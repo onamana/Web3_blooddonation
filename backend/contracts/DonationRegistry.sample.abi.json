@@ -1,0 +1,6 @@
+[
+  "function record(bytes32 donationHash, uint256 timestamp, uint8 bloodType) external",
+  "function verify(bytes32 donationHash) external view returns (bool)",
+  "function query(bytes32 donationHash) external view returns (uint256 timestamp, uint8 bloodType)",
+  "event DonationRecorded(bytes32 indexed donationHash, uint256 timestamp, uint8 bloodType)"
+]

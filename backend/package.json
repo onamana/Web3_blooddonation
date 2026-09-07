@@ -1,0 +1,20 @@
+{
+  "name": "blooddonation-backend",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch src/server.js",
+    "start": "node src/server.js",
+    "ethers:playground": "node scripts/ethersPlayground.js"
+  },
+  "dependencies": {
+    "@asteasolutions/zod-to-openapi": "^9.1.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "ethers": "^6.13.4",
+    "express": "^4.21.2",
+    "swagger-ui-express": "^5.0.1",
+    "zod": "^4.5.4"
+  }
+}
