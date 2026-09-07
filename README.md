@@ -34,6 +34,7 @@ D 프론트엔드          C 백엔드 (API + ethers.js)         A 스마트컨�
 
 자세한 내용은 `backend/README.md` 참고.
 
+
 ## 프론트엔드 진행 순서
 
 1. React + TypeScript + Vite 기본 프로젝트 세팅 (strict 모드, ESLint, CSS Modules)
