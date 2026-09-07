@@ -1,0 +1,599 @@
+.phoneShell {
+  width: 100%;
+  max-width: 430px;
+  margin: 0 auto;
+  min-height: 100vh;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow-x: hidden;
+}
+
+@media (min-width: 700px) {
+  .phoneShell {
+    min-height: 844px;
+    margin: 24px auto;
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    box-shadow: 0 1px 3px rgba(28, 25, 23, 0.05);
+    overflow: hidden;
+  }
+}
+
+/* ---- 게이트(비연결) 화면 ---- */
+.gateStatusBar {
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  flex: none;
+}
+
+.gateBody {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 24px 24px 0;
+}
+
+.gateCard {
+  padding: 28px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.gateIcon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: var(--pri-tint);
+  color: var(--pri);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+}
+
+.gateTitle {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.gateDesc {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--sub);
+  text-wrap: pretty;
+}
+
+.gateFeature {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  font-size: 13px;
+  color: var(--sub);
+}
+
+.gateFooter {
+  padding: 16px 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: var(--bg);
+  flex: none;
+}
+
+.errorBanner {
+  margin-top: 16px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: var(--fail-bg);
+  border: 1px solid var(--fail-line);
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+
+.connectedBanner {
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--done-bg);
+  border: 1px solid var(--done-line);
+  border-radius: 12px;
+  padding: 14px 16px;
+}
+
+/* ---- 공용 카드/버튼 ---- */
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.btn {
+  width: 100%;
+  cursor: pointer;
+  border-radius: 10px;
+  padding: 15px;
+  font-size: 15px;
+  font-weight: 600;
+  border: 1px solid var(--pri);
+  background: var(--pri);
+  color: #fff;
+  min-height: 48px;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btnOff {
+  border-color: var(--line);
+  background: var(--card);
+  color: var(--mute);
+}
+
+.btnGhost {
+  border-color: var(--line);
+  background: var(--card);
+  color: var(--sub);
+}
+
+/* ---- 앱바 ---- */
+.appbar {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: rgba(250, 250, 249, 0.94);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--line);
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex: none;
+}
+
+.appbarBrand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.appbarBrand span:last-child {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.addr {
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 999px;
+  padding: 4px 8px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--mute);
+}
+
+.addrOn {
+  background: #f5f5f4;
+  color: var(--ink);
+}
+
+.did {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--pri);
+  background: var(--pri-tint);
+  border: 1px solid var(--pri-line);
+  border-radius: 999px;
+  padding: 4px 8px;
+}
+
+.sec {
+  padding: 8px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.t2 {
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+/* ---- 요약 KPI ---- */
+.grid2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.kpi {
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.kpiLabel {
+  font-size: 11.5px;
+  color: var(--mute);
+}
+
+.kpiValue {
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.infoBtn {
+  width: 15px;
+  height: 15px;
+  border-radius: 999px;
+  border: 1px solid #d6d3d1;
+  background: #fff;
+  color: var(--mute);
+  font-size: 10px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  flex: none;
+}
+
+.tipBox {
+  font-size: 11px;
+  line-height: 1.5;
+  background: #f5f5f4;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px;
+  text-wrap: pretty;
+}
+
+.aiTag {
+  align-self: flex-start;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--plt);
+  background: #f5f3ff;
+  border: 1px solid #e4dbff;
+  border-radius: 999px;
+  padding: 3px 7px;
+}
+
+/* ---- 헌혈 이력 목록 ---- */
+.hist {
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px;
+  border-radius: 12px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  min-height: 44px;
+}
+
+.histOn {
+  border-color: var(--pri);
+  box-shadow: 0 0 0 3px var(--pri-tint);
+}
+
+.histTopRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.histMetaRow {
+  display: flex;
+  gap: 10px;
+  font-size: 12px;
+  color: var(--sub);
+}
+
+.histFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--line);
+}
+
+/* ---- 혈액 여정 ---- */
+.journeyHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.tbtn {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  font-size: 11.5px;
+  font-weight: 600;
+  border-radius: 8px;
+  padding: 7px 9px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--mute);
+  min-height: 32px;
+}
+
+.tbtnOn {
+  border-color: var(--fail);
+  background: var(--fail-bg);
+  color: var(--fail);
+}
+
+.banner {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  background: var(--fail-bg);
+  border: 1px solid var(--fail-line);
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+
+.journeyCard {
+  padding: 16px 14px;
+  display: flex;
+  flex-direction: column;
+}
+
+.lineRow {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.lineRail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  align-self: stretch;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--pri);
+  margin-top: 5px;
+  flex: none;
+}
+
+.railLine {
+  flex: 1;
+  width: 1px;
+  background: #d6d3d1;
+  min-height: 16px;
+}
+
+.lineBody {
+  flex: 1;
+  padding-bottom: 18px;
+  text-align: left;
+  background: transparent;
+  border: 0;
+}
+
+button.lineBody {
+  cursor: pointer;
+}
+
+.stepName {
+  font-size: 14px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.stepMeta {
+  font-size: 11.5px;
+  color: var(--mute);
+  margin-top: 2px;
+}
+
+.branchDivider {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 0 12px 22px;
+}
+
+.branchDividerLine {
+  flex: 1;
+  height: 1px;
+  background: var(--line);
+}
+
+.branchWrap {
+  position: relative;
+  padding-left: 26px;
+}
+
+.branchRail {
+  position: absolute;
+  left: 4px;
+  top: 0;
+  width: 1px;
+  background: #d6d3d1;
+}
+
+.branchTee {
+  position: absolute;
+  left: 4px;
+  top: 22px;
+  width: 18px;
+  height: 1px;
+  background: #d6d3d1;
+}
+
+.branchDot {
+  position: absolute;
+  left: 0;
+  top: 18px;
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+}
+
+.nbox {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  margin-bottom: 12px;
+  border-radius: 12px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+}
+
+.nboxBad {
+  border: 1px dashed var(--fail);
+}
+
+.nboxHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.tag {
+  font-size: 10.5px;
+  font-weight: 700;
+  border-radius: 6px;
+  padding: 3px 7px;
+  color: #fff;
+}
+
+.node {
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px;
+  min-height: 44px;
+}
+
+.nodeBad {
+  border: 1px dashed var(--fail);
+}
+
+.hash {
+  font-size: 11px;
+  color: var(--sub);
+  background: #f5f5f4;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 2px 6px;
+  cursor: pointer;
+  min-height: 24px;
+}
+
+.legend {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding-top: 14px;
+  margin-top: 4px;
+  border-top: 1px solid #f5f5f4;
+}
+
+.lg {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: var(--mute);
+}
+
+.legendDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+}
+
+.note {
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--mute);
+  text-wrap: pretty;
+}
+
+.notice {
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--mute);
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px 12px;
+  text-wrap: pretty;
+}
+
+.chipf {
+  font-size: 11.5px;
+  color: var(--sub);
+  background: #f5f5f4;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 4px 9px;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 12.5px;
+}
+
+.regionCard {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.footNote {
+  font-size: 11px;
+  color: var(--mute);
+  text-align: center;
+}
+
+.demoBanner {
+  text-align: center;
+  font-size: 11px;
+  color: var(--mute);
+  padding: 10px 16px 18px;
+}

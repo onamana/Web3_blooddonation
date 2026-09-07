@@ -1,0 +1,41 @@
+:root {
+  --ink: #1c1917;
+  --mute: #78716c;
+  --sub: #57534e;
+  --line: #e7e5e4;
+  --bg: #fafaf9;
+  --card: #ffffff;
+
+  --pri: #b3202c;
+  --pri-d: #8e1922;
+  --pri-tint: #fdf2f3;
+  --pri-line: #f6d7da;
+
+  --done: #15803d;
+  --done-bg: #f0fdf4;
+  --done-line: #bbf7d0;
+
+  --stored: #1d4ed8;
+  --stored-bg: #eff6ff;
+  --stored-line: #bfdbfe;
+
+  --fail: #c2410c;
+  --fail-bg: #fff7ed;
+  --fail-line: #fed7ac;
+
+  --rbc: #b3202c;
+  --pls: #b45309;
+  --plt: #6d28d9;
+  --plt-bg: #f5f3ff;
+  --plt-line: #e4dbff;
+
+  --page-bg: #f5f5f4;
+  --radius-sm: 8px;
+  --radius-md: 10px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+
+  --font-sans: Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", system-ui,
+    sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+}

@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BloodTrace — 아트보드 2 · 병원 매칭 (1440×900)</title>
+<style>
+  :root{
+    --ink:#1C1917; --mute:#78716C; --sub:#57534E; --line:#E7E5E4; --bg:#FAFAF9; --card:#FFFFFF;
+    --pri:#B3202C; --pri-d:#8E1922; --pri-tint:#FDF2F3;
+    --done:#15803D; --done-bg:#F0FDF4; --done-line:#BBF7D0;
+    --stored:#1D4ED8; --fail:#C2410C; --fail-bg:#FFF7ED; --fail-line:#FED7AA;
+    --rbc:#B3202C; --pls:#B45309; --plt:#6D28D9;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:#F5F5F4;color:var(--ink);-webkit-font-smoothing:antialiased;
+    font-family:Pretendard,-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif}
+  button{font:inherit;color:inherit}
+  a{color:var(--pri);text-decoration:none} a:hover{color:var(--pri-d);text-decoration:underline}
+  .mono{font-family:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace}
+  .wrap{padding:56px 48px;width:max-content}
+  .hrow{display:flex;align-items:baseline;gap:12px;margin-bottom:18px}
+  .h1{font-size:19px;font-weight:700;letter-spacing:-.01em}
+  .hmeta{font-size:13px;color:var(--mute)}
+  .screen{position:relative;width:1440px;height:900px;background:var(--bg);border:1px solid var(--line);
+    border-radius:16px;overflow:hidden;box-shadow:0 1px 3px rgba(28,25,23,.05);display:flex;flex-direction:column}
+  .topbar{height:60px;flex:none;border-bottom:1px solid var(--line);background:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 24px}
+  .body{flex:1;display:flex;min-height:0}
+  .side{width:300px;flex:none;border-right:1px solid var(--line);background:#fff;padding:22px 20px;display:flex;flex-direction:column;gap:22px;overflow-y:auto}
+  .main{flex:1;min-width:0;overflow-y:auto;padding:22px 24px 28px;display:flex;flex-direction:column;gap:18px}
+  .fl{font-size:12px;font-weight:600;color:var(--sub)}
+  .fg{display:flex;flex-direction:column;gap:10px}
+  .t2{font-size:15px;font-weight:700;letter-spacing:-.01em}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px}
+  .badge{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:600;white-space:nowrap;border-radius:999px;padding:3px 8px}
+  .b-ok{color:var(--done);background:var(--done-bg);border:1px solid var(--done-line)}
+  .b-fail{color:var(--fail);background:var(--fail-bg);border:1px solid var(--fail-line)}
+  .chip{cursor:pointer;font-size:12.5px;font-weight:600;border-radius:8px;padding:7px 11px;background:#fff;color:var(--sub);border:1px solid var(--line)}
+  .chip.on{background:var(--pri);color:#fff;border-color:var(--pri)}
+  .comp{display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:pointer;font-size:12.5px;font-weight:600;
+    text-align:left;border-radius:8px;padding:9px 11px;background:#fff;color:var(--ink);border:1px solid var(--line)}
+  .comp.on{background:var(--pri-tint);border-color:var(--pri)}
+  .step{display:flex;align-items:center;justify-content:space-between;border:1px solid var(--line);border-radius:10px;padding:6px 8px}
+  .sbtn{width:30px;height:30px;border:1px solid var(--line);background:#fff;border-radius:8px;font-size:16px;color:var(--sub);cursor:pointer;line-height:1}
+  select{border:1px solid var(--line);border-radius:10px;padding:9px 10px;font-size:13px;background:#fff;color:var(--ink);cursor:pointer;font-family:inherit}
+  .seg{display:flex;background:#F5F5F4;border:1px solid var(--line);border-radius:10px;padding:3px;gap:3px}
+  .seg button{flex:1;cursor:pointer;font-size:12.5px;font-weight:600;border-radius:7px;padding:8px 0;border:0;background:transparent;color:var(--mute)}
+  .seg button.on{background:#fff;color:var(--ink);box-shadow:0 1px 2px rgba(28,25,23,.08)}
+  .seg button.on.urgent{background:var(--fail);color:#fff;box-shadow:none}
+  .primary{background:var(--pri);color:#fff;border:0;border-radius:10px;padding:13px;font-size:14px;font-weight:600;cursor:pointer}
+  .primary:hover{background:var(--pri-d)}
+  .hint{font-size:11px;color:var(--mute)}
+  .sorts{display:flex;background:#fff;border:1px solid var(--line);border-radius:10px;padding:3px;gap:3px}
+  .sorts button{cursor:pointer;font-size:12px;font-weight:600;border-radius:7px;padding:7px 11px;border:0;background:transparent;color:var(--mute)}
+  .sorts button.on{background:var(--ink);color:var(--bg)}
+  .tip{align-self:flex-end;max-width:340px;font-size:11.5px;line-height:1.5;background:#fff;border:1px solid var(--line);
+    border-radius:10px;padding:9px 11px;box-shadow:0 2px 6px rgba(28,25,23,.06);text-wrap:pretty}
+  .ins{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px}
+  .ins.open{border-color:#D6D3D1;box-shadow:0 2px 8px rgba(28,25,23,.06)}
+  .ins-head{text-align:left;background:transparent;border:0;padding:0;cursor:pointer;display:flex;flex-direction:column;gap:8px;width:100%}
+  .ins-sum{font-size:13.5px;line-height:1.55;font-weight:600;text-wrap:pretty}
+  .ins-basis{font-size:11px;line-height:1.5;color:var(--mute);text-wrap:pretty}
+  .exp{margin-top:12px;padding-top:12px;border-top:1px dashed var(--line);display:flex;flex-direction:column;gap:10px;animation:fade .2s ease both}
+  .res{background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px}
+  .res.sent{border-color:var(--done-line)}
+  .col{display:flex;flex-direction:column}
+  .divider{border-left:1px solid #F5F5F4;padding-left:20px}
+  .reqbtn{cursor:pointer;border-radius:8px;padding:9px 12px;font-size:12.5px;font-weight:600;border:1px solid var(--pri);background:var(--pri);color:#fff}
+  .reqbtn.sent{border-color:var(--done-line);background:var(--done-bg);color:var(--done)}
+  .wtip{position:absolute;top:66px;left:-8px;z-index:8;width:186px;background:var(--ink);color:var(--bg);border-radius:10px;
+    padding:10px 12px;display:flex;flex-direction:column;gap:6px;box-shadow:0 4px 12px rgba(28,25,23,.18)}
+  .modal-scrim{position:absolute;inset:0;z-index:40;background:rgba(28,25,23,.4);display:flex;align-items:center;justify-content:center;padding:40px}
+  .modal{width:620px;max-height:100%;overflow-y:auto;background:#fff;border-radius:14px;padding:24px;display:flex;flex-direction:column;gap:16px;
+    animation:fade .2s ease both;box-shadow:0 12px 40px rgba(28,25,23,.2)}
+  .xbtn{border:1px solid var(--line);background:#fff;border-radius:8px;padding:6px 10px;font-size:12px;color:var(--sub);cursor:pointer}
+  .notice{font-size:11.5px;line-height:1.5;color:var(--mute);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px;text-wrap:pretty}
+  .foot{font-size:11px;color:var(--mute);text-align:center;padding-top:4px}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hrow">
+    <div class="h1">아트보드 2 — 병원 매칭</div>
+    <div class="hmeta mono">데스크톱 1440 × 900 · 클릭 가능 프로토타입</div>
+  </div>
+  <div id="screen" class="screen"></div>
+</div>
+
+<script>
+/* ─────────────────────────────────────────────────────────────
+   목업 데이터 (가상 데모 데이터 — 실제 의료 데이터 아님)
+   ───────────────────────────────────────────────────────────── */
+const COLOR = { rbc:'#B3202C', pls:'#B45309', plt:'#6D28D9' };
+
+const FILTERS = {
+  abo:['A','B','O','AB'],
+  rh:['Rh+','Rh−'],
+  comps:[ {id:'적혈구', color:COLOR.rbc, hint:'보존 35일'},
+          {id:'혈장',   color:COLOR.pls, hint:'보존 1년'},
+          {id:'혈소판', color:COLOR.plt, hint:'보존 5일'} ],
+  regions:['대전권','세종','충남','충북'],
+  urgency:['일반','긴급','응급'],
+  sorts:['AI 추천순','거리순','유효기간 임박순'],
+  sortTip:'유효기간 임박순: 폐기 방지 관점의 정렬입니다. 곧 만료될 재고를 먼저 소진해 폐기 유닛을 줄입니다.'
+};
+
+const INSIGHTS = [
+  { id:'demand', title:'수요 예측', color:COLOR.plt,
+    summary:'이번 주 대전권 혈소판 수요 +38% 예상 — 3일 내 부족 가능',
+    basis:'예측 근거: 최근 4주 수요, 계절 패턴, 재고 회전율',
+    actual:[42,45,44,49,47,52,55,58], forecast:[64,71,80],
+    reasons:['계절 패턴: 9~10월 수술 건수 상승 구간',
+             '지역 수술 일정: 대전권 대형 수술 일정 12건 집중',
+             '헌혈 유입 감소: 대학 방학 종료 전 헌혈의집 방문 −17%'] },
+  { id:'waste', title:'폐기 위험', color:COLOR.fail || '#C2410C',
+    summary:'폐기 위험 재고 12유닛 (유효기간 3일 이내)',
+    basis:'예측 근거: 기관별 재고 회전율, 최근 이관 이력',
+    rows:[ {org:'대전혈액원', comp:'혈소판', dday:'D-1', color:COLOR.plt},
+           {org:'충남대병원 혈액은행', comp:'혈소판', dday:'D-2', color:COLOR.plt},
+           {org:'대전성모병원 혈액은행', comp:'적혈구', dday:'D-3', color:COLOR.rbc},
+           {org:'건양대병원 혈액은행', comp:'혈장', dday:'D-3', color:COLOR.pls} ],
+    transfer:'타 기관 이관 시 <strong>8유닛</strong> 회수 가능 — 대전권 내 3개 기관 수요와 일치' },
+  { id:'route', title:'경로 이상', color:'#C2410C',
+    summary:'공급 경로 이상 감지 1건 — 기록 누락 구간 존재',
+    basis:'탐지 근거: 노드 간 서명 연속성, 예상 이송 시간 초과',
+    nodes:[ {name:'검사 완료', meta:'2026-10-01 09:12 · 대전혈액원', state:'ok'},
+            {name:'공급 확인', meta:'2026-10-01 14:30 · 청주의료원 혈액은행', state:'ok'},
+            {name:'인수 서명 기록 누락', meta:'예상 2026-10-01 16:00 · 원장에 기록 없음', state:'missing'},
+            {name:'사용 처리', meta:'2026-10-02 10:05 · 서명 검증 실패', state:'fail'} ],
+    note:'기록 누락 구간: 공급 확인 후 인수 서명 노드가 원장에 존재하지 않습니다.' }
+];
+
+const RESULTS = [
+  { id:'R1', org:'대전혈액원', kind:'혈액원', distance:4.2, eta:25, comp:'혈소판', blood:'O Rh+', units:6, expiryDays:11, score:92,
+    reason:'근거리 + 유효기간 여유 + 해당 기관 재고 과잉 → 폐기 방지 효과', recover:'이 기관 선택 시 폐기 예상 4유닛 회수',
+    weights:[['거리',30],['유효기간',35],['재고 균형',27]], verified:true },
+  { id:'R2', org:'충남대병원 혈액은행', kind:'병원', distance:6.8, eta:32, comp:'혈소판', blood:'O Rh+', units:4, expiryDays:6, score:86,
+    reason:'이송 시간 짧고 재고 회전 빠름 — 유효기간 여유는 보통', recover:'이 기관 선택 시 폐기 예상 3유닛 회수',
+    weights:[['거리',28],['유효기간',26],['재고 균형',32]], verified:true },
+  { id:'R3', org:'대전성모병원 혈액은행', kind:'병원', distance:9.1, eta:38, comp:'혈장', blood:'O Rh+', units:7, expiryDays:18, score:81,
+    reason:'유효기간 여유 충분, 다만 요청 성분 일부만 충족', recover:'이 기관 선택 시 폐기 예상 2유닛 회수',
+    weights:[['거리',22],['유효기간',33],['재고 균형',26]], verified:true },
+  { id:'R4', org:'세종충남대병원 혈액은행', kind:'병원', distance:21.4, eta:47, comp:'적혈구', blood:'O Rh+', units:9, expiryDays:24, score:74,
+    reason:'재고 과잉 구간이나 이송 거리가 길어 응급 시 불리', recover:'이 기관 선택 시 폐기 예상 5유닛 회수',
+    weights:[['거리',14],['유효기간',35],['재고 균형',25]], verified:true },
+  { id:'R5', org:'건양대병원 혈액은행', kind:'병원', distance:7.6, eta:34, comp:'혈소판', blood:'O Rh+', units:3, expiryDays:3, score:68,
+    reason:'근거리이나 유효기간 임박 — 즉시 사용 계획이 있을 때만 권장', recover:'이 기관 선택 시 폐기 예상 3유닛 회수',
+    weights:[['거리',26],['유효기간',12],['재고 균형',30]], verified:true },
+  { id:'R6', org:'청주의료원 혈액은행', kind:'병원', distance:38.9, eta:62, comp:'혈장', blood:'O Rh+', units:5, expiryDays:14, score:54,
+    reason:'이력 검증 실패 구간 존재 — 원장 재확인 후 요청 권장', recover:'이 기관 선택 시 폐기 예상 1유닛 회수',
+    weights:[['거리',8],['유효기간',30],['재고 균형',16]], verified:false }
+];
+
+const LEDGER_SYNC = '2026-10-05 09:12';
+
+/* 이력 보기 모달 — 헌혈자 화면(A-4)과 동일한 원장 조각 */
+const timelineFor = r => ({
+  org: r.org, donation: 'DN-2026-0412 · ' + r.comp + ' 계열 원장 조각',
+  nodes: [
+    { name:'채혈 완료', meta:'2026-09-28 10:24 · 대전 서구 헌혈의집', ok:true },
+    { name:'검사 완료', meta:'2026-09-29 14:10 · 대전혈액원', ok:true },
+    { name:'성분 분리 · ' + r.comp, meta:'2026-09-29 18:02 · 대전혈액원', ok:true },
+    { name:'기관 입고', meta:'2026-10-02 11:20 · ' + r.org, ok:true },
+    r.verified ? { name:'재고 보관 (사용 대기)', meta:'2026-10-02 11:55 · ' + r.org, ok:true }
+               : { name:'인수 서명 기록 누락', meta:'원장에 해당 노드 없음', ok:false }
+  ]
+});
+
+/* ───────────────────────── 상태 ───────────────────────── */
+const S = { abo:'O', rh:'Rh+', comps:['혈소판'], units:4, region:'대전권', urgency:'긴급',
+            searched:false, sort:'AI 추천순', sortTip:false, openInsight:'demand',
+            hoverId:null, requested:[], modalId:null };
+
+const compColor = c => c === '적혈구' ? COLOR.rbc : c === '혈장' ? COLOR.pls : COLOR.plt;
+const svg = (p, sz) => '<svg width="' + (sz||16) + '" height="' + (sz||16) + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">' + p + '</svg>';
+const IC = {
+  drop:  svg('<path d="M12 2.7 6.8 8.3a7.3 7.3 0 1 0 10.4 0Z"></path>', 20),
+  check: svg('<path d="M20 6 9 17l-5-5"></path>', 14),
+  pin:   svg('<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path><circle cx="12" cy="10" r="3"></circle>', 13),
+  clock: svg('<circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path>', 13)
+};
+
+/* ───────────────────────── 스파크라인 ───────────────────────── */
+function sparkline(ins){
+  const all = ins.actual.concat(ins.forecast), W = 300, H = 96, MIN = 30, MAX = 90;
+  const pts = all.map((v,i) => [Math.round(i * (W/(all.length-1))), Math.round((H - ((v-MIN)/(MAX-MIN))*H)*10)/10]);
+  const aPts = pts.slice(0, ins.actual.length);
+  const fPts = pts.slice(ins.actual.length - 1);
+  const band = fPts.map(p => p[0] + ',' + Math.max(2, p[1]-11)).join(' ') + ' ' +
+               fPts.slice().reverse().map(p => p[0] + ',' + Math.min(H-2, p[1]+11)).join(' ');
+  return '<div style="background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px">' +
+    '<svg width="100%" height="96" viewBox="0 0 300 96" preserveAspectRatio="none">' +
+      '<polygon points="' + band + '" fill="#EDE9FE"></polygon>' +
+      '<polyline points="' + aPts.map(p=>p.join(',')).join(' ') + '" fill="none" stroke="var(--ink)" stroke-width="1.6"></polyline>' +
+      '<polyline points="' + fPts.map(p=>p.join(',')).join(' ') + '" fill="none" stroke="' + COLOR.plt + '" stroke-width="1.6" stroke-dasharray="4 3"></polyline>' +
+    '</svg>' +
+    '<div style="display:flex;gap:12px;margin-top:6px">' +
+      '<span style="display:flex;align-items:center;gap:5px;font-size:10.5px;color:var(--mute)"><span style="width:12px;height:2px;background:var(--ink)"></span>실제 수요 8주</span>' +
+      '<span style="display:flex;align-items:center;gap:5px;font-size:10.5px;color:var(--mute)"><span style="width:12px;height:2px;background:' + COLOR.plt + '"></span>예측</span>' +
+      '<span style="display:flex;align-items:center;gap:5px;font-size:10.5px;color:var(--mute)"><span style="width:12px;height:8px;background:#EDE9FE"></span>신뢰구간 80%</span>' +
+    '</div></div>';
+}
+
+/* ───────────────────────── 렌더 ───────────────────────── */
+function renderSide(){
+  return '<div class="t2">조건 입력</div>' +
+  '<div class="fg"><div class="fl">혈액형</div>' +
+    '<div style="display:flex;flex-wrap:wrap;gap:6px">' +
+      FILTERS.abo.map(x => '<button class="chip' + (S.abo===x?' on':'') + '" data-act="abo" data-val="' + x + '" style="min-width:52px">' + x + '</button>').join('') +
+    '</div>' +
+    '<div style="display:flex;gap:6px">' +
+      FILTERS.rh.map(x => '<button class="chip' + (S.rh===x?' on':'') + '" data-act="rh" data-val="' + x + '" style="flex:1">' + x + '</button>').join('') +
+    '</div></div>' +
+
+  '<div class="fg"><div style="display:flex;align-items:baseline;justify-content:space-between">' +
+      '<div class="fl">필요 성분</div><div class="hint">다중 선택</div></div>' +
+    '<div style="display:flex;flex-direction:column;gap:6px">' +
+      FILTERS.comps.map(c => '<button class="comp' + (S.comps.indexOf(c.id)>=0?' on':'') + '" data-act="comp" data-val="' + c.id + '">' +
+        '<span style="display:flex;align-items:center;gap:8px"><span style="width:8px;height:8px;border-radius:999px;background:' + c.color + '"></span>' + c.id + '</span>' +
+        '<span class="hint">' + c.hint + '</span></button>').join('') +
+    '</div></div>' +
+
+  '<div class="fg"><div class="fl">필요 유닛 수</div>' +
+    '<div class="step"><button class="sbtn" data-act="dec">−</button>' +
+      '<span class="mono" style="font-size:17px;font-weight:600">' + S.units + '</span>' +
+      '<button class="sbtn" data-act="inc">+</button></div></div>' +
+
+  '<div class="fg"><div class="fl">지역</div>' +
+    '<select data-act="region">' + FILTERS.regions.map(r => '<option' + (S.region===r?' selected':'') + '>' + r + '</option>').join('') + '</select></div>' +
+
+  '<div class="fg"><div class="fl">긴급도</div>' +
+    '<div class="seg">' + FILTERS.urgency.map(u =>
+      '<button class="' + (S.urgency===u?'on':'') + (u==='응급'?' urgent':'') + '" data-act="urg" data-val="' + u + '">' + u + '</button>').join('') + '</div>' +
+    (S.urgency==='응급' ? '<div style="font-size:11.5px;line-height:1.5;color:var(--fail);background:var(--fail-bg);border:1px solid var(--fail-line);border-radius:10px;padding:9px 10px;text-wrap:pretty">응급: 이송 60분 이내 기관만 우선 표시하고 유효기간 여유 조건을 완화합니다.</div>' : '') +
+  '</div>' +
+
+  '<button class="primary" data-act="search" style="margin-top:auto">혈액 찾기</button>' +
+  '<div class="hint" style="text-align:center">' + (S.searched
+    ? '조건 적용: ' + S.abo + ' ' + S.rh + ' · ' + (S.comps.join(', ') || '성분 미선택') + ' · ' + S.units + '유닛 · ' + S.region + ' · ' + S.urgency
+    : '조건 선택 후 [혈액 찾기]를 누르면 결과가 갱신됩니다.') + '</div>';
+}
+
+function renderInsight(ins){
+  const open = S.openInsight === ins.id;
+  let exp = '';
+  if (open && ins.id === 'demand'){
+    exp = sparkline(ins) + '<div style="display:flex;flex-direction:column;gap:5px">' +
+      ins.reasons.map(r => '<div style="display:flex;gap:7px;font-size:11.5px;line-height:1.5;color:var(--sub)"><span style="color:' + COLOR.plt + '">·</span><span>' + r + '</span></div>').join('') + '</div>';
+  }
+  if (open && ins.id === 'waste'){
+    exp = '<div style="border:1px solid var(--line);border-radius:10px;overflow:hidden">' +
+        '<div style="display:grid;grid-template-columns:1.5fr .9fr .7fr;gap:6px;padding:7px 10px;background:var(--bg);font-size:10.5px;font-weight:600;color:var(--mute)">' +
+          '<span>기관</span><span>성분</span><span>D-day</span></div>' +
+        ins.rows.map(r => '<div style="display:grid;grid-template-columns:1.5fr .9fr .7fr;gap:6px;padding:7px 10px;border-top:1px solid #F5F5F4;font-size:11.5px">' +
+          '<span>' + r.org + '</span><span style="color:' + r.color + ';font-weight:600">' + r.comp + '</span>' +
+          '<span class="mono" style="color:var(--fail)">' + r.dday + '</span></div>').join('') +
+      '</div>' +
+      '<div style="display:flex;gap:8px;align-items:flex-start;background:var(--done-bg);border:1px solid var(--done-line);border-radius:10px;padding:9px 10px">' +
+        '<span style="color:var(--done);display:flex;margin-top:1px">' + IC.check + '</span>' +
+        '<span style="font-size:11.5px;line-height:1.5;color:#166534;text-wrap:pretty">' + ins.transfer + '</span></div>';
+  }
+  if (open && ins.id === 'route'){
+    exp = '<div style="display:flex;flex-direction:column;gap:8px">' +
+      ins.nodes.map(n => {
+        const ok = n.state === 'ok';
+        return '<div style="display:flex;gap:9px;align-items:flex-start">' +
+          '<div style="display:flex;flex-direction:column;align-items:center;align-self:stretch">' +
+            '<span style="width:9px;height:9px;border-radius:999px;flex:none;background:' + (ok?'var(--done)':(n.state==='missing'?'#fff':'var(--fail)')) + (n.state==='missing'?';border:1px dashed var(--fail)':'') + '"></span>' +
+            '<span style="flex:1;width:1px;background:var(--line);min-height:8px"></span></div>' +
+          '<div style="flex:1;border-radius:8px;padding:8px 10px;background:' + (ok?'var(--bg)':'var(--fail-bg)') + ';border:' + (ok?'1px solid var(--line)':'1px dashed var(--fail)') + '">' +
+            '<div style="font-size:11.5px;font-weight:600;color:' + (ok?'var(--ink)':'var(--fail)') + '">' + n.name + '</div>' +
+            '<div class="mono" style="font-size:10.5px;color:var(--mute);margin-top:2px">' + n.meta + '</div></div>' +
+        '</div>';
+      }).join('') +
+      '<div style="font-size:11.5px;line-height:1.5;color:var(--fail);text-wrap:pretty">' + ins.note + '</div></div>';
+  }
+  return '<div class="ins' + (open?' open':'') + '">' +
+    '<button class="ins-head" data-act="ins" data-id="' + ins.id + '">' +
+      '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px">' +
+        '<span style="display:flex;align-items:center;gap:7px;font-size:13px;font-weight:700">' +
+          '<span style="width:8px;height:8px;border-radius:999px;background:' + ins.color + '"></span>' + ins.title + '</span>' +
+        '<span class="hint">' + (open?'접기 −':'자세히 +') + '</span></div>' +
+      '<div class="ins-sum">' + ins.summary + '</div>' +
+      '<div class="ins-basis">' + ins.basis + '</div>' +
+    '</button>' +
+    (open ? '<div class="exp">' + exp + '</div>' : '') +
+  '</div>';
+}
+
+function sortedResults(){
+  const arr = RESULTS.slice();
+  if (S.sort === '거리순') return arr.sort((a,b) => a.distance - b.distance);
+  if (S.sort === '유효기간 임박순') return arr.sort((a,b) => a.expiryDays - b.expiryDays);
+  return arr.sort((a,b) => b.score - a.score);
+}
+
+function renderResult(r){
+  const sent = S.requested.indexOf(r.id) >= 0;
+  const near = r.expiryDays <= 5;
+  const dash = Math.round(163.4 * r.score / 100);
+  const scoreColor = r.score >= 85 ? 'var(--done)' : r.score >= 70 ? 'var(--pri)' : 'var(--mute)';
+  return '<div class="res' + (sent?' sent':'') + '"><div style="display:flex;align-items:stretch;gap:20px">' +
+    '<div class="col" style="width:280px;flex:none;gap:7px">' +
+      '<div style="display:flex;align-items:center;gap:7px">' +
+        '<span style="font-size:15px;font-weight:700;letter-spacing:-.01em">' + r.org + '</span>' +
+        '<span style="font-size:10.5px;color:var(--mute);border:1px solid var(--line);border-radius:999px;padding:2px 7px">' + r.kind + '</span></div>' +
+      '<div style="display:flex;gap:14px;font-size:12.5px;color:var(--sub)">' +
+        '<span style="display:flex;align-items:center;gap:5px">' + IC.pin + '<span class="mono">' + r.distance + 'km</span></span>' +
+        '<span style="display:flex;align-items:center;gap:5px">' + IC.clock + '<span class="mono">예상 이송 ' + r.eta + '분</span></span></div>' +
+      '<div style="display:flex;align-items:center;gap:8px;margin-top:2px">' +
+        '<span class="badge ' + (r.verified?'b-ok':'b-fail') + '">' + (r.verified?'이력 검증됨':'이력 검증 실패') + '</span>' +
+        '<button data-act="modal" data-id="' + r.id + '" style="background:transparent;border:0;padding:0;font-size:12px;font-weight:600;color:var(--pri);cursor:pointer;text-decoration:underline">이력 보기</button></div>' +
+    '</div>' +
+    '<div class="col divider" style="flex:1;min-width:0;gap:9px">' +
+      '<div style="display:flex;flex-wrap:wrap;gap:6px">' +
+        '<span style="font-size:11.5px;font-weight:700;border-radius:999px;padding:3px 9px;color:#fff;background:' + compColor(r.comp) + '">' + r.comp + '</span>' +
+        '<span class="mono" style="font-size:11.5px;font-weight:600;background:#F5F5F4;border:1px solid var(--line);border-radius:999px;padding:3px 9px">' + r.blood + '</span></div>' +
+      '<div style="display:flex;gap:24px">' +
+        '<div class="col" style="gap:2px"><span class="hint">보유 유닛</span>' +
+          '<span class="mono" style="font-size:19px;font-weight:600">' + r.units + '</span></div>' +
+        '<div class="col" style="gap:2px"><span class="hint">유효기간</span>' +
+          '<span class="mono" style="font-size:19px;font-weight:600;color:' + (near?'var(--fail)':'var(--ink)') + '">D-' + r.expiryDays + '</span></div></div>' +
+    '</div>' +
+    '<div class="divider" style="width:250px;flex:none;display:flex;gap:14px;align-items:flex-start">' +
+      '<div data-act="score" data-id="' + r.id + '" style="position:relative;flex:none">' +
+        '<svg width="62" height="62" viewBox="0 0 62 62">' +
+          '<circle cx="31" cy="31" r="26" fill="none" stroke="#F5F5F4" stroke-width="6"></circle>' +
+          '<circle cx="31" cy="31" r="26" fill="none" stroke="' + scoreColor + '" stroke-width="6" stroke-linecap="round" stroke-dasharray="' + dash + ' 400" transform="rotate(-90 31 31)"></circle></svg>' +
+        '<div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center">' +
+          '<span class="mono" style="font-size:19px;font-weight:600;line-height:1">' + r.score + '</span>' +
+          '<span style="font-size:9px;color:var(--mute)">매칭</span></div>' +
+        (S.hoverId === r.id ? '<div class="wtip"><div style="font-size:10.5px;color:#D6D3D1;letter-spacing:.03em">가중치 분해</div>' +
+          r.weights.map(w => '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:11.5px">' +
+            '<span>' + w[0] + '</span><span class="mono">' + w[1] + '</span></div>').join('') + '</div>' : '') +
+      '</div>' +
+      '<div class="col" style="flex:1;min-width:0;gap:7px">' +
+        '<div style="font-size:11.5px;line-height:1.5;color:var(--sub);text-wrap:pretty">' + r.reason + '</div>' +
+        '<div style="background:var(--done-bg);border:1px solid var(--done-line);border-radius:8px;padding:6px 8px">' +
+          '<span style="font-size:11px;font-weight:600;line-height:1.45;color:#166534;text-wrap:pretty">' + r.recover + '</span></div>' +
+        '<button class="reqbtn' + (sent?' sent':'') + '" data-act="req" data-id="' + r.id + '">' + (sent?'요청 전송됨':'요청 보내기') + '</button>' +
+      '</div>' +
+    '</div>' +
+  '</div></div>';
+}
+
+function renderModal(){
+  if (!S.modalId) return '';
+  const r = RESULTS.find(x => x.id === S.modalId); if (!r) return '';
+  const t = timelineFor(r);
+  return '<div class="modal-scrim" data-act="closeModal"><div class="modal" data-act="stop">' +
+    '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">' +
+      '<div class="col" style="gap:4px"><div style="font-size:17px;font-weight:700;letter-spacing:-.01em">이력 검증 — ' + t.org + '</div>' +
+        '<div class="mono" style="font-size:12px;color:var(--mute)">' + t.donation + ' · 헌혈자 신원 정보 미포함</div></div>' +
+      '<button class="xbtn" data-act="closeModal">닫기</button></div>' +
+    '<div class="col">' + t.nodes.map(n =>
+      '<div style="display:flex;gap:12px;align-items:flex-start">' +
+        '<div style="display:flex;flex-direction:column;align-items:center;align-self:stretch;padding-top:4px">' +
+          '<span style="width:10px;height:10px;border-radius:999px;flex:none;background:' + (n.ok?'var(--pri)':'#fff') + (n.ok?'':';border:1px dashed var(--fail)') + '"></span>' +
+          '<span style="flex:1;width:1px;background:var(--line);min-height:14px"></span></div>' +
+        '<div style="flex:1;border-radius:10px;padding:10px 12px;margin-bottom:8px;background:' + (n.ok?'var(--bg)':'var(--fail-bg)') + ';border:' + (n.ok?'1px solid var(--line)':'1px dashed var(--fail)') + '">' +
+          '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px">' +
+            '<span style="font-size:13.5px;font-weight:600;color:' + (n.ok?'var(--ink)':'var(--fail)') + '">' + n.name + '</span>' +
+            '<span class="badge ' + (n.ok?'b-ok':'b-fail') + '">' + (n.ok?'검증됨':'검증 실패') + '</span></div>' +
+          '<div class="mono" style="font-size:11.5px;color:var(--mute);margin-top:3px">' + n.meta + '</div></div>' +
+      '</div>').join('') + '</div>' +
+    '<div class="notice">헌혈자 화면과 동일한 원장 기록을 기관 관점으로 표시합니다. 환자·헌혈자 신원 정보는 포함되지 않습니다.</div>' +
+  '</div></div>';
+}
+
+function render(){
+  document.getElementById('screen').innerHTML =
+  '<div class="topbar">' +
+    '<div style="display:flex;align-items:center;gap:10px">' +
+      '<span style="color:var(--pri);display:flex">' + IC.drop + '</span>' +
+      '<span style="font-size:16px;font-weight:700;letter-spacing:-.01em">BloodTrace</span>' +
+      '<span style="font-size:12px;color:var(--mute);border-left:1px solid var(--line);padding-left:10px;margin-left:2px">혈액 매칭 콘솔</span></div>' +
+    '<div style="display:flex;align-items:center;gap:14px">' +
+      '<span class="mono" style="font-size:12px;color:var(--mute)">원장 동기화 ' + LEDGER_SYNC + '</span>' +
+      '<span class="badge b-ok" style="font-size:12px;padding:5px 10px">노드 4/4 정상</span></div>' +
+  '</div>' +
+  '<div class="body">' +
+    '<div class="side">' + renderSide() + '</div>' +
+    '<div class="main">' +
+      '<div class="col" style="gap:10px">' +
+        '<div style="display:flex;align-items:center;gap:8px"><span class="t2">AI 인사이트</span>' +
+          '<span style="font-size:11px;font-weight:600;color:' + COLOR.plt + ';background:#F5F3FF;border:1px solid #E4DBFF;border-radius:999px;padding:3px 8px">예측 모델 v0.4 · 데모</span></div>' +
+        '<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;align-items:start">' +
+          INSIGHTS.map(renderInsight).join('') + '</div>' +
+      '</div>' +
+      '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px">' +
+        '<div style="display:flex;align-items:baseline;gap:8px"><span class="t2">매칭 결과</span>' +
+          '<span style="font-size:12px;color:var(--mute)">' + (S.searched ? S.region + ' · ' + S.abo + ' ' + S.rh + ' · ' : '') + RESULTS.length + '개 기관</span></div>' +
+        '<div class="sorts">' + FILTERS.sorts.map(x =>
+          '<button class="' + (S.sort===x?'on':'') + '" data-act="sort" data-val="' + x + '">' + x + '</button>').join('') + '</div>' +
+      '</div>' +
+      (S.sortTip ? '<div class="tip">' + FILTERS.sortTip + '</div>' : '') +
+      '<div class="col" style="gap:12px">' + sortedResults().map(renderResult).join('') + '</div>' +
+      '<div class="mono foot">모든 수치는 가상 데모 데이터입니다. 실명·환자 정보·진료 기록은 포함되지 않습니다.</div>' +
+    '</div>' +
+  '</div>' + renderModal();
+}
+
+/* ───────────────────────── 상호작용 ───────────────────────── */
+document.addEventListener('click', function(e){
+  const t = e.target.closest('[data-act]');
+  if (!t) return;
+  const act = t.dataset.act;
+  if (act === 'stop') return;
+  if (act === 'abo')  S.abo = t.dataset.val;
+  else if (act === 'rh')   S.rh = t.dataset.val;
+  else if (act === 'comp'){ const v = t.dataset.val;
+    S.comps = S.comps.indexOf(v) >= 0 ? S.comps.filter(x => x !== v) : S.comps.concat([v]); }
+  else if (act === 'inc')  S.units = Math.min(20, S.units + 1);
+  else if (act === 'dec')  S.units = Math.max(1, S.units - 1);
+  else if (act === 'urg')  S.urgency = t.dataset.val;
+  else if (act === 'search') S.searched = true;
+  else if (act === 'ins')  S.openInsight = S.openInsight === t.dataset.id ? null : t.dataset.id;
+  else if (act === 'sort') S.sort = t.dataset.val;
+  else if (act === 'req'){ const id = t.dataset.id; if (S.requested.indexOf(id) < 0) S.requested = S.requested.concat([id]); }
+  else if (act === 'modal') S.modalId = t.dataset.id;
+  else if (act === 'closeModal') S.modalId = null;
+  else return;
+  render();
+});
+
+document.addEventListener('change', function(e){
+  const t = e.target.closest('[data-act="region"]');
+  if (!t) return;
+  S.region = t.value; render();
+});
+
+document.addEventListener('mouseover', function(e){
+  const sc = e.target.closest('[data-act="score"]');
+  if (sc && S.hoverId !== sc.dataset.id){ S.hoverId = sc.dataset.id; render(); return; }
+  const so = e.target.closest('[data-act="sort"]');
+  const wantTip = !!(so && so.dataset.val === '유효기간 임박순');
+  if (wantTip !== S.sortTip){ S.sortTip = wantTip; render(); }
+});
+
+document.addEventListener('mouseout', function(e){
+  const sc = e.target.closest('[data-act="score"]');
+  if (sc && !(e.relatedTarget && sc.contains(e.relatedTarget))){ S.hoverId = null; render(); }
+});
+
+render();
+</script>
+</body>
+</html>

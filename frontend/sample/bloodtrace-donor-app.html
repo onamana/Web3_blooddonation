@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BloodTrace — 아트보드 1 · 헌혈자 앱 (390×844)</title>
+<style>
+  :root{
+    --ink:#1C1917; --mute:#78716C; --sub:#57534E; --line:#E7E5E4; --bg:#FAFAF9; --card:#FFFFFF;
+    --pri:#B3202C; --pri-d:#8E1922; --pri-tint:#FDF2F3; --pri-line:#F6D7DA;
+    --done:#15803D; --done-bg:#F0FDF4; --done-line:#BBF7D0;
+    --stored:#1D4ED8; --stored-bg:#EFF6FF; --stored-line:#BFDBFE;
+    --fail:#C2410C; --fail-bg:#FFF7ED; --fail-line:#FED7AA;
+    --rbc:#B3202C; --pls:#B45309; --plt:#6D28D9;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:#F5F5F4;color:var(--ink);-webkit-font-smoothing:antialiased;
+    font-family:Pretendard,-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif}
+  button{font:inherit;color:inherit}
+  a{color:var(--pri);text-decoration:none} a:hover{color:var(--pri-d);text-decoration:underline}
+  .mono{font-family:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace}
+  .wrap{padding:56px 48px;width:max-content}
+  .h1{font-size:19px;font-weight:700;letter-spacing:-.01em}
+  .hrow{display:flex;align-items:baseline;gap:12px;margin-bottom:18px}
+  .hmeta{font-size:13px;color:var(--mute)}
+  .frames{display:flex;align-items:flex-start;gap:32px}
+  .col{display:flex;flex-direction:column;gap:10px}
+  .lbl{font-size:12px;font-weight:600;color:var(--mute);letter-spacing:.04em}
+  .phone{position:relative;width:390px;background:var(--bg);border:1px solid var(--line);border-radius:20px;
+    overflow:hidden;box-shadow:0 1px 3px rgba(28,25,23,.05)}
+  .phone.fixed{height:844px;display:flex;flex-direction:column}
+  .foot{font-size:11.5px;color:var(--mute)}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px}
+  .badge{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:600;white-space:nowrap;border-radius:999px;padding:3px 8px}
+  .b-ok{color:var(--done);background:var(--done-bg);border:1px solid var(--done-line)}
+  .b-fail{color:var(--fail);background:var(--fail-bg);border:1px solid var(--fail-line)}
+  .b-stored{color:var(--stored);background:var(--stored-bg);border:1px solid var(--stored-line)}
+  .b-disc{color:var(--mute);background:#F5F5F4;border:1px solid var(--line)}
+  .stack{display:flex;flex-direction:column}
+  .sec{padding:8px 16px 16px;display:flex;flex-direction:column;gap:12px}
+  .t2{font-size:17px;font-weight:700;letter-spacing:-.01em}
+  .grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .kpi{padding:14px;display:flex;flex-direction:column;gap:6px}
+  .kpi-l{font-size:11.5px;color:var(--mute)}
+  .kpi-v{font-size:26px;font-weight:600;letter-spacing:-.02em}
+  .hist{text-align:left;cursor:pointer;display:flex;flex-direction:column;gap:6px;padding:14px;border-radius:12px;
+    background:var(--card);border:1px solid var(--line)}
+  .hist.on{border-color:var(--pri);box-shadow:0 0 0 3px var(--pri-tint)}
+  .node{width:100%;text-align:left;cursor:pointer;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px}
+  .node.bad{border:1px dashed var(--fail)}
+  .nbox{display:flex;flex-direction:column;gap:8px;padding:12px;margin-bottom:12px;border-radius:12px;background:var(--bg);border:1px solid var(--line)}
+  .nbox.bad{border:1px dashed var(--fail)}
+  .tag{font-size:10.5px;font-weight:700;border-radius:6px;padding:3px 7px;color:#fff}
+  .meta{font-size:11.5px;color:var(--mute);margin-top:2px}
+  .hash{font-size:11px;color:var(--sub);background:#F5F5F4;border:1px solid var(--line);border-radius:6px;padding:2px 6px;cursor:pointer}
+  .btn{width:100%;cursor:pointer;border-radius:10px;padding:15px;font-size:15px;font-weight:600;border:1px solid var(--pri);background:var(--pri);color:#fff}
+  .btn.off{border-color:var(--line);background:var(--card);color:var(--mute)}
+  .tbtn{flex:none;display:inline-flex;align-items:center;gap:5px;cursor:pointer;font-size:11.5px;font-weight:600;
+    border-radius:8px;padding:7px 9px;border:1px solid var(--line);background:var(--card);color:var(--mute)}
+  .tbtn.on{border-color:var(--fail);background:var(--fail-bg);color:var(--fail)}
+  .appbar{position:sticky;top:0;z-index:5;background:rgba(250,250,249,.94);backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--line);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .addr{font-size:11px;font-weight:600;border-radius:999px;padding:4px 8px;border:1px solid var(--line);background:var(--card);color:var(--mute)}
+  .addr.on{background:#F5F5F4;color:var(--ink)}
+  .did{font-size:11px;font-weight:600;color:var(--pri);background:var(--pri-tint);border:1px solid var(--pri-line);border-radius:999px;padding:4px 8px}
+  .scrim{position:absolute;inset:0;background:rgba(28,25,23,.35);z-index:20}
+  .sheet{position:absolute;left:0;right:0;bottom:0;z-index:21;background:#fff;border-top:1px solid var(--line);
+    border-radius:16px 16px 20px 20px;padding:14px 18px 20px;display:flex;flex-direction:column;gap:14px;
+    animation:sheetUp .22s ease both;box-shadow:0 -8px 24px rgba(28,25,23,.08)}
+  .row{display:flex;justify-content:space-between;gap:12px;font-size:12.5px}
+  .chipf{font-size:11.5px;color:var(--sub);background:#F5F5F4;border:1px solid var(--line);border-radius:999px;padding:4px 9px}
+  .notice{font-size:11.5px;line-height:1.5;color:var(--mute);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px;text-wrap:pretty}
+  .toast{position:absolute;left:50%;bottom:28px;transform:translateX(-50%);z-index:30;background:var(--ink);color:var(--bg);
+    font-size:12px;border-radius:999px;padding:8px 14px;animation:fade .18s ease both}
+  .banner{display:flex;gap:10px;align-items:flex-start;background:var(--fail-bg);border:1px solid var(--fail-line);
+    border-radius:12px;padding:12px 14px;animation:fade .2s ease both}
+  .legend{display:flex;gap:12px;flex-wrap:wrap;padding-top:14px;margin-top:4px;border-top:1px solid #F5F5F4}
+  .lg{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--mute)}
+  .dot{width:8px;height:8px;border-radius:999px}
+  .xbtn{border:1px solid var(--line);background:#fff;border-radius:8px;padding:5px 9px;font-size:12px;color:var(--sub);cursor:pointer}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  @keyframes sheetUp{from{transform:translateY(100%)}to{transform:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hrow">
+    <div class="h1">아트보드 1 — 헌혈자 앱</div>
+    <div class="hmeta mono">모바일 390 × 844 · 클릭 가능 프로토타입</div>
+  </div>
+  <div class="frames">
+    <div class="col">
+      <div class="lbl">A-1 · 지갑 연결 (비연결)</div>
+      <div id="f1" class="phone fixed"></div>
+      <div class="foot mono">모든 수치는 가상 데모 데이터입니다.</div>
+    </div>
+    <div class="col">
+      <div class="lbl">A-2 ~ A-5 · 메인 (세로 스크롤 1장)</div>
+      <div id="f2" class="phone"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ─────────────────────────────────────────────────────────────
+   목업 데이터 (가상 데모 데이터 — 실제 의료 데이터 아님)
+   ───────────────────────────────────────────────────────────── */
+const COLOR = { rbc:'#B3202C', pls:'#B45309', plt:'#6D28D9' };
+
+const WALLET = { addr:'0x7a3f…c214', donorId:'DNR-8F2A' };
+
+const SUMMARY = {
+  count: 7, volume: '1,850mL',
+  lastDate: '2026-09-28', lastPlace: '대전 서구 헌혈의집',
+  nextDday: 'D-12', patients: 5,
+  patientTip: '성분 분리로 한 번의 헌혈이 여러 환자에게 사용될 수 있습니다. 추정값입니다.',
+  region: '대전권'
+};
+
+const DONATIONS = [
+  {
+    id:'DN-2026-0412', date:'2026-09-28', volume:400, place:'대전 서구 헌혈의집',
+    stage:'3개 성분 처리 완료 (수혈 1 / 보관 1 / 폐기 1)',
+    root:{ name:'채혈 완료', time:'2026-09-28 10:24', org:'대전 서구 헌혈의집', hash:'0x4e21…8b03', block:'1,284,102',
+           fields:['헌혈 ID','채혈량','채혈 일시','채혈 기관 서명'] },
+    test:{ name:'검사 완료', time:'2026-09-29 14:10', org:'대전혈액원', hash:'0x7d55…19ac', block:'1,284,517',
+           fields:['검사 항목 코드','적합 여부','성분 분리 결과','혈액원 서명'] },
+    branches:[
+      { code:'RBC-0412-A', comp:'적혈구', color:COLOR.rbc, status:'수혈 완료', statusClass:'b-ok', steps:[
+        { name:'의료기관 공급', time:'2026-10-03 09:05', org:'충남대병원 혈액은행', hash:'0x9c1b…4ff0', block:'1,291,880',
+          fields:['성분 코드','유닛 수','보관 온도','인수 기관 서명'] },
+        { name:'수혈 완료', time:'2026-10-03 16:40', org:'충남대병원', hash:'0xa17e…22d9', block:'1,292,455',
+          fields:['성분 코드','사용 구분','처리 일시','기관 서명'] }
+      ]},
+      { code:'PLS-0412-B', comp:'혈장', color:COLOR.pls, status:'재고 보관 · D-8', statusClass:'b-stored', steps:[
+        { name:'의료기관 공급', time:'2026-10-02 11:20', org:'대전성모병원 혈액은행', hash:'0x3f88…7c15', block:'1,290,604',
+          fields:['성분 코드','유닛 수','보관 온도','인수 기관 서명'] },
+        { name:'재고 보관', time:'2026-10-02 11:55', org:'대전성모병원 혈액은행', hash:'0xb420…d3a7', block:'1,290,733',
+          fields:['보관 위치 코드','유효기간','재고 상태','기관 서명'], note:'유효기간 D-8 · 사용 대기' }
+      ]},
+      { code:'PLT-0412-C', comp:'혈소판', color:COLOR.plt, status:'폐기', statusClass:'b-disc', steps:[
+        { name:'의료기관 공급', time:'2026-10-01 08:40', org:'세종충남대병원 혈액은행', hash:'0x62ac…9e01', block:'1,289,120',
+          fields:['성분 코드','유닛 수','보관 온도','인수 기관 서명'] },
+        { name:'폐기 처리', time:'2026-10-06 07:10', org:'세종충남대병원 혈액은행', hash:'0xd991…5b6e', block:'1,296,340',
+          fields:['폐기 사유 코드','폐기 일시','입회 기관 서명'], note:'사유: 유효기간 경과 (혈소판 보존 5일)' }
+      ]}
+    ]
+  },
+  {
+    id:'DN-2026-0287', date:'2026-06-14', volume:400, place:'대전 유성 헌혈의집', stage:'2개 성분 사용 완료',
+    root:{ name:'채혈 완료', time:'2026-06-14 13:02', org:'대전 유성 헌혈의집', hash:'0x1b7d…04c9', block:'1,180,441',
+           fields:['헌혈 ID','채혈량','채혈 일시','채혈 기관 서명'] },
+    test:{ name:'검사 완료', time:'2026-06-15 10:30', org:'대전혈액원', hash:'0x55ea…88f2', block:'1,181,002',
+           fields:['검사 항목 코드','적합 여부','성분 분리 결과','혈액원 서명'] },
+    branches:[
+      { code:'RBC-0287-A', comp:'적혈구', color:COLOR.rbc, status:'수혈 완료', statusClass:'b-ok', steps:[
+        { name:'의료기관 공급', time:'2026-06-17 09:15', org:'건양대병원 혈액은행', hash:'0x77c0…1ad4', block:'1,183,776',
+          fields:['성분 코드','유닛 수','보관 온도','인수 기관 서명'] },
+        { name:'수혈 완료', time:'2026-06-18 14:05', org:'건양대병원', hash:'0x9a15…6b33', block:'1,184,910',
+          fields:['성분 코드','사용 구분','처리 일시','기관 서명'] }
+      ]},
+      { code:'PLS-0287-B', comp:'혈장', color:COLOR.pls, status:'수혈 완료', statusClass:'b-ok', steps:[
+        { name:'의료기관 공급', time:'2026-06-16 15:40', org:'충남대병원 혈액은행', hash:'0x2d4b…c810', block:'1,182,530',
+          fields:['성분 코드','유닛 수','보관 온도','인수 기관 서명'] },
+        { name:'수혈 완료', time:'2026-06-19 08:50', org:'충남대병원', hash:'0xe306…af71', block:'1,185,602',
+          fields:['성분 코드','사용 구분','처리 일시','기관 서명'] }
+      ]}
+    ]
+  },
+  {
+    id:'DN-2026-0119', date:'2026-03-02', volume:320, place:'세종 조치원 헌혈의집', stage:'1개 성분 폐기 · 1개 수혈 완료',
+    root:{ name:'채혈 완료', time:'2026-03-02 11:48', org:'세종 조치원 헌혈의집', hash:'0x8c02…3d55', block:'1,092,110',
+           fields:['헌혈 ID','채혈량','채혈 일시','채혈 기관 서명'] },
+    test:{ name:'검사 완료', time:'2026-03-03 09:20', org:'대전혈액원', hash:'0x40fa…7712', block:'1,092,884',
+           fields:['검사 항목 코드','적합 여부','성분 분리 결과','혈액원 서명'] },
+    branches:[
+      { code:'RBC-0119-A', comp:'적혈구', color:COLOR.rbc, status:'수혈 완료', statusClass:'b-ok', steps:[
+        { name:'의료기관 공급', time:'2026-03-05 10:05', org:'세종충남대병원 혈액은행', hash:'0x6b71…9c20', block:'1,095,330',
+          fields:['성분 코드','유닛 수','보관 온도','인수 기관 서명'] },
+        { name:'수혈 완료', time:'2026-03-06 13:30', org:'세종충남대병원', hash:'0xc8de…1f04', block:'1,096,208',
+          fields:['성분 코드','사용 구분','처리 일시','기관 서명'] }
+      ]},
+      { code:'PLT-0119-B', comp:'혈소판', color:COLOR.plt, status:'폐기', statusClass:'b-disc', steps:[
+        { name:'폐기 처리', time:'2026-03-08 06:55', org:'대전혈액원', hash:'0x0f39…5e88', block:'1,098,470',
+          fields:['폐기 사유 코드','폐기 일시','입회 기관 서명'], note:'사유: 수요 기관 미배정 후 유효기간 경과' }
+      ]}
+    ]
+  }
+];
+
+/* 위변조 시뮬레이션 대상 노드 */
+const TAMPER_TARGET = { donation:'DN-2026-0412', comp:'혈장', step:'의료기관 공급' };
+
+/* ───────────────────────── 상태 ───────────────────────── */
+const S = { connected:false, patientTip:false, selId:DONATIONS[0].id, tampered:false, sheetKey:null, copied:false };
+const sel = () => DONATIONS.find(d => d.id === S.selId) || DONATIONS[0];
+const isBad = (b, s) => S.tampered && sel().id === TAMPER_TARGET.donation && b.comp === TAMPER_TARGET.comp && s.name === TAMPER_TARGET.step;
+
+/* ───────────────────────── 아이콘 ───────────────────────── */
+const svg = (p, sz) => '<svg width="' + (sz||16) + '" height="' + (sz||16) + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">' + p + '</svg>';
+const IC = {
+  drop:  svg('<path d="M12 2.7 6.8 8.3a7.3 7.3 0 1 0 10.4 0Z"></path>', 18),
+  check: svg('<path d="M20 6 9 17l-5-5"></path>'),
+  shield:svg('<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"></path><path d="m9 12 2 2 4-4"></path>'),
+  alert: svg('<path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path>', 13),
+  alertL:svg('<path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path>', 17),
+  pin:   svg('<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path><circle cx="12" cy="10" r="3"></circle>', 13),
+  copy:  svg('<rect x="9" y="9" width="12" height="12" rx="2"></rect><path d="M5 15V5a2 2 0 0 1 2-2h10"></path>', 12),
+  sealS: svg('<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"></path><path d="m9 12 2 2 4-4"></path>', 12)
+};
+
+/* ───────────────────────── A-1 렌더 ───────────────────────── */
+function renderF1(){
+  return '' +
+  '<div style="height:44px;display:flex;align-items:center;justify-content:space-between;padding:0 20px" class="mono">' +
+    '<span style="font-size:12px;color:var(--mute)">9:41</span><span style="font-size:12px;color:var(--mute)">데모</span>' +
+  '</div>' +
+  '<div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:0 24px">' +
+    '<div class="card" style="padding:28px 24px;display:flex;flex-direction:column;align-items:center;gap:16px">' +
+      '<div style="width:48px;height:48px;border-radius:12px;background:var(--pri-tint);color:var(--pri);display:flex;align-items:center;justify-content:center">' + IC.drop + '</div>' +
+      '<div style="display:flex;flex-direction:column;gap:8px;text-align:center">' +
+        '<div style="font-size:24px;font-weight:700;letter-spacing:-.02em">BloodTrace</div>' +
+        '<div style="font-size:14px;line-height:1.6;color:var(--sub);text-wrap:pretty">내가 헌혈한 혈액이 성분으로 나뉘어 어느 지역, 어떤 단계까지 쓰였는지 블록체인 기록으로 확인합니다.</div>' +
+      '</div>' +
+      '<div style="width:100%;height:1px;background:var(--line);margin:4px 0"></div>' +
+      '<div style="display:flex;flex-direction:column;gap:10px;width:100%">' +
+        ['헌혈 이력을 익명 ID로 조회','성분별 이동 경로와 검증 상태 확인'].map(t =>
+          '<div style="display:flex;gap:10px;align-items:flex-start;font-size:13px;color:var(--sub)">' +
+          '<span style="color:var(--pri);margin-top:1px;display:flex">' + IC.check + '</span><span>' + t + '</span></div>').join('') +
+      '</div>' +
+    '</div>' +
+    (S.connected ?
+      '<div style="margin-top:16px;display:flex;align-items:center;gap:10px;background:var(--done-bg);border:1px solid var(--done-line);border-radius:12px;padding:14px 16px;animation:fade .25s ease both">' +
+        '<span style="color:var(--done);display:flex">' + IC.shield + '</span>' +
+        '<div style="display:flex;flex-direction:column;gap:2px">' +
+          '<div style="font-size:13px;font-weight:600;color:var(--done)">지갑이 연결되었습니다</div>' +
+          '<div class="mono" style="font-size:12px;color:var(--sub)">' + WALLET.addr + ' · ' + WALLET.donorId + '</div>' +
+        '</div></div>' : '') +
+  '</div>' +
+  '<div style="padding:16px 20px 24px;display:flex;flex-direction:column;gap:12px;background:var(--bg)">' +
+    '<button class="btn' + (S.connected ? ' off' : '') + '" data-act="wallet">' + (S.connected ? '지갑 연결 해제' : '지갑 연결하기') + '</button>' +
+    '<div style="font-size:11.5px;line-height:1.6;color:var(--mute);text-align:center;text-wrap:pretty">이름·주민번호·병원 기록은 저장되지 않습니다. 익명 ID로만 조회합니다.</div>' +
+  '</div>';
+}
+
+/* ───────────────────────── A-2 ~ A-5 렌더 ───────────────────────── */
+function renderF2(){
+  const d = sel();
+  return '' +
+  '<div class="appbar">' +
+    '<div style="display:flex;align-items:center;gap:8px">' +
+      '<span style="color:var(--pri);display:flex">' + IC.drop + '</span>' +
+      '<span style="font-size:15px;font-weight:700;letter-spacing:-.01em">BloodTrace</span></div>' +
+    '<div style="display:flex;gap:6px">' +
+      '<span class="addr mono' + (S.connected ? ' on' : '') + '">' + (S.connected ? WALLET.addr : '지갑 미연결') + '</span>' +
+      (S.connected ? '<span class="did mono">' + WALLET.donorId + '</span>' : '') +
+    '</div>' +
+  '</div>' +
+
+  /* A-2 */
+  '<div class="sec" style="padding-top:20px">' +
+    '<div style="display:flex;align-items:baseline;justify-content:space-between">' +
+      '<div class="t2">내 헌혈 요약</div><div style="font-size:11.5px;color:var(--mute)">익명 ID 기준</div></div>' +
+    '<div class="grid2">' +
+      '<div class="card kpi"><div class="kpi-l">총 헌혈 횟수</div>' +
+        '<div style="display:flex;align-items:baseline;gap:4px"><span class="kpi-v mono">' + SUMMARY.count + '</span><span style="font-size:13px;color:var(--sub)">회</span></div>' +
+        '<div class="kpi-l mono">누적 ' + SUMMARY.volume + '</div></div>' +
+      '<div class="card kpi"><div class="kpi-l">마지막 헌혈</div>' +
+        '<div class="mono" style="font-size:17px;font-weight:600;letter-spacing:-.01em">' + SUMMARY.lastDate + '</div>' +
+        '<div style="display:flex;gap:4px;align-items:center;font-size:11.5px;color:var(--mute)">' + IC.pin + '<span>' + SUMMARY.lastPlace + '</span></div></div>' +
+      '<div class="card kpi"><div class="kpi-l">다음 헌혈 가능일</div>' +
+        '<div class="kpi-v mono" style="color:var(--pri)">' + SUMMARY.nextDday + '</div>' +
+        '<div style="align-self:flex-start;font-size:10.5px;font-weight:600;color:var(--plt);background:#F5F3FF;border:1px solid #E4DBFF;border-radius:999px;padding:3px 7px">AI 안내</div></div>' +
+      '<div class="card kpi"><div style="display:flex;align-items:center;gap:5px">' +
+          '<span class="kpi-l">도움받은 추정 환자</span>' +
+          '<button data-act="tip" style="width:15px;height:15px;border-radius:999px;border:1px solid #D6D3D1;background:#fff;color:var(--mute);font-size:10px;line-height:1;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0">i</button></div>' +
+        '<div style="display:flex;align-items:baseline;gap:4px"><span class="kpi-v mono">' + SUMMARY.patients + '</span><span style="font-size:13px;color:var(--sub)">명</span></div>' +
+        (S.patientTip ? '<div style="font-size:11px;line-height:1.5;background:#F5F5F4;border:1px solid var(--line);border-radius:8px;padding:8px;text-wrap:pretty">' + SUMMARY.patientTip + '</div>' : '') +
+      '</div>' +
+    '</div>' +
+  '</div>' +
+
+  /* A-3 */
+  '<div class="sec"><div class="t2">헌혈 이력</div>' +
+    DONATIONS.map(x => {
+      const on = x.id === d.id;
+      const bad = on && S.tampered;
+      return '<button class="hist' + (on ? ' on' : '') + '" data-act="pick" data-id="' + x.id + '">' +
+        '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px">' +
+          '<span class="mono" style="font-size:13px;font-weight:600">' + x.id + '</span>' +
+          '<span class="badge ' + (bad ? 'b-fail' : 'b-ok') + '">' + (bad ? '검증 실패 1건' : '검증됨') + '</span></div>' +
+        '<div class="mono" style="display:flex;gap:10px;font-size:12px;color:var(--sub)"><span>' + x.date + '</span><span>·</span><span>' + x.volume + 'mL</span></div>' +
+        '<div style="font-size:12px;color:var(--mute)">' + x.place + '</div>' +
+        '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding-top:8px;border-top:1px dashed var(--line)">' +
+          '<span style="font-size:12px">' + x.stage + '</span>' +
+          '<span style="font-size:11.5px;color:var(--pri);font-weight:600">' + (on ? '여정 보기 ↓' : '탭하여 여정 보기') + '</span></div>' +
+      '</button>';
+    }).join('') +
+  '</div>' +
+
+  /* A-4 */
+  '<div class="sec">' +
+    '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px">' +
+      '<div style="display:flex;flex-direction:column;gap:3px"><div class="t2">혈액 여정</div>' +
+      '<div class="mono" style="font-size:12px;color:var(--mute)">' + d.id + ' · ' + d.volume + 'mL · ' + d.date + '</div></div>' +
+      '<button class="tbtn' + (S.tampered ? ' on' : '') + '" data-act="tamper">' + IC.alert + '<span>위변조 시뮬레이션</span></button>' +
+    '</div>' +
+    (S.tampered ?
+      '<div class="banner"><span style="color:var(--fail);display:flex;margin-top:1px">' + IC.alertL + '</span>' +
+        '<div style="display:flex;flex-direction:column;gap:3px">' +
+        '<div style="font-size:13px;font-weight:700;color:var(--fail)">기록 검증 실패 1건</div>' +
+        '<div style="font-size:12px;line-height:1.5;color:#7C2D12;text-wrap:pretty">혈장 성분의 공급 기록 해시가 원장과 일치하지 않습니다. 해당 노드는 검증 실패로 표시됩니다.</div>' +
+      '</div></div>' : '') +
+    '<div class="card" style="padding:16px 14px;display:flex;flex-direction:column">' +
+      /* 루트 */
+      '<div style="display:flex;gap:12px;align-items:flex-start">' +
+        '<div style="display:flex;flex-direction:column;align-items:center;align-self:stretch">' +
+          '<div style="width:10px;height:10px;border-radius:999px;background:var(--pri);margin-top:5px"></div>' +
+          '<div style="flex:1;width:1px;background:#D6D3D1;min-height:22px"></div></div>' +
+        '<div style="flex:1;padding-bottom:18px"><div style="font-size:14px;font-weight:600">채혈 완료</div>' +
+          '<div class="meta mono">' + d.root.time + ' · ' + d.root.org + '</div></div>' +
+      '</div>' +
+      /* 검사 */
+      '<div style="display:flex;gap:12px;align-items:flex-start">' +
+        '<div style="display:flex;flex-direction:column;align-items:center;align-self:stretch">' +
+          '<div style="width:10px;height:10px;border-radius:999px;background:var(--pri);margin-top:5px"></div>' +
+          '<div style="flex:1;width:1px;background:#D6D3D1;min-height:16px"></div></div>' +
+        '<button data-act="open" data-key="test" style="flex:1;text-align:left;background:transparent;border:0;padding:0 0 14px;cursor:pointer">' +
+          '<div style="display:flex;align-items:center;gap:6px"><span style="font-size:14px;font-weight:600">검사 완료</span>' +
+            '<span class="badge b-ok">검증됨</span></div>' +
+          '<div class="meta mono">' + d.test.time + ' · ' + d.test.org + '</div>' +
+          '<div class="mono" style="font-size:11px;color:var(--mute);margin-top:4px">' + d.test.hash + '</div>' +
+        '</button>' +
+      '</div>' +
+      '<div style="display:flex;align-items:center;gap:8px;padding:0 0 12px 22px">' +
+        '<span style="font-size:11px;font-weight:600;color:var(--mute)">' + d.branches.length + '개 성분으로 분기</span>' +
+        '<span style="flex:1;height:1px;background:var(--line)"></span></div>' +
+      /* 분기 */
+      d.branches.map((b, bi) => {
+        const last = bi === d.branches.length - 1;
+        const anyBad = b.steps.some(s => isBad(b, s));
+        return '<div style="position:relative;padding-left:26px">' +
+          '<div style="position:absolute;left:4px;top:0;width:1px;background:#D6D3D1;height:' + (last ? '22px' : '100%') + '"></div>' +
+          '<div style="position:absolute;left:4px;top:22px;width:18px;height:1px;background:#D6D3D1"></div>' +
+          '<div style="position:absolute;left:0;top:18px;width:9px;height:9px;border-radius:999px;background:' + b.color + '"></div>' +
+          '<div class="nbox' + (anyBad ? ' bad' : '') + '">' +
+            '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px">' +
+              '<div style="display:flex;align-items:center;gap:6px">' +
+                '<span class="tag" style="background:' + b.color + '">' + b.comp + '</span>' +
+                '<span class="mono" style="font-size:12px;font-weight:600">' + b.code + '</span></div>' +
+              '<span class="badge ' + b.statusClass + '">' + b.status + '</span></div>' +
+            b.steps.map((s, si) => {
+              const bad = isBad(b, s);
+              return '<button class="node' + (bad ? ' bad' : '') + '" data-act="open" data-key="b' + bi + '-' + si + '">' +
+                '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px">' +
+                  '<span style="font-size:13px;font-weight:600">' + s.name + '</span>' +
+                  '<span class="badge ' + (bad ? 'b-fail' : 'b-ok') + '">' + (bad ? '검증 실패' : '검증됨') + '</span></div>' +
+                '<div class="meta mono">' + s.time + ' · ' + s.org + '</div>' +
+                '<div style="display:flex;align-items:center;gap:6px;margin-top:6px">' +
+                  '<span style="color:var(--mute);display:flex">' + IC.sealS + '</span>' +
+                  '<span class="hash mono" data-act="copy" data-hash="' + s.hash + '">' + s.hash + '</span>' +
+                  '<span style="display:flex;color:var(--mute)">' + IC.copy + '</span></div>' +
+                (s.note ? '<div style="font-size:11.5px;color:var(--mute);margin-top:6px">' + s.note + '</div>' : '') +
+              '</button>';
+            }).join('') +
+          '</div></div>';
+      }).join('') +
+      '<div class="legend">' +
+        '<div class="lg"><span class="dot" style="background:' + COLOR.rbc + '"></span>적혈구</div>' +
+        '<div class="lg"><span class="dot" style="background:' + COLOR.pls + '"></span>혈장</div>' +
+        '<div class="lg"><span class="dot" style="background:' + COLOR.plt + '"></span>혈소판</div>' +
+      '</div>' +
+    '</div>' +
+    '<div style="font-size:11.5px;line-height:1.5;color:var(--mute);text-wrap:pretty">한 번의 헌혈은 여러 성분으로 나뉘어 각각 다른 경로로 사용됩니다. 노드를 탭하면 기록된 필드를 볼 수 있습니다.</div>' +
+  '</div>' +
+
+  /* A-5 */
+  '<div class="sec" style="padding-bottom:24px">' +
+    '<div class="card" style="padding:16px;display:flex;flex-direction:column;gap:6px">' +
+      '<div style="display:flex;align-items:center;gap:7px"><span style="color:var(--pri);display:flex">' + IC.pin + '</span>' +
+        '<span style="font-size:14px;font-weight:600">내 혈액이 사용된 지역: ' + SUMMARY.region + '</span></div>' +
+      '<div style="font-size:11.5px;line-height:1.5;color:var(--mute);text-wrap:pretty">환자 정보와 병원별 사용 내역은 공개되지 않습니다. 지역 단위까지만 확인할 수 있습니다.</div>' +
+    '</div>' +
+    '<div class="mono" style="font-size:11px;color:var(--mute);text-align:center">모든 수치는 가상 데모 데이터입니다.</div>' +
+  '</div>' +
+
+  renderSheet() +
+  (S.copied ? '<div class="toast">해시가 복사되었습니다</div>' : '');
+}
+
+function stepByKey(key){
+  const d = sel();
+  if (key === 'root') return { s:d.root, ok:true };
+  if (key === 'test') return { s:d.test, ok:true };
+  const m = /^b(\d+)-(\d+)$/.exec(key);
+  if (!m) return null;
+  const b = d.branches[+m[1]]; if (!b) return null;
+  const s = b.steps[+m[2]];    if (!s) return null;
+  return { s:s, ok:!isBad(b, s) };
+}
+
+function renderSheet(){
+  if (!S.sheetKey) return '';
+  const hit = stepByKey(S.sheetKey);
+  if (!hit) return '';
+  const s = hit.s;
+  return '<div class="scrim" data-act="close"></div>' +
+  '<div class="sheet">' +
+    '<div style="width:38px;height:4px;border-radius:999px;background:var(--line);align-self:center"></div>' +
+    '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px">' +
+      '<div style="display:flex;flex-direction:column;gap:4px">' +
+        '<div style="font-size:16px;font-weight:700;letter-spacing:-.01em">' + s.name + '</div>' +
+        '<div class="mono" style="font-size:11.5px;color:var(--mute)">' + s.time + '</div></div>' +
+      '<button class="xbtn" data-act="close">닫기</button></div>' +
+    '<div style="display:flex;flex-direction:column;gap:8px">' +
+      '<div class="row"><span style="color:var(--mute)">서명 기관</span><span style="font-weight:600">' + s.org + '</span></div>' +
+      '<div class="row"><span style="color:var(--mute)">블록 높이</span><span class="mono" style="font-weight:600">' + s.block + '</span></div>' +
+      '<div class="row"><span style="color:var(--mute)">트랜잭션</span>' +
+        '<span class="mono" data-act="copy" data-hash="' + s.hash + '" style="font-weight:600;cursor:pointer;text-decoration:underline dotted">' + s.hash + '</span></div>' +
+      '<div class="row"><span style="color:var(--mute)">검증 상태</span>' +
+        '<span class="badge ' + (hit.ok ? 'b-ok' : 'b-fail') + '">' + (hit.ok ? '검증됨' : '검증 실패') + '</span></div>' +
+    '</div>' +
+    '<div style="display:flex;flex-direction:column;gap:8px">' +
+      '<div style="font-size:11.5px;font-weight:600;color:var(--mute);letter-spacing:.03em">기록된 필드</div>' +
+      '<div style="display:flex;flex-wrap:wrap;gap:6px">' + (s.fields||[]).map(f => '<span class="chipf">' + f + '</span>').join('') + '</div>' +
+    '</div>' +
+    '<div class="notice">이 기록에는 환자·헌혈자 신원 정보가 포함되지 않습니다.</div>' +
+  '</div>';
+}
+
+/* ───────────────────────── 상호작용 ───────────────────────── */
+let toastTimer = null;
+document.addEventListener('click', function(e){
+  const t = e.target.closest('[data-act]');
+  if (!t) return;
+  const act = t.dataset.act;
+  if (act === 'copy'){
+    e.stopPropagation();
+    try { navigator.clipboard.writeText(t.dataset.hash); } catch(err){}
+    S.copied = true; render();
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ S.copied = false; render(); }, 1400);
+    return;
+  }
+  if (act === 'wallet') S.connected = !S.connected;
+  if (act === 'tip')    S.patientTip = !S.patientTip;
+  if (act === 'pick'){  S.selId = t.dataset.id; S.sheetKey = null; }
+  if (act === 'tamper'){ S.tampered = !S.tampered; S.sheetKey = null; }
+  if (act === 'open')   S.sheetKey = t.dataset.key;
+  if (act === 'close')  S.sheetKey = null;
+  render();
+});
+
+function render(){
+  document.getElementById('f1').innerHTML = renderF1();
+  document.getElementById('f2').innerHTML = renderF2();
+}
+render();
+</script>
+</body>
+</html>
