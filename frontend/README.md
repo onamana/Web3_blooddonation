@@ -1,9 +1,12 @@
 # frontend
 
-BloodTrace 프론트엔드. `frontend/sample/*.html` 아트보드의 디자인/문구/인터랙션을 기준으로
-React + TypeScript + Vite로 재구현한 실제 서비스 화면이다.
+BloodPass 프론트엔드. 제출용 MVP인 **헌혈 증서(ERC-721) 4화면**만 남긴 상태다
+(루트 README "제출용 MVP 목표" 참고).
 
-- `frontend/sample/` 의 원본 HTML은 참고용 아트보드로 그대로 유지되며, 실제 코드에서 참조하지 않는다.
+- `frontend/sample/*.html` 은 초기 아트보드다. 이 아트보드로 만들었던 헌혈자 앱(`/donor`)·
+  병원 매칭 콘솔(`/hospital`) 화면은 2026-09-08에 삭제했고(아래 참고), 아트보드 자체는
+  **디자인 참고용으로만** 남겨뒀다. `src/styles/tokens.css` 의 색·간격 토큰이 여기서 나왔고,
+  증서 화면 디자인을 다듬을 때 기준으로 쓸 수 있다. 실제 코드는 이 파일을 참조하지 않는다.
 
 ## 세팅
 
@@ -26,32 +29,64 @@ npm run dev
 | --- | --- | --- |
 | `VITE_API_BASE_URL` | `http://localhost:4000` | 백엔드(`backend/`) API 기본 주소 |
 | `VITE_DEMO_MODE` | `true` | `true`면 아래 "데모 모드" 참고. `false`로 바꾸면 실제 백엔드 API를 호출한다. |
+| `VITE_EXPLORER_BASE_URL` | `https://sepolia.etherscan.io` | 트랜잭션 해시 링크에 쓰는 블록 익스플로러 |
 
 ## 라우팅
 
-- `/` → `/donor` 로 리다이렉트
-- `/donor` — 헌혈자용 모바일 앱 (390×844 기준 모바일 퍼스트, 데스크톱에서는 중앙 정렬된 폭 제한 카드)
-- `/hospital` — 병원용 매칭 콘솔 (1440×900 기준, 태블릿 폭까지 반응형)
+- `/` → `/certificates` 로 리다이렉트
+- `/certificates` — **증서 목록 (지갑)**. 카드 목록 + 양도. 지갑 미연결이면 같은 주소에서
+  연결 화면(`WalletGate`)을 대신 보여주고, 우측 상단 "연결 해제"로 되돌아간다.
+- `/certificates/:tokenId` — **증서 상세**. 이력 타임라인 + 온체인 증거
+- `/verify` — **병원 검증**. 번호 입력 → 판정 → 사용 처리.
+  이미 사용된 증서면 **검증 실패(이중사용 차단)** 화면으로 갈린다.
 - 그 외 경로 — 404 안내 화면
+
+## 헌혈 증서 (ERC-721)
+
+- `src/features/certificate/` 에 4화면과 공용 조각(`WalletGate`, `HistoryTimeline`,
+  `OnchainProof`, `VerifyFailure`)이 모여 있다.
+- `src/api/certificate.ts` 가 `DEMO_MODE` 로 갈린다. 데모면 인메모리 스토어
+  (`src/data/certificateStore.ts`), 아니면 백엔드 `/certificate` 를 호출한다. **양쪽이 같은 타입을
+  돌려주므로 화면 코드에는 분기가 없다.**
+- 데모 스토어를 읽기 전용 목업으로 두지 않고 실제로 변형시키는 이유는, 양도/사용이 상태를 바꿔야
+  "이미 사용한 증서를 다시 검증하면 막힌다"는 이중사용 차단 데모가 성립하기 때문이다.
+  새로고침하면 초기 목업으로 되돌아간다.
+- 이력 타임라인은 우리가 만드는 게 아니라 ERC-721이 자동으로 남기는 `Transfer` 이벤트 로그를
+  읽어온 것이다. 종이 증서에는 남지 않는 기록이라는 게 이 화면의 요점.
+- **디자인 미완성**: 지금은 배치와 흐름만 잡아둔 최소 스타일(`Certificate.module.css`)이다.
+
+## 초기 화면 파티클 효과
+
+`src/components/ParticleFlock.tsx` — 방울 파티클이 모여 "BloodPass" 글자를 만들고, 커서가
+다가오면 반경 안의 개체가 밀려나 공동이 파이고, 커서가 지나가면 다시 모여 글자를 복구한다.
+(참고: recent.design 의 "404 Chicken Flock Animation")
+
+- 글자를 오프스크린 캔버스에 한 번 그려 불투명 픽셀을 샘플링해 목표 좌표를 얻고, 파티클을
+  스프링으로 그 좌표에 당긴다. 커서 반경 안에서는 반발력을 더한다. 라이브러리는 쓰지 않는다.
+- 파티클 수는 `MAX_PARTICLES` 상한에 맞춰 샘플링 간격을 자동 조절한다. **이 값이 낮으면 글자가
+  희박해서 안 읽힌다** (처음 900으로 뒀다가 글자가 구름처럼 보여서 1800으로 올렸다).
+- `prefers-reduced-motion` 을 JS에서 직접 확인한다. `global.css` 의 전역 처리는 CSS 전환만
+  끄고 `requestAnimationFrame` 은 막지 못하므로, 이 컴포넌트는 애니메이션을 아예 시작하지 않고
+  완성된 글자만 한 번 그린다.
+- `build()` 끝에서 항상 한 번 그린다. 백그라운드 탭에서는 브라우저가 rAF를 멈추기 때문에
+  이게 없으면 캔버스가 빈 채로 남는다.
+- 접근성: 글자가 캔버스라서 `role="img"` + `aria-label` 로 서비스명이 읽히게 했다.
 
 ## 데모 모드 vs 실제 API 모드
 
 `VITE_DEMO_MODE=true`(기본값)일 때:
 
-- 헌혈자 화면의 요약/이력/혈액 여정, 병원 화면의 AI 인사이트/매칭 결과는 모두
-  `src/data/donorMock.ts`, `src/data/hospitalMock.ts` 의 목업 데이터를 사용한다
-  (`frontend/sample/*.html`의 데모 데이터를 그대로 옮긴 것).
+- 증서 데이터는 `src/data/certificateMock.ts` 를 초기값으로 하는 인메모리 스토어를 쓴다.
 - 지갑 연결은 실제 MetaMask(`window.ethereum`)로도 가능하지만, MetaMask가 없는 환경에서도
   체험할 수 있도록 "MetaMask 없이 데모로 체험하기" 버튼으로 가상 지갑 연결을 제공한다.
 - 화면 하단에 데모 모드임을 알리는 문구가 항상 노출된다.
+- **주의**: 이 모드의 트랜잭션 해시는 실재하지 않는 가짜다. Etherscan 링크를 누르면 조회가
+  안 된다. 실제 컨트랙트 배포 전까지 남아 있는 문제다.
 
 `VITE_DEMO_MODE=false`로 바꾸면:
 
 - 지갑 연결은 오직 실제 `window.ethereum`(MetaMask)만 사용한다.
-- 헌혈자 화면은 목업 이력 목록 대신 "헌혈 기록 조회" 패널로 바뀌어, 발급받은 헌혈 해시를 입력하면
-  실제 `GET /donation/:hash`, `GET /donation/verify/:hash` 를 호출한다.
-- 병원 화면은 "매칭 결과 (실제 API)" 패널로 바뀌어 실제 `POST /match` 를 호출하고,
-  응답을 원시 JSON으로 표시한다 (아래 "미완성 기능" 참고).
+- 모든 증서 조회/양도/사용이 백엔드 `/certificate` 를 거친다.
 - 로딩 중 / 결과 없음 / 연결 실패 / 501(외부 모듈 미연결) 상태를 각각 구분해서 보여주며,
   API 에러를 목업 성공 데이터로 대체하지 않는다.
 
@@ -60,49 +95,41 @@ npm run dev
 - `eth_requestAccounts` 로 계정 연결을 요청한다.
 - `accountsChanged`, `disconnect` 이벤트를 구독해 계정 변경/연결 해제를 반영한다.
 - `window.ethereum` 이 없으면 "MetaMask가 설치되어 있지 않습니다" 안내와 설치 링크를 보여준다.
-- 화면에는 항상 축약된 주소(`0x1234…abcd`)만 노출하고, 전체 주소는 컴포넌트 상태에만 보관한다.
-- **donor ID는 실제 DID API가 아직 없어서** 지갑 주소로부터 안정적으로 파생시킨 데모 전용 ID이다
-  (`src/utils/donorId.ts`의 `deriveDemoDonorId`). 값 뒤에 `(DEMO)` 표시가 붙어 실제 DID/VC 식별자가
-  아님을 명확히 구분한다.
+- 화면에는 항상 축약된 주소(`0x1234…abcd`)만 노출한다 (`src/utils/address.ts`).
+- **연결 상태는 앱 최상단에서 한 번만 만들어 컨텍스트로 내려준다** (`src/hooks/WalletProvider.tsx`,
+  `src/hooks/walletContext.ts`). 화면 컴포넌트가 각자 `useWalletMachine()` 을 부르면 라우트를
+  옮길 때마다 연결이 풀린다(목록 → 상세 → 목록에서 연결 화면이 다시 뜨는 문제).
 
-## 발견 사항 — 혈액형 타입 계약 불일치
+## 결정된 사항
 
-`backend/src/routes/donation.js` 의 `POST /donation/auth` 는 `bloodType` 을
-`"A" | "B" | "AB" | "O"` 문자열로 받아 그대로 스마트컨트랙트 `record()` 에 넘긴다
-(`backend/src/schemas/common.js` 의 `bloodTypeSchema`).
-
-반면 `backend/contracts/DonationRegistry.sample.abi.json` 의 더미 ABI를 보면 컨트랙트의
-`bloodType` 파라미터는 `uint8` 이다. 즉 문자열 → uint8 매핑 규칙(예: A=0, B=1, AB=2, O=3 같은 합의)이
-A(스마트컨트랙트)·C(백엔드) 담당자 간에 아직 정해지지 않았다.
-
-프론트엔드는 이 매핑을 임의로 추측하지 않고, `src/api/donation.ts` 의 `postDonationAuth` 에서
-백엔드가 요구하는 문자열 그대로 전달한다. 실제 컨트랙트가 배포되고 매핑 규칙이 합의되면
-백엔드(`donation.js`)에서 변환하거나, 프론트에 별도 매핑 테이블을 추가해야 한다.
-
-## 아직 지원하지 않는 기능 (백엔드/외부 모듈 미완성)
-
-- **지갑 주소 → 헌혈 이력 전체 목록** 조회 API가 없다. 실제 API 모드의 헌혈자 화면은 해시 단위
-  조회(`RealDonationLookup.tsx`)로만 동작하며, 목업 모드의 "헌혈 이력" 카드 목록과 동일한 기능을
-  제공하지 못한다.
-- **`POST /match` 의 실제 응답 스펙(B/DID 모듈)이 미확정**이라 병원 화면의 매칭 결과 카드(거리/성분/
-  유닛/매칭 점수 등)로 자동 매핑하지 못한다. 실제 API 모드에서는 원시 JSON만 보여준다
-  (`src/features/hospital/RealMatchPanel.tsx`, `src/api/match.ts` 의 TODO 참고).
-- `DONATION_CONTRACT_ADDRESS`, `DID_MODULE_BASE_URL` 이 백엔드에 설정되지 않은 동안에는
-  두 엔드포인트 모두 501을 반환하며, 프론트는 이를 "아직 외부 모듈이 연결되지 않았습니다"로 안내한다.
+- **혈액형 타입 매핑 (A·C 협의, 2026-09-07)**: API 계약은 `"A" | "B" | "AB" | "O"` 문자열을
+  사용하고, 컨트랙트가 요구하는 `uint8` 변환은 **백엔드에서만** 처리한다
+  (`backend/src/utils/bloodTypeMap.js`: `A=0, B=1, AB=2, O=3`). 프론트는 이 매핑을 몰라도 된다.
+- **미구현(외부 모듈 미연결) 처리 컨벤션 (2026-09-07)**: 컨트랙트 주소 미설정 시 백엔드는
+  `501` + `{ error, detail? }` 로 응답하고, 프론트는 이를 `ApiError.notImplemented` 로 동일하게
+  "아직 외부 모듈이 연결되지 않았습니다"로 안내한다.
+- **헌혈자 앱 / 병원 매칭 콘솔 화면 삭제 (2026-09-08)**: 증서 흐름과 무관해서 제거했다.
+  삭제 대상은 `features/donor/`, `features/hospital/`, `data/donorMock.ts`,
+  `data/hospitalMock.ts`, `types/donor.ts`, `types/hospital.ts`, `api/donation.ts`,
+  `api/match.ts`, 그리고 이들만 쓰던 공용 컴포넌트(`Modal`, `BottomSheet`, `Toast`)와
+  `hooks/useDialogBehavior.ts`. 증서 화면이 쓰던 `WalletGate` 는
+  `features/certificate/` 로 옮겨 증서 문구로 다시 썼고, `shortenAddress` 는
+  `utils/address.ts` 로 옮겼다. 되살릴 일이 생기면 커밋 `108ec4b` 에 원본이 있다.
+  - 이 삭제로 지갑 상태의 `donorId`(DID API가 없어서 주소에서 파생시킨 데모 전용 ID)도 함께
+    제거됐다. 화면에 쓰는 곳이 없어졌기 때문이다.
 
 ## 폴더 구조
 
 ```
 src/
-  api/        # fetch 래퍼, zod 응답 스키마, 엔드포인트별 함수
-  components/ # 공용 UI (Badge, Modal, BottomSheet, Toast, 아이콘)
-  data/       # 데모 목업 데이터 (샘플 아트보드 데이터를 타입화)
+  api/        # fetch 래퍼(client), zod 응답 스키마, 증서 API
+  components/ # 공용 UI (Badge, DemoModeBanner, 아이콘)
+  data/       # 데모 증서 목업 + 인메모리 스토어, 데모 지갑 주소
   features/
-    donor/    # 헌혈자 앱 화면들
-    hospital/ # 병원 콘솔 화면들
-  hooks/      # useWallet, useDialogBehavior 등
+    certificate/  # 증서 4화면 + 공용 조각
+  hooks/      # 지갑 연결 상태 머신 + 컨텍스트
   pages/      # 404 등 라우트 전용 페이지
   styles/     # 디자인 토큰(CSS 변수), 전역 스타일
-  types/      # 도메인 타입
-  utils/      # donorId 파생 등 순수 유틸
+  types/      # 도메인 타입 (증서 타입은 api/schemas.ts 에서 파생)
+  utils/      # 주소 축약, 온체인 값 포맷/익스플로러 링크
 ```

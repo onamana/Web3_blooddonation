@@ -18,8 +18,8 @@ export function NotFoundPage() {
       <div style={{ fontSize: 18, fontWeight: 700 }}>페이지를 찾을 수 없습니다</div>
       <div style={{ fontSize: 13, color: "var(--mute)" }}>주소를 다시 확인해주세요.</div>
       <div style={{ display: "flex", gap: 12, marginTop: 8 }}>
-        <Link to="/donor">헌혈자 앱으로</Link>
-        <Link to="/hospital">병원 콘솔로</Link>
+        <Link to="/certificates">내 증서로</Link>
+        <Link to="/verify">병원 검증으로</Link>
       </div>
     </div>
   );
