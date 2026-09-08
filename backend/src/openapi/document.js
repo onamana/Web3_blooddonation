@@ -7,6 +7,16 @@ import {
   donationVerifyResponseSchema,
   donationQueryResponseSchema,
 } from "../schemas/donation.js";
+import {
+  certificateListResponseSchema,
+  certificateOwnerQuerySchema,
+  certificateSchema,
+  certificateTokenParamSchema,
+  certificateTransferBodySchema,
+  certificateTxResponseSchema,
+  certificateUseBodySchema,
+  certificateVerifyResponseSchema,
+} from "../schemas/certificate.js";
 import { matchConditionsSchema } from "../schemas/match.js";
 import { errorResponseSchema } from "../schemas/common.js";
 
@@ -64,6 +74,81 @@ registry.registerPath({
   responses: {
     200: { description: "조회 성공", content: { "application/json": { schema: donationQueryResponseSchema } } },
     400: { description: "hash 형식 오류", content: { "application/json": { schema: errorResponseSchema } } },
+  },
+});
+
+const certificateNotImplemented = {
+  501: {
+    description: "CERTIFICATE_CONTRACT_ADDRESS 미설정 (A의 배포 대기 중)",
+    content: { "application/json": { schema: errorResponseSchema } },
+  },
+};
+
+registry.registerPath({
+  method: "get",
+  path: "/certificate",
+  summary: "지갑이 현재 보유한 헌혈 증서 목록 (ERC-721 Transfer 로그 기반)",
+  request: { query: certificateOwnerQuerySchema },
+  responses: {
+    200: { description: "조회 성공", content: { "application/json": { schema: certificateListResponseSchema } } },
+    400: { description: "owner 형식 오류", content: { "application/json": { schema: errorResponseSchema } } },
+    ...certificateNotImplemented,
+  },
+});
+
+registry.registerPath({
+  method: "get",
+  path: "/certificate/{tokenId}",
+  summary: "증서 상세 + 이력 타임라인 (Transfer/CertificateUsed 이벤트 재구성)",
+  request: { params: certificateTokenParamSchema },
+  responses: {
+    200: { description: "조회 성공", content: { "application/json": { schema: certificateSchema } } },
+    400: { description: "tokenId 형식 오류", content: { "application/json": { schema: errorResponseSchema } } },
+    ...certificateNotImplemented,
+  },
+});
+
+registry.registerPath({
+  method: "get",
+  path: "/certificate/{tokenId}/verify",
+  summary: "병원 검증 (valid / used(이중사용) / notfound 판정)",
+  request: { params: certificateTokenParamSchema },
+  responses: {
+    200: { description: "판정 결과", content: { "application/json": { schema: certificateVerifyResponseSchema } } },
+    400: { description: "tokenId 형식 오류", content: { "application/json": { schema: errorResponseSchema } } },
+    ...certificateNotImplemented,
+  },
+});
+
+registry.registerPath({
+  method: "post",
+  path: "/certificate/{tokenId}/transfer",
+  summary: "증서 양도 (소유자 서명 검증 후 백엔드가 transferFrom 릴레이)",
+  request: {
+    params: certificateTokenParamSchema,
+    body: { content: { "application/json": { schema: certificateTransferBodySchema } } },
+  },
+  responses: {
+    200: { description: "양도 성공", content: { "application/json": { schema: certificateTxResponseSchema } } },
+    401: { description: "서명 검증 실패", content: { "application/json": { schema: errorResponseSchema } } },
+    403: { description: "현재 소유자가 아님", content: { "application/json": { schema: errorResponseSchema } } },
+    409: { description: "이미 사용된 증서", content: { "application/json": { schema: errorResponseSchema } } },
+    ...certificateNotImplemented,
+  },
+});
+
+registry.registerPath({
+  method: "post",
+  path: "/certificate/{tokenId}/use",
+  summary: "증서 사용 처리 (이미 사용된 증서면 409로 이중사용 차단)",
+  request: {
+    params: certificateTokenParamSchema,
+    body: { content: { "application/json": { schema: certificateUseBodySchema } } },
+  },
+  responses: {
+    200: { description: "사용 처리 성공", content: { "application/json": { schema: certificateTxResponseSchema } } },
+    409: { description: "이미 사용됨 (이중사용 차단)", content: { "application/json": { schema: errorResponseSchema } } },
+    ...certificateNotImplemented,
   },
 });
 

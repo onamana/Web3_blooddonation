@@ -36,6 +36,6 @@ export const donationQueryResponseSchema = z
   .object({
     donationHash: donationHashSchema,
     timestamp: z.number().int(),
-    bloodType: z.union([z.number(), z.string()]),
+    bloodType: bloodTypeSchema,
   })
   .meta({ id: "DonationQueryResponse" });

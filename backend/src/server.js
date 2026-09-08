@@ -4,6 +4,7 @@ import cors from "cors";
 import swaggerUi from "swagger-ui-express";
 import healthRouter from "./routes/health.js";
 import donationRouter from "./routes/donation.js";
+import certificateRouter from "./routes/certificate.js";
 import matchRouter from "./routes/match.js";
 import { generateOpenApiDocument } from "./openapi/document.js";
 
@@ -17,6 +18,7 @@ app.use("/docs", swaggerUi.serve, swaggerUi.setup(openApiDocument));
 
 app.use(healthRouter);
 app.use("/donation", donationRouter);
+app.use("/certificate", certificateRouter);
 app.use("/match", matchRouter);
 
 app.use((err, req, res, next) => {
