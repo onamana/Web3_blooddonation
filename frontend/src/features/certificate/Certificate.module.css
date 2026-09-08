@@ -493,13 +493,12 @@
 
 /* --- 지갑 연결 초기 화면 --- */
 
+/* 위 혈액 보유 현황 패널과 가로 폭을 맞춰, 히어로 아래로 하나의 넓은 흐름처럼 이어지게 한다. */
 .gateCard {
+  width: 100%;
+  padding: 28px 30px 30px;
   align-items: center;
   text-align: center;
-  padding: 24px 22px;
-  max-width: 560px;
-  width: 100%;
-  margin: 0 auto;
 }
 
 /* 파티클 글자를 카드 밖 히어로로 크게 쓴다. 카드 안에 두면 본문 가독 폭에 갇혀 작아진다. */
@@ -520,46 +519,209 @@
   margin: -4px 0 4px;
 }
 
-.gateDesc {
-  font-size: 13px;
-  line-height: 1.7;
-  color: var(--sub);
-}
+/* --- 캐러셀 카드 안에 들어가는 화면 미리보기들 (실제 화면 요소를 축소해 본뜬 것) --- */
 
-.gateFeatures {
+.mockIntro {
   display: flex;
   flex-direction: column;
+  justify-content: center;
   gap: 10px;
   width: 100%;
-  border-top: 1px solid var(--line);
-  padding-top: 14px;
-  margin-top: 4px;
+  font-size: 11.5px;
+  line-height: 1.6;
 }
 
-.gateFeature {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  font-size: 12.5px;
-  line-height: 1.5;
+.mockIntroProblem {
   color: var(--sub);
-  text-align: left;
 }
 
-.gateFeatureIcon {
-  color: var(--pri);
+.mockIntroSolution {
+  color: var(--pri-d);
+  font-weight: 700;
+}
+
+.mockCert {
   display: flex;
-  margin-top: 1px;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  justify-content: center;
+}
+
+.mockCertHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.mockTokenId {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--sub);
+}
+
+.mockBadgeOk {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: var(--done);
+  background: var(--done-bg);
+  border: 1px solid var(--done-line);
+  border-radius: 999px;
+  padding: 2px 7px;
+}
+
+.mockCertType {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--pri);
+  letter-spacing: -0.3px;
+}
+
+.mockCertIssuer {
+  font-size: 10.5px;
+  color: var(--mute);
+}
+
+.mockTimeline {
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+  width: 100%;
+  justify-content: center;
+}
+
+.mockTimelineRow {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mockTimelineRow:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  left: 3px;
+  top: 12px;
+  width: 1px;
+  height: 17px;
+  background: var(--line);
+}
+
+.mockTimelineDot {
   flex: 0 0 auto;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--pri);
+}
+
+.mockTimelineLabel {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.mockTimelineDate {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--mute);
+}
+
+.mockVerify {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  width: 100%;
+  justify-content: center;
+}
+
+.mockInputBox {
+  font-size: 10.5px;
+  color: var(--sub);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 7px 10px;
+  background: var(--card);
+}
+
+.mockResultOk,
+.mockResultBlocked {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 8px;
+  padding: 6px 9px;
+}
+
+.mockResultOk {
+  color: var(--done);
+  background: var(--done-bg);
+}
+
+.mockResultBlocked {
+  color: var(--fail);
+  background: var(--fail-bg);
+}
+
+.mockProof {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  width: 100%;
+  justify-content: center;
+}
+
+.mockHash {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink);
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+
+.mockProofLink {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--stored);
 }
 
 .gateFooter {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  max-width: 560px;
+  gap: 10px;
   width: 100%;
-  margin: 0 auto;
+}
+
+.gateActions {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+}
+
+/* 주 동작(지갑 연결)이 더 넓게, 보조 동작(데모 체험)은 살짝 작게 — 기계적인 반반이 아니라
+   비중 차이가 느껴지도록 나눈다. */
+.gateActions > .btn:first-child {
+  flex: 1.6;
+}
+
+.gateActions > .btn:last-child {
+  flex: 1;
+}
+
+@media (max-width: 520px) {
+  .gateActions {
+    flex-direction: column;
+  }
+  .gateActions > .btn:first-child,
+  .gateActions > .btn:last-child {
+    flex: 1;
+  }
 }
 
 .gateNote {

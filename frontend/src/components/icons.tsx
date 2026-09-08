@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react";
 
-interface IconProps {
+export interface IconProps {
   size?: number;
   style?: CSSProperties;
   className?: string;

@@ -23,6 +23,10 @@
   --fail-bg: #fff7ed;
   --fail-line: #fed7ac;
 
+  --warn: #b45309;
+  --warn-bg: #fffbeb;
+  --warn-line: #fde68a;
+
   --rbc: #b3202c;
   --pls: #b45309;
   --plt: #6d28d9;

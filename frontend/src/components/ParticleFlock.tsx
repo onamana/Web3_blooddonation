@@ -20,11 +20,21 @@ interface Particle {
   r: number;
   /** 개체마다 다른 미세 흔들림 위상 */
   phase: number;
+  /** alpha 배칭용 그룹 인덱스 */
+  bucket: number;
 }
 
 const SPRING = 0.09; // 목표점으로 당기는 힘
 const FRICTION = 0.86;
 const MOUSE_PUSH = 2.6;
+/**
+ * 반지름(1.3~2.5) 기준 alpha 그룹 수. draw()에서 파티클마다 fill()을 부르지 않고
+ * 그룹당 한 번만 불러 저사양 기기의 캔버스 호출 오버헤드를 줄인다.
+ * 그룹 내 alpha 편차가 최대 0.09라 시각적으로는 원본과 구분되지 않는다.
+ */
+const ALPHA_BUCKETS = 4;
+/** 레티나 화면에서 캔버스 실 픽셀 수를 낮춰 래스터라이즈 비용을 줄인다. */
+const DPR_CAP = 1.5;
 
 /**
  * 샘플링 간격(px). 글자가 커져도 이 값을 고정해야 파티클 밀도가 일정하게 유지된다.
@@ -65,6 +75,13 @@ export function ParticleFlock({ text, height = 96, className }: ParticleFlockPro
     const fontFamily = getComputedStyle(wrap).fontFamily;
 
     let particles: Particle[] = [];
+    /** bucket별 파티클 참조 목록. draw()에서 그룹당 fill() 한 번만 부르기 위한 인덱스. */
+    let bucketGroups: Particle[][] = [];
+    /** bucket별 대표 alpha 값 (그룹 내 중간 반지름 기준) */
+    const bucketAlpha = Array.from(
+      { length: ALPHA_BUCKETS },
+      (_, b) => 0.5 + ((b + 0.5) / ALPHA_BUCKETS) * 1.2 * 0.3,
+    );
     let width = 0;
     let cssHeight = height;
     let frame = 0;
@@ -114,7 +131,7 @@ export function ParticleFlock({ text, height = 96, className }: ParticleFlockPro
       width = Math.max(1, Math.round(rect.width));
       cssHeight = height;
 
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const dpr = Math.min(window.devicePixelRatio || 1, DPR_CAP);
       canvas!.width = Math.round(width * dpr);
       canvas!.height = Math.round(cssHeight * dpr);
       canvas!.style.width = `${width}px`;
@@ -124,6 +141,7 @@ export function ParticleFlock({ text, height = 96, className }: ParticleFlockPro
       const targets = sampleTargets(width, cssHeight);
       particles = targets.map((t, i) => {
         const existing = particles[i];
+        const r = 1.3 + Math.random() * 1.2;
         return {
           // 처음에는 흩어진 상태에서 시작해 글자로 모여든다
           x: existing?.x ?? Math.random() * width,
@@ -132,10 +150,14 @@ export function ParticleFlock({ text, height = 96, className }: ParticleFlockPro
           vy: existing?.vy ?? 0,
           tx: t.x,
           ty: t.y,
-          r: 1.3 + Math.random() * 1.2,
+          r,
           phase: Math.random() * Math.PI * 2,
+          bucket: Math.min(ALPHA_BUCKETS - 1, Math.max(0, Math.floor(((r - 1.3) / 1.2) * ALPHA_BUCKETS))),
         };
       });
+
+      bucketGroups = Array.from({ length: ALPHA_BUCKETS }, () => []);
+      for (const p of particles) bucketGroups[p.bucket]!.push(p);
 
       if (reduceMotion) {
         for (const p of particles) {
@@ -151,10 +173,16 @@ export function ParticleFlock({ text, height = 96, className }: ParticleFlockPro
     function draw() {
       ctx!.clearRect(0, 0, width, cssHeight);
       ctx!.fillStyle = "#b3202c";
-      for (const p of particles) {
-        ctx!.globalAlpha = 0.5 + (p.r - 1.3) * 0.3;
+      // 파티클마다 fill()을 부르지 않고 alpha 그룹당 path 하나로 묶어 그린다.
+      for (let b = 0; b < ALPHA_BUCKETS; b += 1) {
+        const group = bucketGroups[b]!;
+        if (group.length === 0) continue;
+        ctx!.globalAlpha = bucketAlpha[b]!;
         ctx!.beginPath();
-        ctx!.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        for (const p of group) {
+          ctx!.moveTo(p.x + p.r, p.y);
+          ctx!.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        }
         ctx!.fill();
       }
       ctx!.globalAlpha = 1;
