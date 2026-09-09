@@ -1,0 +1,80 @@
+/*
+  화면 전환 탭 (참고: 21st.dev @yadwinder/vercel-tabs).
+
+  절대배치 인디케이터 두 개가 JS로 측정한 위치를 따라 움직인다.
+  - 호버 알약: 커서가 올라간 탭으로 미끄러진다 (평소 opacity 0)
+  - 활성 밑줄: 현재 경로에 해당하는 탭 아래로 미끄러진다
+  둘 다 원본과 같은 transition: all .3s cubic-bezier(0, 0, .2, 1) (ease-out).
+  색만 프로젝트 브랜드 레드로 바꿨다.
+*/
+.wrap {
+  position: relative;
+  display: inline-block;
+  /* 밑줄이 bottom: -6px 로 삐져나오므로 잘리지 않게 여유를 둔다 */
+  padding-bottom: 6px;
+}
+
+.pill {
+  position: absolute;
+  top: 0;
+  height: 30px;
+  border-radius: 6px;
+  background: rgb(var(--pri-rgb) / 0.08);
+  transition: all 0.3s cubic-bezier(0, 0, 0.2, 1);
+  pointer-events: none;
+}
+
+.underline {
+  position: absolute;
+  bottom: 0;
+  height: 2px;
+  background: var(--pri);
+  transition: all 0.3s cubic-bezier(0, 0, 0.2, 1);
+  pointer-events: none;
+}
+
+.row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  /* 원본 space-x-[6px] */
+  gap: 6px;
+}
+
+.tab {
+  appearance: none;
+  border: 0;
+  background: none;
+  height: 30px;
+  padding: 0 12px;
+  display: inline-flex;
+  align-items: center;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 20px;
+  white-space: nowrap;
+  text-decoration: none;
+  cursor: pointer;
+  /* 비활성 탭 — 브랜드 레드를 흐리게 */
+  color: rgb(var(--pri-rgb) / 0.6);
+  transition: color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.tab:hover {
+  color: var(--pri);
+  text-decoration: none;
+}
+
+.tab[data-active="true"] {
+  color: var(--pri);
+}
+
+@media (max-width: 560px) {
+  .tab {
+    padding: 0 8px;
+    font-size: 13px;
+  }
+  .row {
+    gap: 2px;
+  }
+}

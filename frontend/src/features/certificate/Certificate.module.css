@@ -25,17 +25,14 @@
   border-bottom: 1px solid var(--line);
 }
 
+/* 링크가 아니라 표시뿐이다 — 커서도 바뀌지 않고 호버 반응도 없다. */
 .brand {
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  text-decoration: none;
   color: var(--ink);
-}
-
-.brand:hover {
-  text-decoration: none;
-  color: var(--ink);
+  cursor: default;
+  user-select: none;
 }
 
 .brandMark {

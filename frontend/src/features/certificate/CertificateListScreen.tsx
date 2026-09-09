@@ -10,7 +10,6 @@ import { BrandBar } from "./BrandBar";
 import { CertificateCard } from "./CertificateCard";
 import { formatTokenId } from "./certificateLabels";
 import { OnchainProofBox } from "./OnchainProof";
-import { Button } from "./Button";
 import styles from "./Certificate.module.css";
 
 /** 화면 1: 증서 목록 (지갑) — 보유 증서 카드 + 양도 */
@@ -57,16 +56,6 @@ export function CertificateListScreen() {
     }
   };
 
-  /** 연결을 끊고 초기(지갑 연결) 화면으로 되돌아간다. 화면에 남은 이전 결과도 같이 비운다. */
-  const handleDisconnect = () => {
-    setCertificates([]);
-    setTransferTokenId(null);
-    setTransferResult(null);
-    setError(null);
-    setStatus("idle");
-    wallet.disconnect();
-  };
-
   if (wallet.status !== "connected" || !address) {
     return (
       <WalletGate
@@ -80,18 +69,7 @@ export function CertificateListScreen() {
 
   return (
     <div className={styles.shell}>
-      <BrandBar>
-        <Button size="sm" to="/issue">
-          혈액원 발급
-        </Button>
-        <Button size="sm" to="/verify">
-          병원 검증
-        </Button>
-        {/* 같은 주소(/certificates)에서 지갑 연결 화면으로 되돌아가는 버튼 */}
-        <Button size="sm" onClick={handleDisconnect}>
-          연결 해제
-        </Button>
-      </BrandBar>
+      <BrandBar />
 
       <div className={styles.topbar}>
         <div>

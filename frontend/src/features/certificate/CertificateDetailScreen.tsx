@@ -9,7 +9,6 @@ import { AddressDisplay } from "./AddressDisplay";
 import { BrandBar } from "./BrandBar";
 import { formatTokenId, statusLabel, statusVariant } from "./certificateLabels";
 import { HistoryTimeline } from "./HistoryTimeline";
-import { Button } from "./Button";
 import styles from "./Certificate.module.css";
 
 /** 화면 2: 증서 상세 — 이력 타임라인 + 온체인 증거 */
@@ -40,11 +39,7 @@ export function CertificateDetailScreen() {
 
   return (
     <div className={styles.shell}>
-      <BrandBar>
-        <Button size="sm" to="/certificates">
-          ← 증서 목록
-        </Button>
-      </BrandBar>
+      <BrandBar />
 
       {status === "loading" && <div className={styles.empty}>불러오는 중...</div>}
 

@@ -121,11 +121,7 @@ export function VerifyScreen() {
 
   return (
     <div className={`${styles.shell} ${styles.shellWide}`}>
-      <BrandBar>
-        <Button size="sm" to="/certificates">
-          내 증서
-        </Button>
-      </BrandBar>
+      <BrandBar />
 
       <div className={styles.sessionStrip}>
         <span className={styles.sessionDot} />

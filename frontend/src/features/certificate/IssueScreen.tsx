@@ -65,14 +65,7 @@ export function IssueScreen() {
 
   return (
     <div className={styles.shell}>
-      <BrandBar>
-        <Button size="sm" to="/certificates">
-          내 증서
-        </Button>
-        <Button size="sm" to="/verify">
-          병원 검증
-        </Button>
-      </BrandBar>
+      <BrandBar />
 
       <div className={styles.sessionStrip}>
         <span className={styles.sessionDot} />
