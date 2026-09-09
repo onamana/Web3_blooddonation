@@ -7,45 +7,45 @@ import { z } from "zod";
 
 export const bloodTypeSchema = z.enum(["A", "B", "AB", "O"]);
 
-export const donationAuthResponseSchema = z.object({
-  donationHash: z.string().regex(/^0x[a-fA-F0-9]{64}$/),
+export const certificateEventSchema = z.object({
+  type: z.enum(["issued", "transferred", "used"]),
+  /** unix seconds */
   timestamp: z.number().int(),
+  from: z.string().nullable(),
+  to: z.string().nullable(),
+  org: z.string().nullable(),
+  txHash: z.string(),
+  blockNumber: z.number().int(),
+});
+
+export const certificateSchema = z.object({
+  tokenId: z.string(),
+  owner: z.string(),
   bloodType: bloodTypeSchema,
-  txHash: z.string().optional(),
+  issuedAt: z.number().int(),
+  issuer: z.string(),
+  status: z.enum(["active", "used"]),
+  usedAt: z.number().int().nullable(),
+  usedBy: z.string().nullable(),
+  history: z.array(certificateEventSchema),
 });
-export type DonationAuthResponse = z.infer<typeof donationAuthResponseSchema>;
 
-export const donationAuthNotImplementedSchema = z.object({
-  error: z.string(),
-  wouldRecord: z.object({
-    donationHash: z.string(),
-    timestamp: z.number().int(),
-    bloodType: bloodTypeSchema,
-  }),
+export const certificateListResponseSchema = z.object({
+  certificates: z.array(certificateSchema),
 });
-export type DonationAuthNotImplemented = z.infer<typeof donationAuthNotImplementedSchema>;
 
-export const donationVerifyResponseSchema = z.object({
-  donationHash: z.string(),
-  verified: z.boolean(),
+export const certificateVerifyResponseSchema = z.object({
+  tokenId: z.string(),
+  status: z.enum(["valid", "used", "notfound"]),
+  certificate: certificateSchema.nullable(),
 });
-export type DonationVerifyResponse = z.infer<typeof donationVerifyResponseSchema>;
 
-export const donationQueryResponseSchema = z.object({
-  donationHash: z.string(),
-  timestamp: z.number().int(),
-  bloodType: z.union([z.number(), z.string()]),
+export const certificateTxResponseSchema = z.object({
+  txHash: z.string(),
+  certificate: certificateSchema,
 });
-export type DonationQueryResponse = z.infer<typeof donationQueryResponseSchema>;
 
 export const errorResponseSchema = z.object({
   error: z.string(),
   detail: z.string().optional(),
 });
-
-/**
- * TODO: B(DID 모듈)의 /match 응답 스펙이 아직 확정되지 않았다.
- * 지금은 "알 수 없는 형태의 JSON"이라는 것만 보장하고,
- * 실제 필드 매핑은 스펙이 나오는 대로 features/hospital/matchAdapter.ts 에서 구현한다.
- */
-export const unknownMatchResponseSchema = z.unknown();

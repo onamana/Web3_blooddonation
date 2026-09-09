@@ -3,6 +3,7 @@ import type { BadgeVariant } from "../types/common";
 const CLASS_BY_VARIANT: Record<BadgeVariant, string> = {
   ok: "badge badge-ok",
   fail: "badge badge-fail",
+  warn: "badge badge-warn",
   stored: "badge badge-stored",
   disc: "badge badge-disc",
 };

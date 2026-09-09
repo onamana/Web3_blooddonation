@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react";
 
-interface IconProps {
+export interface IconProps {
   size?: number;
   style?: CSSProperties;
   className?: string;
@@ -14,14 +14,6 @@ const base = {
   strokeLinejoin: "round" as const,
 };
 
-export function DropIcon({ size = 18, style, className }: IconProps) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" style={style} className={className} {...base}>
-      <path d="M12 2.7 6.8 8.3a7.3 7.3 0 1 0 10.4 0Z" />
-    </svg>
-  );
-}
-
 export function CheckIcon({ size = 16, style, className }: IconProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" style={style} className={className} {...base}>
@@ -30,11 +22,11 @@ export function CheckIcon({ size = 16, style, className }: IconProps) {
   );
 }
 
-export function ShieldIcon({ size = 16, style, className }: IconProps) {
+export function CopyIcon({ size = 12, style, className }: IconProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" style={style} className={className} {...base}>
-      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z" />
-      <path d="m9 12 2 2 4-4" />
+      <rect x="9" y="9" width="12" height="12" rx="2" />
+      <path d="M5 15V5a2 2 0 0 1 2-2h10" />
     </svg>
   );
 }
@@ -49,38 +41,33 @@ export function AlertIcon({ size = 13, style, className }: IconProps) {
   );
 }
 
-export function PinIcon({ size = 13, style, className }: IconProps) {
+/**
+ * lucide arrow-right 와 같은 경로.
+ * 원본 버튼(21st.dev @jakobhoeg/button)이 stroke-width 2 를 쓰므로 이 아이콘만 base 를 덮는다.
+ */
+export function ArrowRightIcon({ size = 16, style, className }: IconProps) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" style={style} className={className} {...base}>
-      <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
-      <circle cx="12" cy="10" r="3" />
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      style={style}
+      className={className}
+      {...base}
+      strokeWidth={2}
+      aria-hidden="true"
+    >
+      <path d="M5 12h14" />
+      <path d="m12 5 7 7-7 7" />
     </svg>
   );
 }
 
-export function CopyIcon({ size = 12, style, className }: IconProps) {
+export function CloseIcon({ size = 16, style, className }: IconProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" style={style} className={className} {...base}>
-      <rect x="9" y="9" width="12" height="12" rx="2" />
-      <path d="M5 15V5a2 2 0 0 1 2-2h10" />
-    </svg>
-  );
-}
-
-export function SealIcon({ size = 12, style, className }: IconProps) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" style={style} className={className} {...base}>
-      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z" />
-      <path d="m9 12 2 2 4-4" />
-    </svg>
-  );
-}
-
-export function ClockIcon({ size = 13, style, className }: IconProps) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" style={style} className={className} {...base}>
-      <circle cx="12" cy="12" r="9" />
-      <path d="M12 7v5l3 2" />
+      <path d="M18 6 6 18" />
+      <path d="m6 6 12 12" />
     </svg>
   );
 }

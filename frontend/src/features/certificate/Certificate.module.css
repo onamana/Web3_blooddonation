@@ -1,0 +1,1224 @@
+/* MVP 배치용 최소 스타일. 디자인은 이후 별도로 손본다. */
+
+.shell {
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 16px 16px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.shellWide {
+  max-width: 960px;
+}
+
+/* --- 브랜드 바 (모든 화면 상단) --- */
+
+.brandBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+/* 링크가 아니라 표시뿐이다 — 커서도 바뀌지 않고 호버 반응도 없다. */
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--ink);
+  cursor: default;
+  user-select: none;
+}
+
+.brandMark {
+  display: block;
+  flex: 0 0 auto;
+  /* 픽셀 아트가 보간으로 흐려지지 않게 한다 */
+  image-rendering: pixelated;
+}
+
+.brandName {
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: -0.2px;
+}
+
+.brandActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 0 0 auto;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 40px;
+}
+
+.title {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.subtitle {
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--mute);
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cardHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.tokenId {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13px;
+}
+
+.rowLabel {
+  color: var(--mute);
+  flex: 0 0 auto;
+}
+
+.rowValue {
+  font-weight: 600;
+  color: var(--ink);
+  text-align: right;
+  word-break: break-all;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* --- 버튼 (21st.dev native-button 이식) --- */
+
+/*
+  프리뷰에서 실측한 원본 동작을 그대로 옮겼다:
+  - 기본   배경 primary,      그림자 shadow-md
+  - 호버   배경 알파 0.9,     그림자 shadow-lg
+  - :active 호버와 완전히 동일 (원본에 커스텀 클릭 연출이 없다)
+  - 전환   색만 0.15s, 그림자는 즉시 (원본이 transition-colors 만 쓴다)
+  색은 브랜드 레드로, 크기는 이 앱 배치에 맞춰 40px / 34px 로 줄였다.
+*/
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  appearance: none;
+  border: 0;
+  cursor: pointer;
+  text-decoration: none;
+  /* 원본은 h-12(48px) / px-7(28px) / 14px. 기존 버튼 높이에 맞춰 낮췄다. */
+  height: 40px;
+  padding: 0 24px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+  color: #fff;
+  background: var(--pri);
+  /* tailwind shadow-md */
+  box-shadow:
+    0 4px 6px -1px rgb(0 0 0 / 0.1),
+    0 2px 4px -2px rgb(0 0 0 / 0.1);
+  transition:
+    background-color 0.15s cubic-bezier(0.4, 0, 0.2, 1),
+    color 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btnLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  /* ripple 변형에서 리플 레이어 위로 올라와야 한다 (원본의 .relative.z-10) */
+  position: relative;
+  z-index: 1;
+}
+
+.btn:hover {
+  /* 원본 hover:bg-primary/90 — 색을 바꾸는 게 아니라 알파를 내린다. */
+  background: rgb(var(--pri-rgb) / 0.9);
+  color: #fff;
+  text-decoration: none;
+  /* tailwind shadow-lg */
+  box-shadow:
+    0 10px 15px -3px rgb(0 0 0 / 0.1),
+    0 4px 6px -4px rgb(0 0 0 / 0.1);
+}
+
+/* 원본 focus-visible:ring-2 ring-offset-2 */
+.btn:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/*
+  --- arrow 변형 (21st.dev @jakobhoeg/button 이식) ---
+
+  호버하면 오른쪽에서 화살표가 밀려 들어온다. 실측한 원본과의 차이:
+  그림자를 아예 쓰지 않고, radius 6px / 여백 8px 16px / 14px·500 이다.
+  호버 배경은 native-button 과 같은 알파 0.9, :active 도 호버와 동일(클릭 연출 없음).
+*/
+.btnArrow {
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: none;
+}
+
+.btnArrow:hover {
+  /* 원본은 호버에서도 그림자가 없다 — 배경 알파만 내려간다. */
+  box-shadow: none;
+}
+
+/*
+  아이콘 칸. 접힘(0폭 · 투명 · 오른쪽으로 밀림) → 펼침.
+  전역 box-sizing: border-box 라서 width 20px 안에 padding-left 8px 가 포함되고,
+  결과적으로 버튼이 정확히 20px 넓어진다(원본 실측값과 동일).
+*/
+.btnIcon {
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+  width: 0;
+  padding-left: 0;
+  opacity: 0;
+  transform: translateX(100%);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 원본은 group-hover 만 쓴다(포커스로는 펼치지 않는다). 아이콘은 장식이라 그대로 따랐다. */
+.btnArrow:hover .btnIcon {
+  width: 20px;
+  padding-left: 8px;
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/*
+  --- ripple 변형 (21st.dev @dillionverma/ripple-button 이식) ---
+
+  원본 실측: border 2px · radius 8px · padding 8px 16px · overflow hidden,
+  클릭한 지점에 원형 스팬을 하나 꽂고 `rippling`(scale 0→2, opacity 1→0) 1s ease-out 을 돌린 뒤
+  애니메이션이 끝나면 그 스팬을 지운다. 크기는 max(버튼 너비, 높이).
+
+  요청대로 두 가지를 얹었다:
+  - 클릭 전에는 아이보리 배경
+  - 클릭하면 리플이 브랜드 레드로 번지고, 버튼 자체 배경도 레드로 물들어 그대로 남는다
+    (리플이 사라지기 전에 밑바닥이 이미 레드가 되도록 전환을 리플보다 짧게 잡았다)
+*/
+.btnRipple {
+  position: relative;
+  overflow: hidden;
+  border: 2px solid var(--ivory-line);
+  border-radius: 8px;
+  padding: 8px 16px;
+  background: var(--ivory);
+  color: var(--pri);
+  box-shadow: none;
+  transition:
+    background-color 0.5s ease-out,
+    border-color 0.5s ease-out,
+    color 0.3s ease-out;
+}
+
+.btnRipple:hover {
+  /* 아이보리 상태에서는 살짝 어둡게만. 원본처럼 그림자는 쓰지 않는다. */
+  background: var(--ivory);
+  border-color: var(--mute);
+  color: var(--pri);
+  box-shadow: none;
+}
+
+/* 클릭 후 — 물든 상태 */
+.btnRippleFilled,
+.btnRippleFilled:hover {
+  background: var(--pri);
+  border-color: var(--pri);
+  color: #fff;
+}
+
+.btnRippleLayer {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+}
+
+.btnRippleDot {
+  position: absolute;
+  border-radius: 9999px;
+  background: var(--pri);
+  transform: scale(0);
+  animation: rippling 1s ease-out;
+}
+
+/* 원본 키프레임 그대로. 0%에 transform이 없어서 인라인 scale(0)이 시작값이 된다. */
+@keyframes rippling {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+/*
+  --- push 변형 (3D 눌림 버튼) ---
+
+  두 겹 구조다. 바깥 button 은 아래에 깔린 "판"(테두리 색)이고,
+  안쪽 .btnLabel 이 위로 살짝 들린 "면"이다. 들린 만큼 아래 판이 드러나 두께로 보인다.
+  호버하면 더 들리고, 누르면 판까지 내려앉아 눌리는 느낌이 난다.
+  transform 은 레이아웃에 영향이 없어서 바 높이는 그대로다.
+*/
+.btnPush {
+  --push_radius: 0.75em;
+  --push_face: #fff;
+  --push_edge: var(--pri);
+  height: auto;
+  padding: 0;
+  /* 참조 코드의 font-weight: bold */
+  font-weight: 700;
+  border-radius: var(--push_radius);
+  background: var(--push_edge);
+  color: var(--push_edge);
+  box-shadow: none;
+}
+
+/* .btn:hover 의 알파·그림자를 무효화 — 판은 항상 단색이어야 두께로 읽힌다 */
+.btnPush:hover {
+  background: var(--push_edge);
+  color: var(--push_edge);
+  box-shadow: none;
+}
+
+.btnPush .btnLabel {
+  box-sizing: border-box;
+  justify-content: center;
+  border: 2px solid var(--push_edge);
+  border-radius: var(--push_radius);
+  padding: 0.7em 1.4em;
+  background: var(--push_face);
+  color: var(--push_edge);
+  transform: translateY(-0.2em);
+  transition: transform 0.1s ease;
+}
+
+.btnPush:hover .btnLabel {
+  transform: translateY(-0.33em);
+}
+
+.btnPush:active .btnLabel {
+  transform: translateY(0);
+}
+
+/* 상단 바 이동 버튼 */
+.btnSm {
+  height: 34px;
+  padding: 0 16px;
+  font-size: 12.5px;
+}
+
+.btnBlock {
+  width: 100%;
+}
+
+.input {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  font-size: 13px;
+  min-height: 44px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* --- 지갑 주소 (축약 + 툴팁 + 복사) --- */
+
+.address {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  vertical-align: middle;
+}
+
+.addressWrap {
+  position: relative;
+  display: inline-flex;
+  outline: none;
+}
+
+.addressText {
+  cursor: default;
+  border-bottom: 1px dotted var(--line);
+}
+
+.tooltip {
+  position: absolute;
+  /* 주소가 화면 위쪽 행에 오는 경우가 많아 아래로 띄운다 */
+  top: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  /* absolute 요소는 부모(축약 주소, 약 76px) 폭에 갇히므로 max-content 로 풀어준다.
+     이걸 빼면 42자가 세로로 찌그러진다. */
+  width: max-content;
+  max-width: min(88vw, 420px);
+  background: var(--ink);
+  color: #fff;
+  font-size: 11px;
+  line-height: 1.4;
+  padding: 6px 8px;
+  border-radius: 6px;
+  word-break: break-all;
+  text-align: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.12s ease;
+  z-index: 5;
+}
+
+.addressWrap:hover .tooltip,
+.addressWrap:focus-visible .tooltip {
+  opacity: 1;
+}
+
+.copyBtn {
+  appearance: none;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  color: var(--mute);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex: 0 0 auto;
+}
+
+.copyBtn:hover {
+  border-color: var(--mute);
+  color: var(--ink);
+}
+
+.copiedNote {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--done);
+  white-space: nowrap;
+}
+
+/* --- 이력 타임라인 --- */
+
+.timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.timelineItem {
+  display: grid;
+  grid-template-columns: 14px 1fr;
+  gap: 10px;
+}
+
+.timelineRail {
+  position: relative;
+  display: flex;
+  justify-content: center;
+}
+
+.timelineDot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--pri);
+  margin-top: 5px;
+  z-index: 1;
+}
+
+.timelineDotUsed {
+  background: var(--done);
+}
+
+.timelineLine {
+  position: absolute;
+  top: 5px;
+  bottom: -6px;
+  width: 1px;
+  background: var(--line);
+}
+
+.timelineBody {
+  padding-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.timelineHead {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.timelineDate {
+  font-size: 12.5px;
+  color: var(--mute);
+}
+
+.timelineType {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.timelineFlow {
+  font-size: 12.5px;
+  color: var(--sub);
+  word-break: break-all;
+}
+
+/* --- 온체인 증거 --- */
+
+.proof {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--mute);
+  flex-wrap: wrap;
+}
+
+.proofLink {
+  color: var(--stored);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.proofLink:hover {
+  text-decoration: underline;
+}
+
+.proofBox {
+  background: var(--stored-bg);
+  border: 1px solid var(--stored-line);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.proofBoxTitle {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--done);
+}
+
+/* --- 판정 화면 --- */
+
+.verdict {
+  border-radius: var(--radius-xl);
+  /* 데모의 하이라이트라 화면 공간을 아끼지 않는다 */
+  padding: 56px 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  text-align: center;
+}
+
+.verdictOk {
+  background: var(--done-bg);
+  border: 1px solid var(--done-line);
+}
+
+.verdictFail {
+  background: var(--pri);
+  border: 1px solid var(--pri-d);
+}
+
+.verdictMark {
+  font-size: 84px;
+  line-height: 1;
+  font-weight: 700;
+}
+
+.verdictMarkOk {
+  color: var(--done);
+}
+
+.verdictMarkFail {
+  color: #fff;
+}
+
+.verdictTitle {
+  font-size: 52px;
+  font-weight: 800;
+  letter-spacing: -1.2px;
+  line-height: 1.15;
+}
+
+.verdictTitleOk {
+  color: var(--done);
+}
+
+.verdictTitleFail {
+  color: #fff;
+}
+
+.verdictDesc {
+  font-size: 22px;
+  line-height: 1.5;
+  font-weight: 600;
+}
+
+.verdictDescOk {
+  color: #14532d;
+}
+
+.verdictDescFail {
+  color: #ffe4e6;
+}
+
+.verdictMeta {
+  font-size: 15px;
+}
+
+.verdictMetaFail {
+  color: #ffd0d5;
+}
+
+.verdictLinkFail {
+  color: #fff;
+  text-decoration: underline;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.verdictWarn {
+  background: var(--warn-bg);
+  border: 1px solid var(--warn-line);
+}
+
+.verdictMarkWarn {
+  color: var(--warn);
+}
+
+.verdictTitleWarn {
+  color: var(--warn);
+}
+
+/* "증서 컨트랙트 연결 대기 중"처럼 문장에 가까운 제목은 52px에서 줄바꿈이 부서진다. */
+.verdictTitleSm {
+  font-size: 30px;
+  letter-spacing: -0.6px;
+}
+
+.verdictDescWarn {
+  color: #78350f;
+}
+
+.verdictMetaWarn {
+  color: var(--warn);
+}
+
+/* --- 판정 이유 설명 (판정 카드 바로 아래) --- */
+
+/* 기술을 모르는 병원 직원에게 "왜 이 판정이 나왔는가"를 한 문장으로 알려주는 자리. */
+.explain {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.explainTitle {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.explainBody {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--sub);
+}
+
+/* 존재하지 않는 번호일 때 직원이 다음으로 확인할 후보들 */
+.reasonList {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--sub);
+}
+
+/* --- 검증 화면 세션 컨텍스트 --- */
+
+/* 이 화면만 "누구의 화면인지"가 안 보였다. 병원명·처리 건수·연결 상태를 상단에 고정한다. */
+.sessionStrip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  font-size: 12px;
+  color: var(--sub);
+}
+
+.sessionDot {
+  flex: 0 0 auto;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--done);
+}
+
+.sessionHospital {
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.sessionSep {
+  color: var(--line);
+}
+
+.sessionValue {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.sessionNetwork {
+  margin-left: auto;
+  color: var(--mute);
+}
+
+.inputHint {
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--mute);
+}
+
+/* 연속 검증이 많은 병원 워크플로 — 이번 세션에 본 번호를 다시 치지 않게 한다. */
+.recentChips {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.recentLabel {
+  font-size: 11.5px;
+  color: var(--mute);
+}
+
+.recentChip {
+  appearance: none;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--sub);
+  cursor: pointer;
+}
+
+.recentChip:hover {
+  border-color: var(--mute);
+  color: var(--ink);
+}
+
+.recentChip:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 모든 상태 공통 푸터 — 이 판정이 어디서 온 것인지를 화면에서 떼어놓지 않는다. */
+.trustFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+  border-top: 1px dashed var(--line);
+  padding-top: 10px;
+  font-size: 11.5px;
+  color: var(--mute);
+}
+
+/* 입력이 여러 개인 화면(발급)에서 placeholder만으로는 무슨 값인지 알 수 없어 라벨을 붙인다. */
+.fieldLabel {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--sub);
+  margin-top: 4px;
+}
+
+.banner {
+  background: var(--fail-bg);
+  border: 1px solid var(--fail-line);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: #7c2d12;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* 사용자가 고칠 수 없는 상태(컨트랙트 미배포)는 빨강이 아니라 경고 톤으로 분리한다. */
+.bannerWarn {
+  background: var(--warn-bg);
+  border: 1px solid var(--warn-line);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: #78350f;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.bannerWarn .bannerHead {
+  color: var(--warn);
+}
+
+.bannerHead {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+  color: var(--fail);
+}
+
+/* --- 지갑 연결 초기 화면 --- */
+
+/* 위 혈액 보유 현황 패널과 가로 폭을 맞춰, 히어로 아래로 하나의 넓은 흐름처럼 이어지게 한다. */
+.gateCard {
+  width: 100%;
+  /*
+    셸의 세로 gap(14px)을 이 경계에서만 상쇄한다.
+    위 패널과 붙여 전체를 14px 끌어올려서, 하단 고정 바가 캐러셀 점·캡션을 덮지 않게 한다.
+  */
+  margin-top: -14px;
+  /*
+    위 패널(.panel)은 위→아래로 옅은 브랜드 틴트가 빠지는데, 이 카드는 방향을 뒤집어
+    아래→위로 빠지게 해서 두 박스가 서로 마주 보게 구획한다. 색은 같은 --pri-tint.
+  */
+  background: linear-gradient(0deg, var(--pri-tint), var(--card) 70%);
+  /* 위쪽은 거의 붙인다 — 테두리가 없어서 상단 패딩이 그대로 빈 공간으로 읽힌다. */
+  padding: 4px 30px 15px;
+  align-items: center;
+  text-align: center;
+  /* 초기화면에서는 테두리를 두르지 않는다. .card 는 다른 화면과 공용이라 여기서만 끈다. */
+  border: 0;
+}
+
+/* 파티클 글자를 카드 밖 히어로로 크게 쓴다. 카드 안에 두면 본문 가독 폭에 갇혀 작아진다. */
+.gateShell {
+  max-width: 880px;
+  /*
+    공용 .shell 은 하단을 40px 로 크게 잡는데, 초기 화면은 그 아래에 아무것도 없어서
+    그냥 빈 공간으로만 남는다. 상단(16px)과 같게 맞춘다.
+  */
+  padding-bottom: 16px;
+}
+
+.gateHero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.gateFlock {
+  /* 커서에 밀린 파티클이 잘리지 않도록 좌우로 조금 넘치게 둔다 */
+  margin: -4px 0 4px;
+}
+
+/* --- 캐러셀 카드 안에 들어가는 화면 미리보기들 (실제 화면 요소를 축소해 본뜬 것) --- */
+
+/* 인트로 카드: 긴 문장 대신 "종이 → 온체인" 대비를 도형으로 보여준다. */
+.mockCompare {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.mockCompareItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 10px;
+  padding: 11px 12px;
+}
+
+.mockCompareItem[data-kind="paper"] {
+  background: var(--page-bg);
+  color: var(--mute);
+}
+
+.mockCompareItem[data-kind="chain"] {
+  background: var(--pri-tint);
+  color: var(--pri-d);
+}
+
+.mockCompareIcon {
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.mockCompareItem[data-kind="paper"] .mockCompareIcon {
+  background: var(--mute);
+}
+
+.mockCompareItem[data-kind="chain"] .mockCompareIcon {
+  background: var(--pri);
+}
+
+.mockCompareLabel {
+  font-size: 11.5px;
+  font-weight: 700;
+}
+
+.mockCompareNote {
+  font-size: 10px;
+  color: var(--mute);
+  font-weight: 500;
+}
+
+.mockCompareArrow {
+  text-align: center;
+  font-size: 12px;
+  color: var(--line);
+  line-height: 1;
+}
+
+.mockCert {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  justify-content: center;
+}
+
+.mockCertHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.mockTokenId {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--sub);
+}
+
+.mockBadgeOk {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: var(--done);
+  background: var(--done-bg);
+  border-radius: 999px;
+  padding: 2px 7px;
+}
+
+.mockCertType {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--pri);
+  letter-spacing: -0.3px;
+}
+
+.mockCertIssuer {
+  font-size: 10.5px;
+  color: var(--mute);
+}
+
+.mockTimeline {
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+  width: 100%;
+  justify-content: center;
+}
+
+.mockTimelineRow {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mockTimelineRow:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  left: 3px;
+  top: 12px;
+  width: 1px;
+  height: 17px;
+  background: var(--line);
+}
+
+.mockTimelineDot {
+  flex: 0 0 auto;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--pri);
+}
+
+.mockTimelineLabel {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.mockTimelineDate {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--mute);
+}
+
+.mockVerify {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  width: 100%;
+  justify-content: center;
+}
+
+.mockInputBox {
+  font-size: 10.5px;
+  color: var(--sub);
+  border-radius: 8px;
+  padding: 7px 10px;
+  background: var(--page-bg);
+}
+
+.mockResultOk,
+.mockResultBlocked {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 8px;
+  padding: 6px 9px;
+}
+
+.mockResultOk {
+  color: var(--done);
+  background: var(--done-bg);
+}
+
+.mockResultBlocked {
+  color: var(--fail);
+  background: var(--fail-bg);
+}
+
+.mockProof {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  width: 100%;
+  justify-content: center;
+}
+
+.mockHash {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink);
+  background: var(--page-bg);
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+
+.mockProofLink {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--stored);
+}
+
+.gateFooter {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.gateActions {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+}
+
+/*
+  하단 고정 CTA 바.
+
+  초기 화면은 스크롤 없이 딱 맞아서(여유 9px) 흐름 안에 버튼을 넣을 자리가 없다.
+  position: fixed 로 띄워 레이아웃 높이를 0으로 만든다.
+
+  높이는 52px 로 묶어둔다 — 캐러셀 카드 하단 패딩(30px)과 셸 하단 패딩(16px)이 만드는
+  46px 빈 영역 + 뷰포트 여유 9px 안에 들어가야 캐러셀 점(dots)을 가리지 않는다.
+*/
+.gateBar {
+  position: fixed;
+  bottom: 0;
+  /* 셸(.gateShell)과 같은 폭·같은 좌우 패딩으로 맞춰 본문과 정렬한다. */
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 880px;
+  z-index: 20;
+  /*
+    딱 잘린 경계 대신 위에서 아래로 점점 진해지는 흰색 그라데이션.
+    위쪽은 완전 투명이라 그 아래 내용이 자연스럽게 사라지듯 이어진다.
+    (그림자는 경계선을 만들어서 뺐다.)
+  */
+  background: linear-gradient(
+    180deg,
+    rgb(255 255 255 / 0) 0%,
+    rgb(255 255 255 / 0.35) 55%,
+    rgb(255 255 255 / 0.92) 82%,
+    var(--card) 100%
+  );
+  /* 투명한 위쪽이 캐러셀 클릭·드래그를 막지 않도록 */
+  pointer-events: none;
+  /* 위 30px 은 내용 없이 사라지는 구간으로만 쓴다 */
+  padding-top: 30px;
+}
+
+.gateBarInner {
+  /*
+    이 줄(버튼이 있는 불투명 구간)이 캐러셀 점을 덮지 않아야 한다.
+    카드 하단 패딩 30px + 셸 하단 패딩 16px = 46px 안에 들어가도록 위아래 여백을 최소로.
+  */
+  /*
+    오른쪽은 버튼이 본문 경계에 딱 붙지 않게 여유를 더 준다.
+    아래쪽도 띄워서 문구와 버튼이 화면 바닥에 눌리지 않고 바 안에서 가운데로 오게 한다.
+  */
+  padding: 2px 32px 10px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  /* 바 자체는 pointer-events: none 이므로 여기서 되살린다 */
+  pointer-events: auto;
+}
+
+/* 지갑 연결을 망설이는 순간 바로 옆에서 안심시키는 자리 */
+.gateBarNote {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--sub);
+  /* 왼쪽 경계에서 살짝 띄운다 */
+  margin-left: 5px;
+}
+
+/* 좁은 화면에서는 문구를 접고 버튼만 전체 폭으로 */
+@media (max-width: 560px) {
+  .gateBarNote {
+    display: none;
+  }
+  .gateBarInner > .btn {
+    flex: 1;
+  }
+}
+
+.gateNote {
+  font-size: 11.5px;
+  line-height: 1.6;
+  color: var(--mute);
+  text-align: center;
+  margin-top: 4px;
+}
+
+.empty {
+  padding: 28px 14px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--mute);
+}
+

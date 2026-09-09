@@ -1,6 +1,8 @@
 import { Navigate, Route, Routes } from "react-router-dom";
-import { DonorApp } from "./features/donor/DonorApp";
-import { HospitalConsole } from "./features/hospital/HospitalConsole";
+import { CertificateDetailScreen } from "./features/certificate/CertificateDetailScreen";
+import { CertificateListScreen } from "./features/certificate/CertificateListScreen";
+import { IssueScreen } from "./features/certificate/IssueScreen";
+import { VerifyScreen } from "./features/certificate/VerifyScreen";
 import { NotFoundPage } from "./pages/NotFoundPage";
 import { Academy } from "./features/academy/Academy";
 
@@ -8,9 +10,11 @@ export function App() {
   return (
     <Routes>
       <Route path="/learn" element={<Academy />} />
-      <Route path="/" element={<Navigate to="/donor" replace />} />
-      <Route path="/donor" element={<DonorApp />} />
-      <Route path="/hospital" element={<HospitalConsole />} />
+      <Route path="/" element={<Navigate to="/certificates" replace />} />
+      <Route path="/certificates" element={<CertificateListScreen />} />
+      <Route path="/certificates/:tokenId" element={<CertificateDetailScreen />} />
+      <Route path="/verify" element={<VerifyScreen />} />
+      <Route path="/issue" element={<IssueScreen />} />
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );

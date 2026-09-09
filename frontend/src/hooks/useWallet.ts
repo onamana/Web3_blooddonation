@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { DEMO_WALLET } from "../data/donorMock";
-import { deriveDemoDonorId } from "../utils/donorId";
+import { DEMO_WALLET_ADDRESS } from "../data/demoWallet";
 
 export type WalletStatus = "disconnected" | "connecting" | "connected" | "error";
 
@@ -8,7 +7,6 @@ export interface WalletState {
   status: WalletStatus;
   /** 전체 지갑 주소. 화면에는 절대 그대로 노출하지 않고 축약해서만 표시한다. */
   address: string | null;
-  donorId: string | null;
   error: string | null;
   hasMetaMask: boolean;
   /** true면 실제 MetaMask가 아니라 데모용 가상 지갑으로 연결된 상태 */
@@ -18,13 +16,27 @@ export interface WalletState {
 const initialState: WalletState = {
   status: "disconnected",
   address: null,
-  donorId: null,
   error: null,
   hasMetaMask: false,
   isDemoWallet: false,
 };
 
-export function useWallet() {
+export interface WalletControls extends WalletState {
+  connect: () => Promise<void>;
+  connectDemoWallet: () => void;
+  disconnect: () => void;
+  /** 연결 실패 안내를 닫고 처음 상태로 되돌린다. */
+  dismissError: () => void;
+}
+
+/**
+ * 지갑 연결 상태 머신.
+ *
+ * 이 훅을 화면 컴포넌트에서 직접 부르면 화면을 옮길 때마다 상태가 초기화되므로
+ * (증서 목록 → 상세 → 목록으로 돌아오면 연결이 풀림) 앱 최상단의 WalletProvider가
+ * 한 번만 부르고, 화면들은 `hooks/walletContext.ts` 의 useWallet()으로 값을 받는다.
+ */
+export function useWalletMachine(): WalletControls {
   const [state, setState] = useState<WalletState>(initialState);
   const handlersRef = useRef<{
     onAccountsChanged?: (accounts: string[]) => void;
@@ -75,7 +87,7 @@ export function useWallet() {
           setState({ ...initialState, hasMetaMask: true });
           return;
         }
-        setState((s) => ({ ...s, address: next, donorId: deriveDemoDonorId(next) }));
+        setState((s) => ({ ...s, address: next }));
       };
       const onDisconnect = () => {
         setState({ ...initialState, hasMetaMask: true });
@@ -87,7 +99,6 @@ export function useWallet() {
       setState({
         status: "connected",
         address,
-        donorId: deriveDemoDonorId(address),
         error: null,
         hasMetaMask: true,
         isDemoWallet: false,
@@ -105,18 +116,21 @@ export function useWallet() {
   const connectDemoWallet = useCallback(() => {
     setState({
       status: "connected",
-      address: DEMO_WALLET.address,
-      donorId: DEMO_WALLET.demoDonorId,
+      address: DEMO_WALLET_ADDRESS,
       error: null,
       hasMetaMask: state.hasMetaMask,
       isDemoWallet: true,
     });
   }, [state.hasMetaMask]);
 
+  const dismissError = useCallback(() => {
+    setState((s) => (s.status === "error" ? { ...s, status: "disconnected", error: null } : s));
+  }, []);
+
   const disconnect = useCallback(() => {
     teardownListeners();
     setState((s) => ({ ...initialState, hasMetaMask: s.hasMetaMask }));
   }, [teardownListeners]);
 
-  return { ...state, connect, connectDemoWallet, disconnect };
+  return { ...state, connect, connectDemoWallet, disconnect, dismissError };
 }
