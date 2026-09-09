@@ -54,6 +54,20 @@ export const certificateTransferBodySchema = z
   })
   .meta({ id: "CertificateTransferRequest" });
 
+/**
+ * 발급 요청.
+ *
+ * `issuer`(혈액원 명)는 일부러 받지 않는다 — 클라이언트가 발급기관을 자기 마음대로
+ * 적을 수 있으면 검증 화면의 "대전혈액원 발급"이 아무 의미가 없어진다. 서버 설정
+ * (BLOOD_CENTER_NAME)에서만 결정한다. `issuedAt`도 컨트랙트의 block.timestamp를 쓴다.
+ */
+export const certificateIssueBodySchema = z
+  .object({
+    to: ethAddressSchema.meta({ description: "증서를 받을 헌혈자 지갑 주소" }),
+    bloodType: bloodTypeSchema.meta({ description: "혈액원 검사 결과 (헌혈자 자기 신고가 아니다)" }),
+  })
+  .meta({ id: "CertificateIssueRequest" });
+
 export const certificateUseBodySchema = z
   .object({
     hospital: z.string().min(1).meta({ example: "충남대병원" }),

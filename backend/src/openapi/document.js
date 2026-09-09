@@ -8,6 +8,7 @@ import {
   donationQueryResponseSchema,
 } from "../schemas/donation.js";
 import {
+  certificateIssueBodySchema,
   certificateListResponseSchema,
   certificateOwnerQuerySchema,
   certificateSchema,
@@ -116,6 +117,24 @@ registry.registerPath({
   responses: {
     200: { description: "판정 결과", content: { "application/json": { schema: certificateVerifyResponseSchema } } },
     400: { description: "tokenId 형식 오류", content: { "application/json": { schema: errorResponseSchema } } },
+    ...certificateNotImplemented,
+  },
+});
+
+registry.registerPath({
+  method: "post",
+  path: "/certificate/issue",
+  summary: "증서 발급 (혈액원 → 헌혈자 지갑으로 민팅). issuer/issuedAt은 서버·컨트랙트가 정한다",
+  request: {
+    body: { content: { "application/json": { schema: certificateIssueBodySchema } } },
+  },
+  responses: {
+    200: { description: "발급 성공", content: { "application/json": { schema: certificateTxResponseSchema } } },
+    400: { description: "to/bloodType 형식 오류", content: { "application/json": { schema: errorResponseSchema } } },
+    502: {
+      description: "발급 트랜잭션에서 tokenId를 찾지 못함",
+      content: { "application/json": { schema: errorResponseSchema } },
+    },
     ...certificateNotImplemented,
   },
 });
