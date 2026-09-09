@@ -58,6 +58,21 @@ C 백엔드 /match      →   B DID 모듈 (VC 보관 · 조건 필터링)      
 - C: 백엔드 (API 서버, ethers.js 연동, 서명 검증) — `backend/`
 - D: 프론트엔드 (지갑 연결, 화면) — `frontend/`
 
+## 스마트컨트랙트 진행 순서
+
+1. ~~Hardhat 프로젝트 세팅 (`contract/`)~~ 완료
+2. ~~`BloodCertificate.sol` / `DonationRegistry.sol` 구현 — backend의 `*.sample.abi.json`과 함수/이벤트
+   시그니처를 맞추고, `AccessControl`로 발급자 롤(`ISSUER_ROLE`/`RECORDER_ROLE`) 적용~~ 완료
+3. ~~테스트 작성 및 통과 (발급 / 권한 없는 계정의 issue 거부 / 이중사용 차단)~~ 완료
+4. ~~Sepolia 배포~~ 완료 (2026-09-09). 배포 주소는 `contract/README.md` "배포 현황" 참고
+5. **남은 것 — C의 relayer 지갑 주소를 받아 두 컨트랙트에 `ISSUER_ROLE`/`RECORDER_ROLE` 부여.**
+   이게 없으면 backend가 `issue()`/`record()`를 호출할 권한이 없다.
+6. **남은 것 — 배포 주소 + 실제 ABI를 C에게 전달.** `backend/.env`의 `CERTIFICATE_CONTRACT_ADDRESS`/
+   `DONATION_CONTRACT_ADDRESS`와 두 `*.sample.abi.json`을 교체해야 501 응답이 실제 온체인 호출로 바뀐다.
+7. (선택) Etherscan 소스 검증 (`npm run verify:sepolia`)
+
+자세한 내용은 `contract/README.md` 참고.
+
 ## 백엔드 진행 순서
 
 1. Node/Express 기본 서버 세팅
@@ -107,11 +122,12 @@ C 백엔드 /match      →   B DID 모듈 (VC 보관 · 조건 필터링)      
 
 ### A와 협의할 항목 (블로커)
 
-- **컨트랙트에 `issue(address to, uint8 bloodType, string issuer)` 추가.** 현재 `*.sample.abi.json`에
-  선언만 넣어둔 상태다.
-- **발급자 롤(`onlyIssuer` / OpenZeppelin `AccessControl`) 필수.** 이게 없으면 누구나 증서를
-  찍어낼 수 있고, 그러면 `/verify` 화면 전체가 무의미해진다. 백엔드 signer를 그 롤에 등록해야 한다.
-- (선택) `/donation/auth`의 `donationHash`를 증서에 묶으면 "이 증서는 실제 헌혈 기록에서
+- ~~컨트랙트에 `issue(address to, uint8 bloodType, string issuer)` 추가.~~ 완료 (2026-09-09 Sepolia 배포,
+  `contract/README.md` "배포 현황" 참고)
+- ~~발급자 롤(`onlyIssuer` / OpenZeppelin `AccessControl`) 필수.~~ 완료. 단, **백엔드 signer를 그 롤에
+  등록하는 건 아직 안 됨** — `BACKEND_SIGNER_ADDRESS`를 A에게 전달하면 부여받을 수 있다
+  (위 "스마트컨트랙트 진행 순서" 5번).
+- (선택, 미착수) `/donation/auth`의 `donationHash`를 증서에 묶으면 "이 증서는 실제 헌혈 기록에서
   나왔다"까지 증명된다. 현재 ABI에 해당 필드가 없다.
 
 ### C가 남긴 것

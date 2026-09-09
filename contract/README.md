@@ -39,3 +39,28 @@ npm test
   MVP 단계에서는 발급과 병원 사용 처리를 같은 롤로 묶었다 — 다중 혈액원/병원별 분리가 필요해지면
   갈라야 한다 (루트 README "C가 남긴 것" 참고).
 - `RECORDER_ROLE` (`DonationRegistry`): `record()` 호출 권한.
+
+## 배포 현황 (Sepolia, 2026-09-09)
+
+- Deployer: `0x19Ff20dDBEa7717f10be6825Bff2ac2Aac193af0`
+- **BloodCertificate**: `0x0b72339558d31921711A8fEB0719d885A3076cE7`
+  ([Etherscan](https://sepolia.etherscan.io/address/0x0b72339558d31921711A8fEB0719d885A3076cE7))
+- **DonationRegistry**: `0x91304aC763ef386CF65950C2e9bfb53528C0d8Ae`
+  ([Etherscan](https://sepolia.etherscan.io/address/0x91304aC763ef386CF65950C2e9bfb53528C0d8Ae))
+- `BACKEND_SIGNER_ADDRESS`를 아직 안 받아서 롤 부여는 스킵됨. C의 relayer 지갑 주소를 받으면
+  두 컨트랙트에 `ISSUER_ROLE`/`RECORDER_ROLE`을 수동으로 부여해야 backend가 `issue()`/`record()`를
+  호출할 수 있다.
+
+## TODO — 배포됐지만 아직 연결 안 된 부분
+
+컨트랙트가 Sepolia에 실재하는 것과, 전체 파이프라인(프론트→백엔드→체인)이 실제로 동작하는 것은 다르다.
+아래가 모두 해결돼야 데모의 가짜 데이터/가짜 트랜잭션 해시가 실제 온체인 값으로 바뀐다.
+
+- [ ] **backend가 배포 주소를 모름.** `backend/.env`의 `CERTIFICATE_CONTRACT_ADDRESS`/
+  `DONATION_CONTRACT_ADDRESS`가 비어있어 `/certificate`가 여전히 501을 응답한다 → 위 "배포 후
+  C에게 전달할 것" 1·2번 전달 필요.
+- [ ] **backend의 relayer 지갑에 롤이 없음.** `BACKEND_SIGNER_ADDRESS`를 받아 `ISSUER_ROLE`/
+  `RECORDER_ROLE`을 부여하기 전까지는, 주소를 넣어도 backend가 `issue()`/`record()` 호출 시
+  권한 없음으로 revert된다.
+- [ ] **frontend는 여전히 데모 모드.** `VITE_DEMO_MODE=true`로 인메모리 목업 데이터를 쓰고 있어
+  화면상 변화가 없다. 위 두 항목이 끝나고 D가 데모 모드를 꺼야 실제 체인 데이터가 보인다.
