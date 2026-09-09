@@ -1,0 +1,115 @@
+/*
+  dialog 자신이 화면을 덮고 배경 어둡기까지 담당한다 (배경 클릭 감지를 위해).
+  닫혔을 때 브라우저 기본 display:none 을 아래 display:grid 가 덮어쓰므로 직접 숨긴다.
+*/
+.dialog {
+  width: 100vw;
+  max-width: none;
+  height: 100dvh;
+  max-height: none;
+  margin: 0;
+  padding: 16px;
+  border: 0;
+  background: rgb(28 25 23 / 0.45);
+  display: grid;
+  place-items: center;
+  animation: overlayIn 0.18s ease;
+}
+
+.dialog:not([open]) {
+  display: none;
+}
+
+.dialog::backdrop {
+  background: transparent;
+}
+
+@keyframes overlayIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.panel {
+  width: 100%;
+  max-width: 400px;
+  background: var(--card);
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow:
+    0 24px 48px -12px rgb(0 0 0 / 0.28),
+    0 8px 16px -8px rgb(0 0 0 / 0.16);
+  animation: panelIn 0.22s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+@keyframes panelIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.title {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.close {
+  appearance: none;
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  margin: -4px -4px 0 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--mute);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.close:hover {
+  background: var(--page-bg);
+  color: var(--ink);
+}
+
+.body {
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--sub);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-wrap: pretty;
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+}

@@ -40,3 +40,34 @@ export function AlertIcon({ size = 13, style, className }: IconProps) {
     </svg>
   );
 }
+
+/**
+ * lucide arrow-right 와 같은 경로.
+ * 원본 버튼(21st.dev @jakobhoeg/button)이 stroke-width 2 를 쓰므로 이 아이콘만 base 를 덮는다.
+ */
+export function ArrowRightIcon({ size = 16, style, className }: IconProps) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      style={style}
+      className={className}
+      {...base}
+      strokeWidth={2}
+      aria-hidden="true"
+    >
+      <path d="M5 12h14" />
+      <path d="m12 5 7 7-7 7" />
+    </svg>
+  );
+}
+
+export function CloseIcon({ size = 16, style, className }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" style={style} className={className} {...base}>
+      <path d="M18 6 6 18" />
+      <path d="m6 6 12 12" />
+    </svg>
+  );
+}

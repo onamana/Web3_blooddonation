@@ -10,3 +10,10 @@ export const DEMO_MODE = import.meta.env.VITE_DEMO_MODE !== "false";
 /** 트랜잭션 해시를 확인할 블록 익스플로러. 컨트랙트는 Sepolia에 배포된다. */
 export const EXPLORER_BASE_URL =
   import.meta.env.VITE_EXPLORER_BASE_URL || "https://sepolia.etherscan.io";
+
+/**
+ * 데모 모드에서 발급 화면이 쓰는 발급기관 명.
+ * 실제 API 모드에서는 백엔드(BLOOD_CENTER_NAME)가 정하므로 요청에 담지 않는다.
+ * 프론트의 HOSPITAL_NAME과 같은 처지 — 다중 혈액원 지원은 MVP 스코프 밖이다.
+ */
+export const DEMO_BLOOD_CENTER_NAME = "대전혈액원";

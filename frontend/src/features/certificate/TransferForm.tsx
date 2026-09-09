@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Button } from "./Button";
 import styles from "./Certificate.module.css";
 
 interface TransferFormProps {
@@ -29,12 +30,12 @@ export function TransferForm({ pending, onSubmit, onCancel }: TransferFormProps)
         aria-label="받는 지갑 주소"
       />
       <div className={styles.actions}>
-        <button type="submit" className={styles.btn} disabled={!valid || pending}>
+        <Button type="submit" disabled={!valid || pending}>
           {pending ? "양도 중..." : "양도 확인"}
-        </button>
-        <button type="button" className={`${styles.btn} ${styles.btnQuiet}`} onClick={onCancel} disabled={pending}>
+        </Button>
+        <Button onClick={onCancel} disabled={pending}>
           취소
-        </button>
+        </Button>
       </div>
     </form>
   );

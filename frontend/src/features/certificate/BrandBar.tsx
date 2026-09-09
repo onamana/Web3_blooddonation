@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import styles from "./Certificate.module.css";
 
 interface BrandBarProps {
-  /** 우측에 놓을 동작 버튼들. styles.actionBtn 을 써서 모양을 통일한다. */
+  /** 우측에 놓을 이동 버튼들. <Button size="sm"> 을 써서 모양을 통일한다. */
   children?: React.ReactNode;
 }
 

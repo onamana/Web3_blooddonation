@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 import { listCertificates, transferCertificate } from "../../api/certificate";
 import { ApiError } from "../../api/client";
 import { DemoModeBanner } from "../../components/DemoModeBanner";
@@ -11,6 +10,7 @@ import { BrandBar } from "./BrandBar";
 import { CertificateCard } from "./CertificateCard";
 import { formatTokenId } from "./certificateLabels";
 import { OnchainProofBox } from "./OnchainProof";
+import { Button } from "./Button";
 import styles from "./Certificate.module.css";
 
 /** 화면 1: 증서 목록 (지갑) — 보유 증서 카드 + 양도 */
@@ -68,19 +68,29 @@ export function CertificateListScreen() {
   };
 
   if (wallet.status !== "connected" || !address) {
-    return <WalletGate wallet={wallet} onConnect={wallet.connect} onConnectDemo={wallet.connectDemoWallet} />;
+    return (
+      <WalletGate
+        wallet={wallet}
+        onConnect={wallet.connect}
+        onConnectDemo={wallet.connectDemoWallet}
+        onDismissError={wallet.dismissError}
+      />
+    );
   }
 
   return (
     <div className={styles.shell}>
       <BrandBar>
-        <Link className={styles.actionBtn} to="/verify">
+        <Button size="sm" to="/issue">
+          혈액원 발급
+        </Button>
+        <Button size="sm" to="/verify">
           병원 검증
-        </Link>
+        </Button>
         {/* 같은 주소(/certificates)에서 지갑 연결 화면으로 되돌아가는 버튼 */}
-        <button type="button" className={styles.actionBtn} onClick={handleDisconnect}>
+        <Button size="sm" onClick={handleDisconnect}>
           연결 해제
-        </button>
+        </Button>
       </BrandBar>
 
       <div className={styles.topbar}>

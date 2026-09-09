@@ -25,6 +25,8 @@ export interface WalletControls extends WalletState {
   connect: () => Promise<void>;
   connectDemoWallet: () => void;
   disconnect: () => void;
+  /** 연결 실패 안내를 닫고 처음 상태로 되돌린다. */
+  dismissError: () => void;
 }
 
 /**
@@ -121,10 +123,14 @@ export function useWalletMachine(): WalletControls {
     });
   }, [state.hasMetaMask]);
 
+  const dismissError = useCallback(() => {
+    setState((s) => (s.status === "error" ? { ...s, status: "disconnected", error: null } : s));
+  }, []);
+
   const disconnect = useCallback(() => {
     teardownListeners();
     setState((s) => ({ ...initialState, hasMetaMask: s.hasMetaMask }));
   }, [teardownListeners]);
 
-  return { ...state, connect, connectDemoWallet, disconnect };
+  return { ...state, connect, connectDemoWallet, disconnect, dismissError };
 }

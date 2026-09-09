@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { getCertificate } from "../../api/certificate";
 import { ApiError } from "../../api/client";
 import { Badge } from "../../components/Badge";
@@ -9,6 +9,7 @@ import { AddressDisplay } from "./AddressDisplay";
 import { BrandBar } from "./BrandBar";
 import { formatTokenId, statusLabel, statusVariant } from "./certificateLabels";
 import { HistoryTimeline } from "./HistoryTimeline";
+import { Button } from "./Button";
 import styles from "./Certificate.module.css";
 
 /** 화면 2: 증서 상세 — 이력 타임라인 + 온체인 증거 */
@@ -40,9 +41,9 @@ export function CertificateDetailScreen() {
   return (
     <div className={styles.shell}>
       <BrandBar>
-        <Link className={styles.actionBtn} to="/certificates">
+        <Button size="sm" to="/certificates">
           ← 증서 목록
-        </Link>
+        </Button>
       </BrandBar>
 
       {status === "loading" && <div className={styles.empty}>불러오는 중...</div>}

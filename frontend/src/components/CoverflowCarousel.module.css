@@ -1,0 +1,175 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.navBtn {
+  appearance: none;
+  flex: 0 0 auto;
+  /* 44px = 터치 타깃 권장 최소치 */
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 0;
+  background: var(--card);
+  color: var(--sub);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.navBtn:hover {
+  color: var(--ink);
+}
+
+/*
+  원본(21st.dev @ruixen.ui/coverflow-carousel) 실측: 바깥 래퍼가 perspective 780px 를 갖고
+  안쪽 스테이지가 preserve-3d 로 카드를 3D 배치한다. 끌 수 있다는 걸 커서로 알린다.
+*/
+.viewport {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  /* 아래쪽은 카드 그림자가 overflow:hidden 에 잘리지 않도록 넉넉히 남긴다. */
+  padding: 10px 0 28px;
+  perspective: 780px;
+  cursor: grab;
+  outline: none;
+  /* 부채가 좌우로 자연스럽게 사라지도록 */
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 14%, #000 86%, transparent);
+  mask-image: linear-gradient(to right, transparent, #000 14%, #000 86%, transparent);
+}
+
+.viewport[data-dragging="true"] {
+  cursor: grabbing;
+}
+
+.viewport:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+.stage {
+  --cf-card: clamp(180px, 30vw, 248px);
+  position: relative;
+  height: var(--cf-card);
+  transform-style: preserve-3d;
+  user-select: none;
+}
+
+.card {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: var(--cf-card);
+  /* 원본과 같이 정사각형 */
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  border-radius: 16px;
+  border: 0;
+  background: var(--card);
+  box-shadow: 0 18px 34px -18px rgb(0 0 0 / 0.28);
+  will-change: transform;
+  transition:
+    transform 0.5s cubic-bezier(0.22, 0.61, 0.36, 1),
+    opacity 0.5s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+/* 끌고 있는 동안은 손가락을 그대로 따라와야 하므로 전환을 끈다. */
+.viewport[data-dragging="true"] .card {
+  transition: none;
+}
+
+/* 가운데가 아닌 카드는 채도를 낮춰 시선이 가운데로 모이게 한다. */
+.card:not([data-centered="true"]) {
+  filter: brightness(0.97) saturate(0.7);
+}
+
+.card[data-centered="true"] {
+  box-shadow: 0 22px 40px -18px rgb(179 32 44 / 0.3);
+}
+
+/* 가운데가 아닌 카드는 눌러서 가져올 수 있다는 걸 커서로 알린다. */
+.card:not([data-centered="true"]) {
+  cursor: pointer;
+}
+
+.visual {
+  position: relative;
+  height: 100%;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.caption {
+  min-height: 64px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  text-align: center;
+  animation: captionIn 0.35s ease;
+}
+
+@keyframes captionIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.captionTitle {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.captionDesc {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--sub);
+  max-width: 52ch;
+  text-wrap: pretty;
+}
+
+.dots {
+  display: flex;
+  gap: 6px;
+}
+
+.dot {
+  appearance: none;
+  padding: 0;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  border: none;
+  background: var(--line);
+  cursor: pointer;
+}
+
+.dot[data-active="true"] {
+  background: var(--pri);
+  width: 16px;
+  border-radius: 3px;
+}

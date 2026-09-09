@@ -1,8 +1,8 @@
-import { Link } from "react-router-dom";
 import { Badge } from "../../components/Badge";
 import type { Certificate } from "../../types/certificate";
 import { formatOnchainDate } from "../../utils/onchain";
 import { formatTokenId, statusLabel, statusVariant } from "./certificateLabels";
+import { Button } from "./Button";
 import { TransferForm } from "./TransferForm";
 import styles from "./Certificate.module.css";
 
@@ -55,12 +55,10 @@ export function CertificateCard({
         <TransferForm pending={transferPending} onSubmit={onTransfer} onCancel={onCancelTransfer} />
       ) : (
         <div className={styles.actions}>
-          <Link className={`${styles.btn} ${styles.btnGhost}`} to={`/certificates/${certificate.tokenId}`}>
-            상세 보기
-          </Link>
-          <button type="button" className={styles.btn} onClick={onOpenTransfer} disabled={used}>
+          <Button to={`/certificates/${certificate.tokenId}`}>상세 보기</Button>
+          <Button onClick={onOpenTransfer} disabled={used}>
             양도하기
-          </button>
+          </Button>
         </div>
       )}
     </div>

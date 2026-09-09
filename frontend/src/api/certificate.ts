@@ -1,7 +1,7 @@
 import { demoCertificateStore } from "../data/certificateStore";
 import type { Certificate, CertificateTxResult, CertificateVerifyResult } from "../types/certificate";
 import { ApiError, apiRequest } from "./client";
-import { DEMO_MODE } from "./env";
+import { DEMO_BLOOD_CENTER_NAME, DEMO_MODE } from "./env";
 import {
   certificateListResponseSchema,
   certificateSchema,
@@ -43,6 +43,27 @@ export async function verifyCertificate(tokenId: string): Promise<CertificateVer
 
   const raw = await apiRequest<unknown>(`/certificate/${encodeURIComponent(tokenId)}/verify`);
   return certificateVerifyResponseSchema.parse(raw);
+}
+
+export interface IssueCertificateRequest {
+  /** 증서를 받을 헌혈자 지갑 주소 */
+  to: string;
+  /** 혈액원 검사 결과 */
+  bloodType: Certificate["bloodType"];
+}
+
+/**
+ * 발급. 발급기관 명(issuer)은 보내지 않는다 — 서버가 정한다.
+ * 클라이언트가 발급기관을 적을 수 있으면 검증 화면의 "OO혈액원 발급"이 의미를 잃는다.
+ */
+export async function issueCertificate({ to, bloodType }: IssueCertificateRequest): Promise<CertificateTxResult> {
+  if (DEMO_MODE) return demoCertificateStore.issue(to, bloodType, DEMO_BLOOD_CENTER_NAME);
+
+  const raw = await apiRequest<unknown>("/certificate/issue", {
+    method: "POST",
+    body: { to, bloodType },
+  });
+  return certificateTxResponseSchema.parse(raw);
 }
 
 export interface TransferCertificateRequest {

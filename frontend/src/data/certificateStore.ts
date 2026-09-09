@@ -10,6 +10,8 @@ import { INITIAL_CERTIFICATES } from "./certificateMock";
 
 let certificates: Certificate[] = structuredClone(INITIAL_CERTIFICATES);
 let nextBlockNumber = 7010000;
+// 실제 컨트랙트에서는 tokenId를 컨트랙트가 증가시킨다. 목업도 같은 규칙으로 이어붙인다.
+let nextTokenId = Math.max(...INITIAL_CERTIFICATES.map((c) => Number(c.tokenId))) + 1;
 
 function fakeTxHash() {
   const bytes = crypto.getRandomValues(new Uint8Array(32));
@@ -41,6 +43,37 @@ export const demoCertificateStore = {
   get(tokenId: string) {
     const found = find(tokenId);
     return found ? structuredClone(found) : null;
+  },
+
+  /**
+   * 발급. 혈액원이 헌혈자 지갑으로 새 증서를 민팅하는 동작에 대응한다.
+   * tokenId와 issuedAt은 호출자가 정하지 않는다(실제 컨트랙트와 같은 규칙).
+   */
+  issue(to: string, bloodType: Certificate["bloodType"], issuer: string) {
+    const issuedAt = nowSeconds();
+    const certificate: Certificate = {
+      tokenId: String(nextTokenId++),
+      owner: to,
+      bloodType,
+      issuedAt,
+      issuer,
+      status: "active",
+      usedAt: null,
+      usedBy: null,
+      history: [],
+    };
+
+    // 발급 이력은 from이 zero address인 Transfer에 대응하므로 from을 null로 둔다.
+    const txHash = appendEvent(certificate, {
+      type: "issued",
+      timestamp: issuedAt,
+      from: null,
+      to,
+      org: issuer,
+    });
+    certificates = [...certificates, certificate];
+
+    return { txHash, certificate: structuredClone(certificate) };
   },
 
   transfer(tokenId: string, from: string, to: string) {
@@ -85,5 +118,6 @@ export const demoCertificateStore = {
 
   reset() {
     certificates = structuredClone(INITIAL_CERTIFICATES);
+    nextTokenId = Math.max(...INITIAL_CERTIFICATES.map((c) => Number(c.tokenId))) + 1;
   },
 };

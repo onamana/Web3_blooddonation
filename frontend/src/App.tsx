@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import { CertificateDetailScreen } from "./features/certificate/CertificateDetailScreen";
 import { CertificateListScreen } from "./features/certificate/CertificateListScreen";
+import { IssueScreen } from "./features/certificate/IssueScreen";
 import { VerifyScreen } from "./features/certificate/VerifyScreen";
 import { NotFoundPage } from "./pages/NotFoundPage";
 
@@ -11,6 +12,7 @@ export function App() {
       <Route path="/certificates" element={<CertificateListScreen />} />
       <Route path="/certificates/:tokenId" element={<CertificateDetailScreen />} />
       <Route path="/verify" element={<VerifyScreen />} />
+      <Route path="/issue" element={<IssueScreen />} />
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );

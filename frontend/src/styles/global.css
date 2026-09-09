@@ -17,6 +17,11 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* 초기 화면(지갑 미연결)만 배경을 완전 흰색으로. WalletGate 가 마운트되는 동안 표식이 붙는다. */
+body[data-screen="gate"] {
+  background: var(--card);
+}
+
 #root {
   min-height: 100vh;
 }
@@ -67,6 +72,12 @@ a:hover {
   color: var(--stored);
   background: var(--stored-bg);
   border: 1px solid var(--stored-line);
+}
+
+.badge-warn {
+  color: var(--warn);
+  background: var(--warn-bg);
+  border: 1px solid var(--warn-line);
 }
 
 .badge-disc {
