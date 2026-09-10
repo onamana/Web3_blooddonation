@@ -1,5 +1,11 @@
 import { demoCertificateStore } from "../data/certificateStore";
-import type { Certificate, CertificateTxResult, CertificateVerifyResult } from "../types/certificate";
+import { demoBloodProfileStore } from "../data/demoBloodProfileStore";
+import type {
+  Certificate,
+  CertificateTxResult,
+  CertificateVerifyResult,
+  DonationType,
+} from "../types/certificate";
 import { ApiError, apiRequest } from "./client";
 import { DEMO_BLOOD_CENTER_NAME, DEMO_MODE } from "./env";
 import {
@@ -48,20 +54,44 @@ export async function verifyCertificate(tokenId: string): Promise<CertificateVer
 export interface IssueCertificateRequest {
   /** 증서를 받을 헌혈자 지갑 주소 */
   to: string;
-  /** 혈액원 검사 결과 */
-  bloodType: Certificate["bloodType"];
+  /** 혈액원 담당자가 선택한 헌혈 종류 */
+  donationType: DonationType;
+  /** 전혈일 때 선택한 헌혈량(mL) */
+  volumeMl?: 320 | 400;
 }
 
 /**
  * 발급. 발급기관 명(issuer)은 보내지 않는다 — 서버가 정한다.
  * 클라이언트가 발급기관을 적을 수 있으면 검증 화면의 "OO혈액원 발급"이 의미를 잃는다.
  */
-export async function issueCertificate({ to, bloodType }: IssueCertificateRequest): Promise<CertificateTxResult> {
-  if (DEMO_MODE) return demoCertificateStore.issue(to, bloodType, DEMO_BLOOD_CENTER_NAME);
+export async function issueCertificate({
+  to,
+  donationType,
+  volumeMl,
+}: IssueCertificateRequest): Promise<CertificateTxResult> {
+  if (DEMO_MODE) {
+    const profile = demoBloodProfileStore.getByWallet(to);
+    if (!profile) {
+      throw new ApiError(
+        404,
+        "이 지갑 주소에 등록된 데모 혈액 검사정보가 없습니다.",
+        "데모 지갑 주소 채우기 버튼을 사용하세요.",
+      );
+    }
+
+    const result = demoCertificateStore.issue(
+      to,
+      DEMO_BLOOD_CENTER_NAME,
+      donationType,
+      volumeMl,
+    );
+    demoBloodProfileStore.linkCertificate(result.certificate.tokenId, profile);
+    return result;
+  }
 
   const raw = await apiRequest<unknown>("/certificate/issue", {
     method: "POST",
-    body: { to, bloodType },
+    body: { to, donationType, volumeMl },
   });
   return certificateTxResponseSchema.parse(raw);
 }
