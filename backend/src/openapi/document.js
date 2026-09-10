@@ -13,7 +13,6 @@ import {
   certificateOwnerQuerySchema,
   certificateSchema,
   certificateTokenParamSchema,
-  certificateTransferBodySchema,
   certificateTxResponseSchema,
   certificateUseBodySchema,
   certificateVerifyResponseSchema,
@@ -135,23 +134,6 @@ registry.registerPath({
       description: "발급 트랜잭션에서 tokenId를 찾지 못함",
       content: { "application/json": { schema: errorResponseSchema } },
     },
-    ...certificateNotImplemented,
-  },
-});
-
-registry.registerPath({
-  method: "post",
-  path: "/certificate/{tokenId}/transfer",
-  summary: "증서 양도 (소유자 서명 검증 후 백엔드가 transferFrom 릴레이)",
-  request: {
-    params: certificateTokenParamSchema,
-    body: { content: { "application/json": { schema: certificateTransferBodySchema } } },
-  },
-  responses: {
-    200: { description: "양도 성공", content: { "application/json": { schema: certificateTxResponseSchema } } },
-    401: { description: "서명 검증 실패", content: { "application/json": { schema: errorResponseSchema } } },
-    403: { description: "현재 소유자가 아님", content: { "application/json": { schema: errorResponseSchema } } },
-    409: { description: "이미 사용된 증서", content: { "application/json": { schema: errorResponseSchema } } },
     ...certificateNotImplemented,
   },
 });

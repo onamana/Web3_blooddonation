@@ -20,6 +20,7 @@ contract DonationRegistry is AccessControl {
 
     error DonationAlreadyRecorded(bytes32 donationHash);
     error DonationNotFound(bytes32 donationHash);
+    error InvalidBloodType(uint8 bloodType);
 
     constructor(address admin) {
         _grantRole(DEFAULT_ADMIN_ROLE, admin);
@@ -27,6 +28,7 @@ contract DonationRegistry is AccessControl {
     }
 
     function record(bytes32 donationHash, uint256 timestamp, uint8 bloodType) external onlyRole(RECORDER_ROLE) {
+        if (bloodType > 3) revert InvalidBloodType(bloodType);
         if (_donations[donationHash].exists) revert DonationAlreadyRecorded(donationHash);
 
         _donations[donationHash] = Donation({timestamp: timestamp, bloodType: bloodType, exists: true});

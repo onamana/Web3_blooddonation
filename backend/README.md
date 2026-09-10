@@ -12,6 +12,9 @@ npm run dev
 - `SEPOLIA_RPC_URL`, `BACKEND_SIGNER_PRIVATE_KEY`: ethers.js 연습(②) 전에 필요
 - `DONATION_CONTRACT_ADDRESS`: A가 배포 후 전달해주는 주소로 교체
 - `CERTIFICATE_CONTRACT_ADDRESS`: 증서(ERC-721) 컨트랙트 주소. 미설정 시 `/certificate` 는 501
+- `CERTIFICATE_DEPLOY_BLOCK`: BloodCertificate가 배포된 블록 번호(`deploy.js` 출력 참고). 비워두면
+  이력 조회(`queryFilter`)가 블록 0부터 훑는데, 일부 RPC(Infura 등)는 `eth_getLogs` 블록 범위를
+  제한해서 "range exceeds limit" 에러로 `/certificate` 관련 라우트가 전부 깨진다.
 - `DID_MODULE_BASE_URL`: B가 만든 DID 모듈 API 주소로 교체
 
 서버 켜면 `http://localhost:4000/docs`에서 Swagger UI로 API 확인 및 테스트 가능 (`/openapi.json`은 원본 스펙).
@@ -21,7 +24,7 @@ npm run dev
 - `src/server.js` — Express 진입점, Swagger UI 마운트
 - `src/config/chain.js` — provider/signer/contract 인스턴스 (ethers.js)
 - `src/routes/donation.js` — 헌혈 인증 요청 처리 (서명 검증 → 온체인 record/verify/query)
-- `src/routes/certificate.js` — 헌혈 증서(ERC-721) 조회/양도/사용 처리
+- `src/routes/certificate.js` — 헌혈 증서(ERC-721) 조회/사용 처리 (양도는 프론트 지갑이 직접 온체인으로 보낸다)
 - `src/routes/match.js` — 병원 매칭 조건을 B(DID 모듈)로 중계
 - `src/utils/verifySignature.js` — MetaMask 서명 검증 (프론트에서 서명한 메시지 확인용)
 - `src/schemas/*.js` — Zod 스키마 (요청 검증 + Swagger 문서 생성의 단일 원천)
@@ -47,7 +50,6 @@ npm run dev
 - `GET /certificate?owner=0x...` — 지갑이 보유한 증서 목록
 - `GET /certificate/:tokenId` — 증서 상세 + 이력 타임라인
 - `GET /certificate/:tokenId/verify` — 병원 검증 (`valid` / `used` / `notfound`)
-- `POST /certificate/:tokenId/transfer` — body: `{ from, to, message, signature }`
 - `POST /certificate/:tokenId/use` — body: `{ hospital }`
 - `POST /match` — body: 매칭 조건 (혈액형, 최근 헌혈일 등) → B로 중계
 
@@ -61,8 +63,12 @@ npm run dev
   결정과는 상황이 다르다 (루트 README 참고).
 - **이중사용 차단**은 `POST /certificate/:tokenId/use` 가 `isUsed` 를 먼저 확인하고 409로 막는다.
   프론트의 "검증 실패" 화면이 이 판정을 그대로 보여준다.
-- **양도**는 소유자가 지갑으로 서명한 메시지를 검증한 뒤 백엔드 릴레이어가 `transferFrom` 을 보낸다
-  (`/donation/auth` 와 같은 패턴). TODO: 프론트에서 직접 지갑으로 보내게 바꿀 수 있으면 릴레이 제거.
+- **양도는 백엔드가 중계하지 않는다.** relayer가 ERC-721 `transferFrom`을 보내려면 소유자가 먼저
+  `approve()`를 해야 하는데 그 단계가 없으면 항상 `ERC721InsufficientApproval`로 revert된다.
+  대신 소유자의 MetaMask가 컨트랙트의 `safeTransferFrom()`을 직접 호출하고
+  (`frontend/src/api/certificate.ts`), 백엔드는 그 뒤 `GET /certificate/:tokenId`로 최신 소유자/
+  이력만 다시 읽어온다. 사용 완료된 증서의 양도 차단도 `BloodCertificate.sol`의 `_update()`
+  override가 온체인에서 강제하므로 백엔드가 따로 막을 필요가 없다.
 
 ## D(프론트엔드)와 결정된 사항
 

@@ -8,8 +8,9 @@ async function main() {
 
   const BloodCertificate = await hre.ethers.getContractFactory("BloodCertificate");
   const certificate = await BloodCertificate.deploy(deployer.address);
-  await certificate.waitForDeployment();
+  const certificateReceipt = await certificate.deploymentTransaction().wait();
   console.log("BloodCertificate deployed:", await certificate.getAddress());
+  console.log("BloodCertificate deploy block (set as backend CERTIFICATE_DEPLOY_BLOCK):", certificateReceipt.blockNumber);
 
   const DonationRegistry = await hre.ethers.getContractFactory("DonationRegistry");
   const registry = await DonationRegistry.deploy(deployer.address);
@@ -18,11 +19,13 @@ async function main() {
 
   if (backendSignerAddress) {
     const issuerRole = await certificate.ISSUER_ROLE();
-    await certificate.grantRole(issuerRole, backendSignerAddress);
+    const issuerTx = await certificate.grantRole(issuerRole, backendSignerAddress);
+    await issuerTx.wait();
     console.log("Granted ISSUER_ROLE on BloodCertificate to", backendSignerAddress);
 
     const recorderRole = await registry.RECORDER_ROLE();
-    await registry.grantRole(recorderRole, backendSignerAddress);
+    const recorderTx = await registry.grantRole(recorderRole, backendSignerAddress);
+    await recorderTx.wait();
     console.log("Granted RECORDER_ROLE on DonationRegistry to", backendSignerAddress);
   } else {
     console.log("BACKEND_SIGNER_ADDRESS not set — skipped role grants. Grant manually before backend can call issue()/record().");

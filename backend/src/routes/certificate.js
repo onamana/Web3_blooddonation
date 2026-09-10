@@ -1,14 +1,12 @@
 import { Router } from "express";
 import { ethers } from "ethers";
 import { getCertificateContract } from "../config/chain.js";
-import { verifyWalletSignature } from "../utils/verifySignature.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { validateBody, validateParams, validateQuery } from "../middleware/validate.js";
 import {
   certificateIssueBodySchema,
   certificateOwnerQuerySchema,
   certificateTokenParamSchema,
-  certificateTransferBodySchema,
   certificateUseBodySchema,
 } from "../schemas/certificate.js";
 import { BLOOD_TYPE_TO_CODE, CODE_TO_BLOOD_TYPE } from "../utils/bloodTypeMap.js";
@@ -32,6 +30,13 @@ function notImplemented(res) {
 function isConfigured() {
   return Boolean(process.env.CERTIFICATE_CONTRACT_ADDRESS);
 }
+
+/**
+ * 이벤트 로그 조회의 시작 블록. 컨트랙트가 배포된 블록보다 이전은 뒤질 필요가 없고,
+ * 일부 RPC(Infura 등)는 eth_getLogs의 블록 범위를 통째로 제한하기 때문에 fromBlock을
+ * 0(earliest)으로 두면 "range exceeds limit" 에러로 죽는다.
+ */
+const CERTIFICATE_DEPLOY_BLOCK = Number(process.env.CERTIFICATE_DEPLOY_BLOCK || 0);
 
 /**
  * 발급기관 명. 발급 요청 본문이 아니라 서버 설정에서만 온다.
@@ -68,8 +73,8 @@ async function eventTimestamp(log) {
 /** Transfer + CertificateUsed 로그를 시간순 이력으로 합친다. */
 async function loadHistory(contract, tokenId) {
   const [transfers, uses] = await Promise.all([
-    contract.queryFilter(contract.filters.Transfer(null, null, tokenId)),
-    contract.queryFilter(contract.filters.CertificateUsed(tokenId)),
+    contract.queryFilter(contract.filters.Transfer(null, null, tokenId), CERTIFICATE_DEPLOY_BLOCK),
+    contract.queryFilter(contract.filters.CertificateUsed(tokenId), CERTIFICATE_DEPLOY_BLOCK),
   ]);
 
   const transferEvents = await Promise.all(
@@ -124,7 +129,7 @@ router.get("/", validateQuery(certificateOwnerQuerySchema), asyncHandler(async (
 
   const { owner } = res.locals.query;
   const contract = getCertificateContract();
-  const received = await contract.queryFilter(contract.filters.Transfer(null, owner));
+  const received = await contract.queryFilter(contract.filters.Transfer(null, owner), CERTIFICATE_DEPLOY_BLOCK);
   const candidates = [...new Set(received.map((log) => log.args.tokenId.toString()))];
 
   const owned = [];
@@ -166,36 +171,12 @@ router.get("/:tokenId/verify", validateParams(certificateTokenParamSchema), asyn
   });
 }));
 
-// 양도: 소유자가 지갑으로 서명한 메시지를 검증한 뒤 백엔드 릴레이어가 transferFrom을 보낸다.
-// TODO: 프론트에서 직접 지갑으로 transferFrom을 보내는 방식으로 바꿀 수 있으면 이 릴레이는 걷어낸다.
-router.post(
-  "/:tokenId/transfer",
-  validateParams(certificateTokenParamSchema),
-  validateBody(certificateTransferBodySchema),
-  asyncHandler(async (req, res) => {
-    const { tokenId } = req.params;
-    const { from, to, message, signature } = req.body;
-
-    if (!verifyWalletSignature({ message, signature, claimedAddress: from })) {
-      return res.status(401).json({ error: "signature verification failed" });
-    }
-    if (!isConfigured()) return notImplemented(res);
-
-    const contract = getCertificateContract({ withSigner: true });
-    const currentOwner = await contract.ownerOf(tokenId);
-    if (currentOwner.toLowerCase() !== from.toLowerCase()) {
-      return res.status(403).json({ error: "not the current owner of this certificate" });
-    }
-    if (await contract.isUsed(tokenId)) {
-      return res.status(409).json({ error: "already used certificate cannot be transferred" });
-    }
-
-    const tx = await contract.transferFrom(from, to, tokenId);
-    await tx.wait();
-
-    res.json({ txHash: tx.hash, certificate: await loadCertificate(contract, tokenId) });
-  })
-);
+// 양도: relayer 릴레이 방식은 걷어냈다. ERC-721에서 relayer가 transferFrom을 보내려면
+// 소유자가 미리 approve()/setApprovalForAll()을 해야 하는데 그 단계가 없으면 항상
+// ERC721InsufficientApproval로 revert된다. 지금은 프론트 지갑이 직접
+// safeTransferFrom()을 호출하고(frontend/src/api/certificate.ts), 그 tx가 컨트랙트에
+// 반영된 뒤 GET /:tokenId 로 최신 소유자/이력을 다시 읽어오면 된다 — 별도 백엔드 라우트가
+// 필요 없다. 사용된 증서의 양도 차단도 이제 온체인(_update override)에서 강제한다.
 
 // 사용 처리: 이미 사용된 증서면 409로 막는다 (이중사용 차단).
 router.post(
@@ -224,8 +205,8 @@ router.post(
 
 // 발급: 혈액원이 헌혈자 지갑으로 새 증서(ERC-721)를 민팅한다.
 //
-// 양도/사용과 권한 구조가 다르다. 양도는 소유자의 지갑 서명으로 권한을 증명하지만,
-// 발급은 아직 소유자가 없어서 서명할 사람이 없다. 따라서 권한의 원천은 "지갑 서명"이 아니라
+// 양도는 소유자의 지갑이 직접 온체인 트랜잭션을 보내 권한을 증명하지만, 발급은 아직
+// 소유자가 없어서 그 방식을 쓸 수 없다. 따라서 권한의 원천은 "지갑"이 아니라
 // "혈액원이라는 기관"이어야 한다.
 //
 // TODO(A 협의): 컨트랙트에 발급자 롤(onlyIssuer / AccessControl)을 두고 백엔드 signer를 등록해야

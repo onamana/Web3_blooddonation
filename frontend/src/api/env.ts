@@ -12,6 +12,12 @@ export const EXPLORER_BASE_URL =
   import.meta.env.VITE_EXPLORER_BASE_URL || "https://sepolia.etherscan.io";
 
 /**
+ * BloodCertificate(ERC-721) 컨트랙트 주소. 양도는 백엔드 릴레이가 아니라 소유자의
+ * MetaMask가 직접 safeTransferFrom()을 호출하므로 프론트가 이 주소를 알아야 한다.
+ */
+export const CERTIFICATE_CONTRACT_ADDRESS = import.meta.env.VITE_CERTIFICATE_CONTRACT_ADDRESS || "";
+
+/**
  * 데모 모드에서 발급 화면이 쓰는 발급기관 명.
  * 실제 API 모드에서는 백엔드(BLOOD_CENTER_NAME)가 정하므로 요청에 담지 않는다.
  * 프론트의 HOSPITAL_NAME과 같은 처지 — 다중 혈액원 지원은 MVP 스코프 밖이다.

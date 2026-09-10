@@ -26,6 +26,65 @@ C 백엔드 /match      →   B DID 모듈 (VC 보관 · 조건 필터링)      
 - 오프체인: 실명, 연락처, 상세 신상정보
 - 개인정보는 절대 온체인에 올리지 않음
 
+## `contract` 브랜치 코드리뷰 대응 체크리스트 (2026-09-10, 머지 판단용)
+
+Contract 브랜치 코드리뷰(증서 양도가 relayer 구조라 `ERC721InsufficientApproval`로 항상
+실패하는 문제 등)에서 나온 지적을 모두 반영하고, 실제 Sepolia + 실제 Chrome/MetaMask로
+검증까지 끝냈다.
+
+### 머지 전 반드시 처리 — 전부 완료
+
+- [x] **양도 구조 수정.** relayer의 `transferFrom` 릴레이를 걷어내고, 소유자의 MetaMask가
+  컨트랙트의 `safeTransferFrom()`을 직접 호출하도록 변경 (`frontend/src/api/certificate.ts`).
+  백엔드는 조회·이력 재구성만 담당 (`backend/src/routes/certificate.js`).
+- [x] **사용 후 양도 정책 결정 및 온체인/백엔드 동작 통일.** "사용된 증서는 양도 불가"로
+  정하고, `BloodCertificate.sol`의 `_update()` override로 온체인에서 강제
+  (`UsedCertificateCannotBeTransferred`). 백엔드의 기존 차단 로직과 일치.
+- [x] **`DonationRegistry` 자동 테스트 추가.** `contract/test/DonationRegistry.test.js` 신규
+  (record 성공/이벤트/verify/query/중복 차단/권한 차단/미존재 hash, 7건).
+- [x] **`BloodCertificate` 권한·예외·양도 테스트 추가.** 기존 3건 → 11건으로 확장
+  (`contract/test/BloodCertificate.test.js`).
+
+### 강력 권장 — 전부 완료 (의존성 취약점은 의도적으로 보류)
+
+- [x] **혈액형 범위 검증.** 두 컨트랙트의 `issue()`/`record()`에 `InvalidBloodType`(0~3 외 거부)
+  추가.
+- [x] **배포 스크립트의 `tx.wait()` 보완.** `contract/scripts/deploy.js`의 role 부여 트랜잭션이
+  채굴까지 기다리도록 수정.
+- [x] **의존성 취약점 검토.** `npm audit` 46건 확인 — 전부 Hardhat 개발 툴체인(devDependency)
+  한정이라 배포되는 컨트랙트 bytecode에는 영향 없음. 고치려면 hardhat v3/hardhat-toolbox v7로
+  breaking 업그레이드가 필요해서, 사용자 판단으로 **지금은 보류** 결정 (`contract/README.md`
+  "의존성 취약점" 참고).
+
+### 수정 완료 후 처리 — 전부 완료
+
+- [x] **수정본 Sepolia 재배포.** 기존 2026-09-09 주소 폐기, 새 주소로 교체
+  (`contract/README.md` "배포 현황" 참고).
+- [x] **Etherscan 소스 검증.** 두 컨트랙트 모두 `npm run verify:sepolia`로 검증 완료.
+- [x] **새 주소·ABI 전달 및 전체 파이프라인 테스트.** `backend/.env`/`frontend/.env`에 새 주소
+  반영, ABI 샘플을 컴파일된 실제 ABI로 교체, `VITE_DEMO_MODE=false` 전환.
+
+### 최종 완료 기준 — 실제 Sepolia에서 검증 완료
+
+> 발급 → 목록 조회 → 상세 조회 → 소유자 양도 → 병원 검증 → 사용 처리 → 재사용 차단
+
+위 흐름을 실제 Sepolia 트랜잭션으로 두 번 확인했다: 1) 스크립트로 지갑 역할을 대신해
+`safeTransferFrom`·`markUsed`·재사용 차단·사용후양도차단(`UsedCertificateCannotBeTransferred`
+revert)까지 API 레벨로, 2) 실제 Chrome + MetaMask로 지갑 연결 → 양도 버튼 → 서명 → 실제
+tx(`0xca536f...3a94`) 반영까지. 두 경우 모두 성공했고, 각 tx는 Etherscan에서 확인 가능하다.
+
+**테스트 중 추가로 발견해서 고친 버그** (리뷰엔 없었지만 실제 구동 중 드러남):
+- `certificate.js`의 `queryFilter`가 블록 0부터 무제한 조회해서 Infura의 `eth_getLogs` 범위
+  제한(`range exceeds limit`)에 걸리는 문제 → `CERTIFICATE_DEPLOY_BLOCK`으로 시작 블록 제한.
+- ethers v6의 배치 요청을 무료 Infura가 일부만 거부(`-32005`)하는 문제 → `chain.js`에서
+  `batchMaxCount: 1`로 배치 비활성화.
+
+**아직 남은 개선 여지** (머지를 막지는 않음, `frontend/README.md` "브라우저 실사용 검증 리포트"
+참고):
+- 프론트가 트랜잭션 전 MetaMask의 체인을 확인/전환 요청하지 않음 (Sepolia가 아니면 사용자가
+  원인 불명확한 에러를 마주침).
+- 지갑 연결이 새로고침 시 유지되지 않음 (`eth_accounts`로 자동 복원하지 않음).
+
 ## 제출용 MVP 목표 — 헌혈 증서 5화면
 
 기능을 넓히지 않고 하나의 흐름을 깊게 만든다. 화면이 허전한 이유는 기능이 적어서가 아니라
@@ -64,12 +123,13 @@ C 백엔드 /match      →   B DID 모듈 (VC 보관 · 조건 필터링)      
 2. ~~`BloodCertificate.sol` / `DonationRegistry.sol` 구현 — backend의 `*.sample.abi.json`과 함수/이벤트
    시그니처를 맞추고, `AccessControl`로 발급자 롤(`ISSUER_ROLE`/`RECORDER_ROLE`) 적용~~ 완료
 3. ~~테스트 작성 및 통과 (발급 / 권한 없는 계정의 issue 거부 / 이중사용 차단)~~ 완료
-4. ~~Sepolia 배포~~ 완료 (2026-09-09). 배포 주소는 `contract/README.md` "배포 현황" 참고
-5. **남은 것 — C의 relayer 지갑 주소를 받아 두 컨트랙트에 `ISSUER_ROLE`/`RECORDER_ROLE` 부여.**
-   이게 없으면 backend가 `issue()`/`record()`를 호출할 권한이 없다.
-6. **남은 것 — 배포 주소 + 실제 ABI를 C에게 전달.** `backend/.env`의 `CERTIFICATE_CONTRACT_ADDRESS`/
-   `DONATION_CONTRACT_ADDRESS`와 두 `*.sample.abi.json`을 교체해야 501 응답이 실제 온체인 호출로 바뀐다.
-7. (선택) Etherscan 소스 검증 (`npm run verify:sepolia`)
+4. ~~Sepolia 배포~~ 완료 — 2026-09-10 코드리뷰 대응(양도 구조 변경 등)으로 재배포, 새 주소는
+   `contract/README.md` "배포 현황" 참고 (2026-09-09 주소는 폐기)
+5. ~~C의 relayer 지갑 주소를 받아 두 컨트랙트에 `ISSUER_ROLE`/`RECORDER_ROLE` 부여~~ 완료
+   (2026-09-10, C의 relayer는 deployer 지갑을 재사용)
+6. ~~배포 주소 + 실제 ABI를 C에게 전달~~ 완료 (2026-09-10). `backend/.env`의
+   `CERTIFICATE_CONTRACT_ADDRESS`/`DONATION_CONTRACT_ADDRESS`와 두 `*.sample.abi.json` 교체됨
+7. ~~Etherscan 소스 검증~~ 완료 (2026-09-10, `npm run verify:sepolia`)
 
 자세한 내용은 `contract/README.md` 참고.
 
@@ -91,8 +151,11 @@ C 백엔드 /match      →   B DID 모듈 (VC 보관 · 조건 필터링)      
 3. ~~`window.ethereum` 기반 실제 지갑 연결~~ 완료
 4. ~~`VITE_DEMO_MODE` 로 데모 목업 ↔ 실제 API 전환 구조 + Zod 응답 검증~~ 완료
 5. ~~증서 4화면 (목록 / 상세 타임라인 / 병원 검증 / 이중사용 차단)~~ 완료
-6. **남은 것 — A의 증서 컨트랙트 배포 대기.** 붙이면 데모의 가짜 트랜잭션 해시가 실제 해시로
-   바뀌고 Etherscan 링크가 살아난다
+6. ~~A의 증서 컨트랙트 배포 대기~~ 완료 (2026-09-10). `VITE_DEMO_MODE=false`로 전환, 데모의
+   가짜 트랜잭션 해시가 실제 Sepolia 해시로 바뀌었고 Etherscan 링크도 살아있음
+7. ~~양도 구조를 relayer에서 프론트 지갑 직접 호출로 변경~~ 완료 (2026-09-10 코드리뷰 대응).
+   실제 Chrome + MetaMask + Sepolia로 지갑 연결 → 양도 → 실제 tx 반영까지 검증 완료
+   — 겪은 이슈와 남은 개선 여지는 `frontend/README.md` "브라우저 실사용 검증 리포트" 참고
 
 자세한 내용은 `frontend/README.md` 참고.
 

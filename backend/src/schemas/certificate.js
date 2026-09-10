@@ -45,15 +45,6 @@ export const certificateListResponseSchema = z
   .object({ certificates: z.array(certificateSchema) })
   .meta({ id: "CertificateListResponse" });
 
-export const certificateTransferBodySchema = z
-  .object({
-    from: ethAddressSchema,
-    to: ethAddressSchema,
-    message: z.string().min(1).meta({ example: "blood-certificate-transfer:94:1699999999" }),
-    signature: z.string().min(1).meta({ example: "0x..." }),
-  })
-  .meta({ id: "CertificateTransferRequest" });
-
 /**
  * 발급 요청.
  *

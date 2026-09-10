@@ -24,6 +24,8 @@ contract BloodCertificate is ERC721, AccessControl {
 
     error CertificateAlreadyUsed(uint256 tokenId);
     error CertificateDoesNotExist(uint256 tokenId);
+    error InvalidBloodType(uint8 bloodType);
+    error UsedCertificateCannotBeTransferred(uint256 tokenId);
 
     constructor(address admin) ERC721("BloodPass Certificate", "BPC") {
         _grantRole(DEFAULT_ADMIN_ROLE, admin);
@@ -35,6 +37,8 @@ contract BloodCertificate is ERC721, AccessControl {
         onlyRole(ISSUER_ROLE)
         returns (uint256 tokenId)
     {
+        if (bloodType > 3) revert InvalidBloodType(bloodType);
+
         tokenId = _nextTokenId++;
         _certificates[tokenId] = CertificateInfo({
             bloodType: bloodType,
@@ -75,6 +79,17 @@ contract BloodCertificate is ERC721, AccessControl {
         if (_ownerOf(tokenId) == address(0)) revert CertificateDoesNotExist(tokenId);
         CertificateInfo storage cert = _certificates[tokenId];
         return (cert.bloodType, cert.issuedAt, cert.issuer, cert.used, cert.usedAt, cert.usedBy);
+    }
+
+    /// @dev 사용 처리된 증서는 이력 보존을 위해 이후 양도를 막는다 (민팅 자체는 막지 않는다).
+    function _update(address to, uint256 tokenId, address auth) internal override returns (address) {
+        address from = _ownerOf(tokenId);
+
+        if (from != address(0) && to != address(0) && _certificates[tokenId].used) {
+            revert UsedCertificateCannotBeTransferred(tokenId);
+        }
+
+        return super._update(to, tokenId, auth);
     }
 
     function supportsInterface(bytes4 interfaceId) public view override(ERC721, AccessControl) returns (bool) {
