@@ -1,157 +1,152 @@
-# 🩸 Blood Donation DID / VC Service (Module B)
+# DID / VC Blood Donation Eligibility Service
 
-> **W3C Verifiable Credentials Data Model 1.0** 및 이더리움 타원곡선 서명 알고리즘(**secp256k1 / Keccak-256**)을 준수하는 탈중앙화 신원증명(DID) 및 전자 자격증명(VC) 발급·검증 엔진입니다.
-
----
-
-## 1. 아키텍처 및 설계 원칙
-
-본 모듈은 블록체인 기반 헌혈 시스템의 핵심 요구사항인 **"의료 데이터 프라이버시 보호"**와 **"데이터 무결성 보장"**을 만족하기 위해 다음과 같이 설계되었습니다.
-
-### 🔒 개인정보 오프체인 분리 원칙 (Data Privacy)
-- **온체인 최소화**: 헌혈자의 혈액형, 적격 판정 여부, 최근 헌혈 일자 등 민감한 개인의료정보(PHD)는 가스비 낭비 및 개인정보 유출을 방지하기 위해 블록체인에 영구 기록하지 않습니다.
-- **오프체인 VC 암호화 서명**: 공인 발급기관(혈액원)의 비대칭 개인키(secp256k1)를 이용해 EIP-191 규격 서명을 생성하고, 데이터 위변조 여부는 공개키 복구(`ecrecover`)를 통해 수학적으로 증명합니다.
-
-### 📜 표준 준수 스펙
-- **DID Method**: `did:ethr` (Ethereum Address 기반 식별자)
-- **Issuer DID**: `did:ethr:0x90F8bf6A479f320ead074411a4B0e7944Ea8c9C1` (대한적십자사/혈액원 발급 노드)
-- **Proof Type**: `EthereumPersonalSignature2020` (Keccak-256 해시 기반 무결성 검증)
+헌혈 적격 증명(Verifiable Credential)의 발급, 전자서명 무결성 검증, 그리고 수혈 대상자 매칭 엔진을 제공하는 오프체인 분산 신원인증 모듈입니다.
 
 ---
 
-## 2. 시스템 데이터 흐름 (Workflow)
+## 주요 기능 및 기술 스펙
 
-```text
-[ 병원 / 수혈 요청자 ]
-        │ 1. POST /match (혈액형, 최근 헌혈일 기준)
-        ▼
-[ Backend API (C) ] ── (중계) ──▶ [ DID Module (B) - Port 5001 ]
-                                            │
-                                            ├─ 2. 저장된 VC의 전자서명 검증 (verifyMessage)
-                                            ├─ 3. 데이터 위변조/만료(exp) 여부 체크
-                                            └─ 4. 조건 부합 적격자(Eligible) 선별
-                                            ▼
-[ Backend API (C) ] ◀── (검증 완료 DID 반환) ─┘
-3. 사전 요구사항 및 환경 설정 (Prerequisites)
-Node.js: v18.0.0 이상 권장 (LTS)
+* **오프체인 VC 전자서명 및 무결성 검증**: 발급기관(혈액원) 개인키 기반 ECDSA 전자서명(`EthereumPersonalSignature2020`)을 수행하며, Canonical JSON 직렬화를 통해 데이터 위·변조를 원천 차단합니다.
+* **보안 및 접근 제어**: 발급 API(`POST /vc/issue`) 호출 시 서비스 시크릿 토큰(`x-api-key`) 기반 인증을 강제하며, 허용된 백엔드 Origin에 대해서만 CORS를 허용합니다.
+* **엄격한 스키마 검증**: 이더리움 체크섬 주소, 지원 혈액형, 불리언 적격 여부 및 휴지기간(일수) 입력값에 대한 사전 검증을 수행합니다.
+* **수혈 적격자 매칭**: 위·변조 검증을 거친 유효한 VC만을 대상으로 혈액형, 적격 여부, 최소 헌혈 경과 일수(`minDaysSinceLastDonation`) 기반 후보자를 선별합니다.
 
-포트 가용성: 5001번 포트 (모듈 기본 바인딩 포트)
+> **시스템 제한사항 (시연 및 MVP 기준)**:  
+> 본 모듈의 VC 저장소는 시연용 인메모리(Memory) 구조로 동작하며, **서버 재시작 시 적재된 VC 데이터가 초기화**됩니다. 실제 운영 단계에서는 영속성 데이터베이스(DB) 및 키 관리 서비스(KMS/Vault) 연동이 필요합니다.
 
-필수 의존 패키지 (Dependencies):
+---
 
-express: RESTful API 라우팅 게이트웨이
+## 환경 설정 및 실행 방법
 
-ethers: EIP-191 서명(signMessage) 및 타원곡선 서명 검증(verifyMessage)
+### 1. 환경변수 설정
 
-cors: 교차 출처 리소스 공유 허용
+저장소 루트에 위치한 `.env.example`을 복사하여 `.env` 파일을 생성하고 필수 값을 구성합니다.
 
-dotenv: 환경변수 관리
+```bash
+cp .env.example .env
+Ini, TOML
+PORT=5001
+NODE_ENV=development
 
-⚠️ 알림: 실제 패키지 바이너리(node_modules/)는 Git 저장소 추적에서 제외되어 있으므로, 저장소를 내려받은 후 반드시 아래의 설치 과정을 진행해야 합니다.
+# 발급기관 전자서명용 이더리움 개인키 (0x로 시작하는 64자리 16진수)
+DID_ISSUER_PRIVATE_KEY=your_private_key_here
 
-4. 디렉터리 구조 및 핵심 모듈
-Plaintext
-did/
-├── src/
-│   ├── services/
-│   │   └── vcService.js    # W3C VC 생성, Keccak-256 서명/검증 및 후보자 필터링 코어
-│   └── server.js           # Express 기반 API 게이트웨이 (Port 5001)
-├── .gitignore              # node_modules 및 환경변수 배제 설정
-├── package.json            # 의존성 및 실행 스크립트 정의
-└── README.md
-issueBloodVC(holderAddress, bloodType, isEligible):
-credentialSubject를 구성하고 혈액원 개인키로 서명 날인된 W3C 규격 VC 객체를 생성합니다.
+# 발급 API 보호용 시크릿 토큰
+DID_ISSUE_API_KEY=your_service_api_key_here
 
-verifyBloodVC(vc):
-proof.rawPayload와 proof.jws 서명값을 대조하여 데이터 위변조 여부를 검증하고 유효기간(expirationDate)을 판정합니다.
+# 백엔드 CORS 허용 도메인 (쉼표 구분)
+DID_ALLOWED_ORIGINS=http://localhost:4000
+DID_ISSUER_PRIVATE_KEY가 설정되지 않은 경우 서버가 시작되지 않습니다.
 
-matchCandidates({ bloodType, recentDonationWithinDays, onlyEligible }):
-서명 무결성 검증을 통과한 신뢰 데이터 중 병원의 요청 조건에 부합하는 대상자 DID 목록을 추출합니다.
+운영 환경(NODE_ENV=production)에서는 전체 VC 조회 API(GET /vc)가 비활성화됩니다.
 
-5. API 명세 (Endpoints)
+2. 패키지 설치 및 서버 구동
+Bash
+# 의존성 설치
+npm install
+
+# 개발 모드 실행 (포트 5001)
+npm run dev
+
+# 프로덕션 실행
+npm start
+3. 무결성 및 보안 단위 테스트
+Bash
+npm test
+VC 클레임(혈액형, 적격 여부, DID, 만료일 등) 위·변조 탐지 8종
+
+API 계층 인증(x-api-key), 유효성 검사, 보안 격리 9종
+
+API 규격서
+기본 서버 주소: http://localhost:5001
+
+1. 헬스체크
 GET /health
-모듈의 동작 상태 및 발급기관(Issuer) DID를 조회합니다.
+
+Response (200 OK)
 
 JSON
 {
   "status": "ok",
   "module": "DID/VC Service",
-  "issuerDid": "did:ethr:0x90F8bf6A479f320ead074411a4B0e7944Ea8c9C1"
+  "issuerDid": "did:ethr:0x...",
+  "port": 5001
 }
-GET /vc
-현재 발급기관 서명이 완료된 전체 VC 목록을 조회합니다. (디버깅 및 시연용)
+2. 헌혈 적격 VC 발급
+공인된 백엔드 시스템만 호출할 수 있습니다.
 
 POST /vc/issue
-신규 헌혈자에게 혈액원 서명이 날인된 VC를 발급합니다.
 
-Request Body:
+Headers: x-api-key: {DID_ISSUE_API_KEY}
+
+Request Body
 
 JSON
 {
   "holderAddress": "0x70997970C51812dc3A010C7d01b50e0d17dc79C8",
   "bloodType": "O",
-  "isEligible": true
+  "isEligible": true,
+  "lastDonationDate": "2026-08-01",
+  "daysValid": 90
 }
-POST /match
-백엔드(C)의 요청을 수신하여 서명 검증을 거친 최적의 헌혈 후보자를 선별합니다.
+Response (201 Created): 발급된 W3C 규격 VC 객체 반환
 
-Request Body:
+3. VC 위변조 및 서명 검증
+POST /vc/verify
+
+Request Body
+
+JSON
+{
+  "vc": { /* W3C VC 객체 */ }
+}
+Response (200 OK)
+
+JSON
+{
+  "isValid": true,
+  "verifiedData": {
+    "issuer": "did:ethr:0x...",
+    "holderDid": "did:ethr:0x...",
+    "bloodType": "O",
+    "isEligible": true,
+    "lastDonationDate": "2026-08-01"
+  }
+}
+4. 수혈 적격 후보자 매칭
+POST /match
+
+Request Body
 
 JSON
 {
   "bloodType": "O",
-  "recentDonationWithinDays": 90,
+  "minDaysSinceLastDonation": 60,
   "onlyEligible": true
 }
-Response (200 OK):
+Response (200 OK)
 
 JSON
 {
   "success": true,
   "query": {
     "bloodType": "O",
-    "recentDonationWithinDays": 90,
+    "minDaysSinceLastDonation": 60,
     "onlyEligible": true
   },
   "matchedCount": 1,
   "matches": [
     {
-      "holderDid": "did:ethr:0x70997970C51812dc3A010C7d01b50e0d17dc79C8",
+      "holderDid": "did:ethr:0x...",
       "bloodType": "O",
       "isEligible": true,
-      "lastDonationDate": "2026-09-10",
-      "issuerDid": "did:ethr:0x90F8bf6A479f320ead074411a4B0e7944Ea8c9C1",
+      "lastDonationDate": "2026-08-01",
+      "issuerDid": "did:ethr:0x...",
       "verifiedSignature": true
     }
   ]
 }
-6. 설치 및 실행 가이드
-1) 의존성 설치
-Bash
-# did 디렉터리로 이동
-cd did
+5. 전체 VC 조회 (개발 전용)
+GET /vc
 
-# package.json에 정의된 필수 의존성 일괄 설치
-npm install
-2) 서비스 실행
-Bash
-# 개발 모드로 실행 (Watch 모드)
-npm run dev
-
-# 또는 직접 실행
-node --watch src/server.js
-구동 성공 시 http://localhost:5001에서 수신 대기합니다.
-
-3) 백엔드(C) 연동 설정 (필수)
-백엔드(backend/)가 본 DID 모듈과 통신할 수 있도록 backend/.env 파일에 아래 환경변수를 반드시 선언해야 합니다:
-
-코드 스니펫
-DID_MODULE_BASE_URL=http://localhost:5001
-
----
-
-### 복사 후 체크
-1. `did/README.md`에 전체 붙여넣기 후 **`Ctrl + S`**로 저장합니다.
-2. 이제 터미널에서 다음 명령어를 쳐서 상태를 확인합니다:
-   ```cmd
-   git status
+개발 모드(NODE_ENV=development)에서만 활성화되며, 운영 모드에서는 404 Not Found를 반환합니다.
