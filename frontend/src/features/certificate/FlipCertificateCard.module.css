@@ -35,7 +35,11 @@
   backface-visibility: hidden;
   border-radius: 18px;
   overflow: hidden;
-  box-shadow: 0 18px 34px -18px rgb(0 0 0 / 0.28);
+}
+
+.face[data-side="front"] {
+  overflow: visible;
+  border-radius: 0;
 }
 
 .face[data-side="back"] {
@@ -65,6 +69,8 @@
 */
 
 .bag {
+  /* The stationary front face handles hover/click; the visual cannot change hit testing. */
+  pointer-events: none;
   position: relative;
   height: 100%;
   transform-style: preserve-3d;
@@ -190,9 +196,9 @@
 /* 마우스를 따라 도는 하이라이트 — useBloodTilt 가 배경을 직접 갱신한다. */
 .bagGlare {
   position: absolute;
-  inset: 0;
+  inset: 11.11% 0 0;
   pointer-events: none;
-  border-radius: inherit;
+  border-radius: 15% 15% 13% 13%;
   transform: translateZ(50px);
   background: radial-gradient(circle at 50% 30%, rgba(255, 255, 255, 0.35), transparent 55%);
 }
@@ -233,12 +239,12 @@
   align-items: center;
   justify-content: center;
   gap: 2px;
-  font-size: 8.5px;
+  font-size: 14px;
   font-weight: 700;
   letter-spacing: 0.2px;
   color: #55524e;
   border-right: 1px solid #2b2b2b;
-  padding: 0 2px;
+  padding: 0 6px;
 }
 
 .labelHeaderCol[data-last] {
@@ -246,7 +252,8 @@
 }
 
 .labelHeaderValue {
-  font-size: 10px;
+  font-size: clamp(14px, 1.8vw, 17px);
+  overflow-wrap: anywhere;
   color: #1a1a1a;
 }
 
@@ -284,14 +291,14 @@
 }
 
 .labelCaption {
-  font-size: 10.5px;
+  font-size: 13px;
   font-weight: 700;
   color: var(--pri);
   letter-spacing: 0.2px;
 }
 
 .labelBig {
-  font-size: clamp(16px, 2.4vw, 20px);
+  font-size: clamp(19px, 2.6vw, 23px);
   font-weight: 800;
   color: var(--pri);
   letter-spacing: -0.1px;
@@ -301,7 +308,7 @@
 }
 
 .labelIssuer {
-  font-size: 12px;
+  font-size: 15px;
   color: var(--sub);
   line-height: 1.4;
   overflow-wrap: anywhere;
@@ -312,8 +319,9 @@
   height: 22%;
   display: flex;
   align-items: center;
-  padding-left: 8px;
-  font-size: 9px;
+  gap: 8px;
+  padding: 0 6px;
+  font-size: clamp(12px, 1.6vw, 14px);
   font-weight: 700;
   color: #3a3733;
   border-top: 1px solid #2b2b2b;
@@ -332,7 +340,7 @@
 
 /* 증서번호 뱃지 */
 .bagTokenId {
-  font-size: 13.5px;
+  font-size: 15px;
   font-weight: 800;
   color: var(--ink);
   background: var(--pri-tint);
@@ -377,7 +385,7 @@
   align-items: baseline;
   justify-content: space-between;
   gap: 10px;
-  font-size: 12.5px;
+  font-size: 14px;
 }
 
 .detailLabel {

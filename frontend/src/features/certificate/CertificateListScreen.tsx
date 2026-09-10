@@ -4,7 +4,7 @@ import { ApiError } from "../../api/client";
 import { useWallet } from "../../hooks/walletContext";
 import type { Certificate } from "../../types/certificate";
 import { WalletGate } from "./WalletGate";
-import { AddressDisplay } from "./AddressDisplay";
+import { ConnectedWallet } from "./ConnectedWallet";
 import { BrandBar } from "./BrandBar";
 import { CertificateCarousel } from "./CertificateCarousel";
 import { formatTokenId } from "./certificateLabels";
@@ -68,17 +68,17 @@ export function CertificateListScreen() {
   }
 
   return (
-    <div className={styles.shell}>
+    <div className={`${styles.shell} ${listStyles.page}`}>
       <BrandBar />
 
+      <div className={listStyles.surface}>
       <section className={listStyles.overview} aria-labelledby="certificate-title">
       <div className={listStyles.heading}>
         <div>
-          <span className={listStyles.eyebrow}>MY BLOODPASS</span>
-          <h1 id="certificate-title" className={listStyles.title}>내 헌혈 증서</h1>
+          <h1 id="certificate-title" className={listStyles.title}>내 증서</h1>
           <p className={listStyles.description}>나눔의 기록을 한곳에, 소중한 마음을 다음으로.</p>
         </div>
-        <div className={listStyles.wallet}><span>연결된 지갑</span><AddressDisplay address={address} /></div>
+        <ConnectedWallet key={address} address={address} />
       </div>
       <div className={listStyles.stats} aria-live="polite">
         {[
@@ -128,6 +128,7 @@ export function CertificateListScreen() {
         />
         </section>
       )}
+      </div>
     </div>
   );
 }

@@ -129,7 +129,7 @@ export function CertificateCarousel({
       <div
         className={styles.viewport}
         role="group"
-        aria-label="내 헌혈 증서"
+        aria-label="내 증서"
         tabIndex={0}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}

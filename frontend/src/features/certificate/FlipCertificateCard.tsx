@@ -41,7 +41,7 @@ export function FlipCertificateCard({
   onTransfer,
 }: FlipCertificateCardProps) {
   const used = certificate.status === "used";
-  const { bagRef, glareRef } = useBloodTilt(tiltActive && !flipped);
+  const { hitAreaRef, bagRef, glareRef } = useBloodTilt(tiltActive && !flipped);
 
   return (
     <div className={styles.flipOuter}>
@@ -51,7 +51,7 @@ export function FlipCertificateCard({
           거기 있던 좌표(612x612 캔버스 안의 152,116 ~ 460,584 박스)를 이 박스 기준
           퍼센트로 환산해서 옮겼다. 라벨 칸의 값만 우리 데이터로 채웠다.
         */}
-        <div className={styles.face} data-side="front">
+        <div className={styles.face} data-side="front" ref={hitAreaRef}>
           <div className={styles.bag} data-used={used} ref={bagRef}>
             {/* 위쪽 튜브 포트 3개 */}
             <div className={styles.port} style={{ left: "30.19%" }}>
@@ -80,15 +80,9 @@ export function FlipCertificateCard({
             <div className={styles.label}>
               <div className={styles.labelHeader}>
                 <div className={styles.labelHeaderCol}>
-                  <span>헌혈일자</span>
-                  <span className={`${styles.labelHeaderValue} mono`}>{formatOnchainDate(certificate.issuedAt)}</span>
-                </div>
-                <div className={styles.labelHeaderCol}>
-                  <span>증서번호</span>
                   <span className={`${styles.labelHeaderValue} mono`}>{formatTokenId(certificate.tokenId)}</span>
                 </div>
                 <div className={styles.labelHeaderCol} data-last>
-                  <span>사용가능</span>
                   <span
                     className={styles.labelHeaderValue}
                     data-ok={certificate.status === "active"}
@@ -107,7 +101,8 @@ export function FlipCertificateCard({
                     <div className={styles.labelIssuer}>{certificate.issuer}</div>
                   </div>
                   <div className={styles.labelFooterStrip} data-center>
-                    ERC-721 온체인 인증서
+                    <span>헌혈일자</span>
+                    <span className="mono">{formatOnchainDate(certificate.issuedAt)}</span>
                   </div>
                 </div>
               </div>

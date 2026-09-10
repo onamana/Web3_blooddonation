@@ -7,44 +7,82 @@ import { useEffect, useRef } from "react";
  * 카드에서만 켠다 — 그 판단은 호출부(enabled)가 한다.
  */
 export function useBloodTilt(enabled: boolean) {
+  const hitAreaRef = useRef<HTMLDivElement>(null);
   const bagRef = useRef<HTMLDivElement>(null);
   const glareRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const bag = bagRef.current;
-    if (!bag || !enabled) return;
+    const hitArea = hitAreaRef.current;
+    if (!bag || !hitArea || !enabled) return;
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    let frame = 0;
+    let currentX = 0;
+    let currentY = 0;
+    let targetX = 0;
+    let targetY = 0;
+    let previousTime = 0;
 
-    const handleMove = (e: MouseEvent) => {
-      const rect = bag.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      const rotY = ((x - rect.width / 2) / (rect.width / 2)) * 10;
-      const rotX = -((y - rect.height / 2) / (rect.height / 2)) * 10;
-      bag.style.transform = `perspective(1200px) rotateX(${rotX}deg) rotateY(${rotY}deg)`;
+    const animate = (time: number) => {
+      const elapsed = previousTime ? Math.min(time - previousTime, 64) : 16;
+      previousTime = time;
+      const blend = 1 - Math.exp(-elapsed / 85);
+      currentX += (targetX - currentX) * blend;
+      currentY += (targetY - currentY) * blend;
+      const settled = Math.abs(targetX - currentX) + Math.abs(targetY - currentY) < 0.001;
+      if (settled) { currentX = targetX; currentY = targetY; }
+      bag.style.transform = `perspective(1200px) rotateX(${-currentY * 6}deg) rotateY(${currentX * 6}deg)`;
 
       const glare = glareRef.current;
       if (glare) {
-        const px = (x / rect.width) * 100;
-        const py = (y / rect.height) * 100;
+        const px = 50 + currentX * 40;
+        const py = 30 + currentY * 25;
         glare.style.background = `radial-gradient(circle at ${px}% ${py}%, rgba(255,255,255,0.4), transparent 55%)`;
       }
+      frame = settled ? 0 : requestAnimationFrame(animate);
+      if (settled) previousTime = 0;
     };
 
+    const schedule = () => {
+      if (!frame) frame = requestAnimationFrame(animate);
+    };
+    const handleMove = (e: PointerEvent) => {
+      if (e.pointerType !== "mouse" || reducedMotion.matches) return;
+      // Measure the stationary hit area, never the bag being transformed.
+      const rect = hitArea.getBoundingClientRect();
+      if (!rect.width || !rect.height) return;
+      const clamp = (value: number) => Math.max(-1, Math.min(1, value));
+      targetX = clamp(((e.clientX - rect.left) / rect.width) * 2 - 1);
+      targetY = clamp(((e.clientY - rect.top) / rect.height) * 2 - 1);
+      schedule();
+    };
     const handleLeave = () => {
-      bag.style.transform = "perspective(1200px) rotateX(0deg) rotateY(0deg)";
-      const glare = glareRef.current;
-      if (glare) glare.style.background = "radial-gradient(circle at 50% 30%, rgba(255,255,255,0.35), transparent 55%)";
+      targetX = 0;
+      targetY = 0;
+      schedule();
+    };
+    const reset = () => {
+      cancelAnimationFrame(frame);
+      frame = 0;
+      previousTime = 0;
+      currentX = currentY = targetX = targetY = 0;
+      bag.style.transform = "";
+      if (glareRef.current) glareRef.current.style.background = "";
     };
 
-    bag.addEventListener("mousemove", handleMove);
-    bag.addEventListener("mouseleave", handleLeave);
+    hitArea.addEventListener("pointermove", handleMove);
+    hitArea.addEventListener("pointerleave", handleLeave);
+    hitArea.addEventListener("pointercancel", handleLeave);
+    reducedMotion.addEventListener("change", reset);
 
     return () => {
-      bag.removeEventListener("mousemove", handleMove);
-      bag.removeEventListener("mouseleave", handleLeave);
-      bag.style.transform = "";
+      hitArea.removeEventListener("pointermove", handleMove);
+      hitArea.removeEventListener("pointerleave", handleLeave);
+      hitArea.removeEventListener("pointercancel", handleLeave);
+      reducedMotion.removeEventListener("change", reset);
+      reset();
     };
   }, [enabled]);
 
-  return { bagRef, glareRef };
+  return { hitAreaRef, bagRef, glareRef };
 }
