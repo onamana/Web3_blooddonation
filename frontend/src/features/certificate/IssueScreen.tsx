@@ -13,11 +13,11 @@ import { formatTokenId } from "./certificateLabels";
 import { OnchainProof } from "./OnchainProof";
 import styles from "./Certificate.module.css";
 
-const DONATION_TYPES: { value: DonationType; label: string; description: string }[] = [
-  { value: "WHOLE_BLOOD", label: "전혈", description: "혈액의 모든 성분" },
-  { value: "PLASMA", label: "혈장", description: "혈장 성분헌혈" },
-  { value: "PLATELETS", label: "혈소판", description: "혈소판 성분헌혈" },
-  { value: "PLATELETS_PLASMA", label: "혈소판·혈장", description: "두 성분 동시 헌혈" },
+const DONATION_TYPES: { value: DonationType; label: string }[] = [
+  { value: "WHOLE_BLOOD", label: "전혈" },
+  { value: "PLASMA", label: "혈장" },
+  { value: "PLATELETS", label: "혈소판" },
+  { value: "PLATELETS_PLASMA", label: "혈소판·혈장" },
 ];
 
 const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{40}$/;
@@ -87,7 +87,7 @@ export function IssueScreen() {
               <div className={styles.issueInputHead}>
                 <span>01</span>
                 <div>
-                  <h2>증서를 받을 지갑</h2>
+                  <h2>헌혈증서 발급 대상 지갑</h2>
                   <p>검사정보가 등록된 헌혈자의 지갑 주소를 입력합니다.</p>
                 </div>
               </div>
@@ -136,27 +136,30 @@ export function IssueScreen() {
               <div className={styles.issueInputHead}>
                 <span>02</span>
                 <div>
-                  <h2>헌혈 정보</h2>
+                  <h2>헌혈 종류</h2>
                   <p>이번 증서에 연결할 헌혈 종류를 선택합니다.</p>
                 </div>
               </div>
 
               <div className={styles.issueTypeGrid} role="radiogroup" aria-label="헌혈 종류">
-                {DONATION_TYPES.map(({ value, label, description }) => (
+                {DONATION_TYPES.map(({ value, label }) => (
                   <Fragment key={value}>
-                    <button
-                      type="button"
-                      role="radio"
-                      aria-checked={donationType === value}
+                    <label
                       className={styles.issueTypeOption}
                       data-active={donationType === value}
-                      onClick={() => setDonationType(value)}
-                      disabled={pending}
+                      data-disabled={pending}
                     >
-                      <span className={styles.issueTypeCheck}>{donationType === value ? "✓" : ""}</span>
+                      <input
+                        type="checkbox"
+                        role="radio"
+                        aria-checked={donationType === value}
+                        className={styles.issueTypeCheck}
+                        checked={donationType === value}
+                        onChange={() => setDonationType(value)}
+                        disabled={pending}
+                      />
                       <strong>{label}</strong>
-                      <small>{description}</small>
-                    </button>
+                    </label>
 
                     {value === "WHOLE_BLOOD" && donationType === "WHOLE_BLOOD" && (
                       <div className={styles.issueVolumeBlock}>
@@ -230,8 +233,8 @@ export function IssueScreen() {
               </div>
             )}
 
-            <Button type="submit" variant="push" block disabled={!addressValid || pending}>
-              {pending ? "블록체인에 기록 중..." : "이 정보로 증서 발급"}
+            <Button type="submit" className={styles.issueIssueButton} disabled={!addressValid || pending}>
+              {pending ? "발급 중..." : "증서 발급하기"}
             </Button>
             <p className={styles.issueSubmitNote}>발급 후 소유자와 발급 이력이 온체인에 기록됩니다.</p>
           </aside>

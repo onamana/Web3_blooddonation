@@ -1287,6 +1287,15 @@
   grid-template-columns: minmax(0, 1fr);
   align-items: start;
   gap: 14px;
+  overflow: hidden;
+  border-radius: var(--radius-xl);
+  background: linear-gradient(
+    180deg,
+    var(--pri-tint) 0%,
+    var(--card) 28%,
+    var(--card) 72%,
+    var(--pri-tint) 100%
+  );
 }
 
 .issueWalletSection,
@@ -1295,11 +1304,10 @@
 }
 
 .issueInputSection {
-  border: 1px solid var(--line);
+  border: 0;
   border-radius: var(--radius-xl);
   padding: 20px;
-  background: #fff;
-  box-shadow: 0 10px 30px rgb(28 25 23 / 0.035);
+  background: transparent;
 }
 
 .issueInputHead {
@@ -1473,10 +1481,10 @@
   position: relative;
   display: grid;
   grid-template-columns: 22px 1fr;
-  grid-template-rows: auto auto;
+  align-items: center;
   column-gap: 9px;
   min-height: 72px;
-  appearance: none;
+  user-select: none;
   border: 1px solid var(--line);
   border-radius: 13px;
   padding: 12px;
@@ -1486,9 +1494,19 @@
   transition: transform 0.14s ease, border-color 0.14s ease, background 0.14s ease;
 }
 
-.issueTypeOption:hover {
+.issueTypeOption:hover:not([data-disabled="true"]) {
   border-color: #c7c3c0;
   transform: translateY(-1px);
+}
+
+.issueTypeOption:focus-within {
+  outline: 2px solid rgb(var(--pri-rgb) / 0.24);
+  outline-offset: 2px;
+}
+
+.issueTypeOption[data-disabled="true"] {
+  cursor: not-allowed;
+  opacity: 0.5;
 }
 
 .issueTypeOption[data-active="true"] {
@@ -1497,33 +1515,87 @@
 }
 
 .issueTypeCheck {
-  display: grid;
-  width: 20px;
-  height: 20px;
-  grid-row: 1 / 3;
-  place-items: center;
-  border: 1px solid var(--line);
-  border-radius: 50%;
-  color: #fff;
-  font-size: 10px;
+  --primary-color: var(--pri);
+  --secondary-color: #fff;
+  --primary-hover-color: var(--pri-d);
+  --checkbox-diameter: 20px;
+  --checkbox-border-radius: 5px;
+  --checkbox-border-color: var(--pri);
+  --checkbox-border-width: 1px;
+  --checkbox-border-style: solid;
+  --checkmark-size: 1.2;
+
+  position: relative;
+  align-self: center;
+  width: var(--checkbox-diameter);
+  height: var(--checkbox-diameter);
+  margin: 0;
+  appearance: none;
+  border: var(--checkbox-border-width) var(--checkbox-border-style) var(--checkbox-border-color);
+  border-radius: var(--checkbox-border-radius);
+  background: var(--secondary-color);
+  box-sizing: border-box;
+  cursor: pointer;
+  transition: all 0.3s;
 }
 
-.issueTypeOption[data-active="true"] .issueTypeCheck {
-  border-color: var(--pri);
-  background: var(--pri);
+.issueTypeCheck::before,
+.issueTypeCheck::after {
+  box-sizing: border-box;
+}
+
+.issueTypeCheck::after {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: 0 0 0 calc(var(--checkbox-diameter) / 2.5) var(--primary-color);
+  content: "";
+  opacity: 0;
+  transition: all 0.5s cubic-bezier(0.12, 0.4, 0.29, 1.46);
+}
+
+.issueTypeCheck::before {
+  position: absolute;
+  top: 45%;
+  left: 50%;
+  width: 4px;
+  height: 7px;
+  border-right: 2px solid var(--secondary-color);
+  border-bottom: 2px solid var(--secondary-color);
+  content: "";
+  opacity: 0;
+  transform: translate(-50%, -50%) rotate(45deg) scale(0);
+  transition: all 0.1s cubic-bezier(0.71, -0.46, 0.88, 0.6), opacity 0.1s;
+}
+
+.issueTypeCheck:hover {
+  border-color: var(--primary-hover-color);
+}
+
+.issueTypeCheck:checked {
+  border-color: transparent;
+  background: var(--primary-color);
+}
+
+.issueTypeCheck:checked::before {
+  opacity: 1;
+  transform: translate(-50%, -50%) rotate(45deg) scale(var(--checkmark-size));
+  transition: all 0.2s cubic-bezier(0.12, 0.4, 0.29, 1.46) 0.1s;
+}
+
+.issueTypeCheck:active:not(:checked)::after {
+  box-shadow: none;
+  opacity: 1;
+  transition: none;
+}
+
+.issueTypeCheck:disabled {
+  cursor: not-allowed;
 }
 
 .issueTypeOption strong {
-  align-self: end;
   color: var(--ink);
-  font-size: 12.5px;
-}
-
-.issueTypeOption small {
-  align-self: start;
-  margin-top: 2px;
-  color: var(--mute);
-  font-size: 10px;
+  font-size: 14px;
 }
 
 .issueVolumeBlock {
@@ -1564,10 +1636,9 @@
   position: static;
   grid-column: 1;
   overflow: hidden;
-  border: 1px solid var(--pri-line);
+  border: 0;
   border-radius: 18px;
-  background: var(--pri-tint);
-  box-shadow: 0 18px 45px rgb(92 18 26 / 0.09);
+  background: transparent;
 }
 
 .issuePreviewTop {
@@ -1716,9 +1787,23 @@
   margin: 10px 12px;
 }
 
-.issuePreview > .btn {
-  width: calc(100% - 24px);
-  margin: 10px 12px 8px;
+.issuePreview > .issueIssueButton {
+  display: flex;
+  width: 100px;
+  height: 45px;
+  margin: 10px auto 8px;
+  border-radius: 8px;
+  background: var(--pri-line);
+  box-shadow: none;
+  color: var(--pri);
+  font-weight: 700;
+  transition: background-color 0.3s, box-shadow 0.3s, color 0.3s;
+}
+
+.issuePreview > .issueIssueButton:hover {
+  background: var(--pri);
+  box-shadow: 0 0 0 5px rgb(var(--pri-rgb) / 0.37);
+  color: #fff;
 }
 
 .issueSubmitNote {
