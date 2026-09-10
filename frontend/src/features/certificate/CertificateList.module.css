@@ -10,9 +10,10 @@ body:has(.page) { background: var(--card); }
 .title { margin: 8px 0; font-size: clamp(24px, 4vw, 32px); letter-spacing: -0.05em; line-height: 1.25; }
 .description { margin: 0; color: var(--sub); font-size: 14px; line-height: 1.7; word-break: keep-all; }
 .stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 24px; }
-.stat { display: flex; flex-direction: column; gap: 12px; padding: 18px 20px; border-radius: 16px; background: radial-gradient(circle, rgb(28 25 23 / 0.06) 1px, transparent 1px) 0 0 / 20px 20px, var(--card); box-shadow: 0 4px 8px -4px rgb(28 25 23 / 0.12); }
+.stat { display: flex; flex-direction: column; gap: 10px; padding: 16px 20px; border: 1px solid var(--line); border-radius: 12px; background: var(--card); }
+.stat[data-highlight="true"] { background: var(--pri-tint); border-color: var(--pri-line); }
 .stat > span { font-size: 12px; font-weight: 600; color: var(--sub); }
-.stat strong { font-size: 30px; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; line-height: 1; }
+.stat strong { font-size: 28px; color: var(--sub); letter-spacing: -0.04em; font-variant-numeric: tabular-nums; line-height: 1; }
 .stat small { font-size: 12px; font-weight: 500; color: var(--mute); margin-left: 5px; }
 .stat[data-highlight="true"] strong { color: var(--pri); }
 .collection { padding: 24px 0; border-radius: 0 0 var(--radius-xl) var(--radius-xl); background: linear-gradient(0deg, var(--pri-tint), var(--card) 75%); }

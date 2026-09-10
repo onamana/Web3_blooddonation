@@ -341,15 +341,15 @@ export function VerifyScreen() {
       {/* STATE 2 — 사용 가능. 사용 처리 전에 "정말 이 지갑의 증서인지"를 근거로 보여준다. */}
       {valid && (
         <>
-          <div className={verifyStyles.availableCard}>
-            <div className={verifyStyles.availableIcon}>
+          <div className={`${styles.verdict} ${styles.verdictOk}`}>
+            <div className={`${styles.verdictMark} ${styles.verdictMarkOk}`}>
               <Check size={20} aria-hidden="true" />
             </div>
-            <div className={verifyStyles.availableTitle}>사용 가능</div>
-            <div className={verifyStyles.availableDescription}>
+            <div className={`${styles.verdictTitle} ${styles.verdictTitleOk}`}>사용 가능</div>
+            <div className={`${styles.verdictDesc} ${styles.verdictDescOk}`}>
               증서 {formatTokenId(valid.tokenId)} · {valid.bloodType}형
             </div>
-            <div className={verifyStyles.availableMeta}>
+            <div className={styles.verdictMeta}>
               {formatOnchainDate(valid.issuedAt)} {valid.issuer} 발급
             </div>
           </div>

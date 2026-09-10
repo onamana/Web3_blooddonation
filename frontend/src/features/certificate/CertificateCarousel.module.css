@@ -71,8 +71,11 @@
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 6px;
+  gap: 2px;
 }
+
+.controls { display: flex; align-items: center; justify-content: center; gap: 20px; }
+.position { min-width: 48px; font-size: 13px; font-variant-numeric: tabular-nums; color: var(--sub); text-align: center; }
 
 .nav {
   appearance: none;
@@ -99,15 +102,18 @@
 .dot {
   appearance: none;
   padding: 0;
-  width: 6px;
-  height: 6px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   border: none;
-  background: var(--line);
+  background: transparent;
   cursor: pointer;
+  display: grid;
+  place-items: center;
 }
 
-.dot[data-active="true"] {
+.dot::after { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--line); }
+.dot[data-active="true"]::after {
   background: var(--pri);
   width: 16px;
   border-radius: 3px;

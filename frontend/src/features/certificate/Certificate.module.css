@@ -14,11 +14,19 @@
 .verifyShell .sessionNetwork { font-size: 11px; }
 .verifyShell .recentChips { margin-top: 16px; }
 .verifyShell .recentChip { min-height: 36px; padding: 6px 12px; }
-.verifyShell .verdict { padding: clamp(24px, 5vw, 40px); gap: 12px; }
-.verifyShell .verdictMark { font-size: 44px; }
-.verifyShell .verdictTitle { font-size: clamp(24px, 4.5vw, 36px); letter-spacing: -0.04em; word-break: keep-all; }
-.verifyShell .verdictDesc { font-size: clamp(15px, 2.5vw, 18px); word-break: keep-all; }
-.verifyShell .verdictMeta { font-size: 13px; line-height: 1.7; overflow-wrap: anywhere; }
+.verifyShell .verdict { padding: clamp(24px, 5vw, 32px); gap: 10px; background: var(--card); overflow-wrap: anywhere; }
+.verifyShell .verdictMark { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; font-size: 24px; margin-bottom: 4px; }
+.verifyShell .verdictTitle { font-size: clamp(22px, 4vw, 26px); letter-spacing: -0.04em; word-break: keep-all; }
+.verifyShell .verdictDesc { font-size: 14px; font-weight: 500; color: var(--sub); word-break: keep-all; }
+.verifyShell .verdictMeta { font-size: 13px; color: var(--sub); line-height: 1.7; overflow-wrap: anywhere; }
+.verifyShell .verdictOk { border-color: var(--done-line); }
+.verifyShell .verdictFail { border-color: var(--pri-line); }
+.verifyShell .verdictWarn { border-color: var(--warn-line); }
+.verifyShell .verdictMarkOk { background: var(--done-bg); color: var(--done); }
+.verifyShell .verdictMarkFail { background: var(--pri-tint); color: var(--pri); }
+.verifyShell .verdictMarkWarn { background: var(--warn-bg); color: var(--warn); }
+.verifyShell .verdictTitleFail { color: var(--pri-d); }
+.verifyShell .verdictLinkFail { color: var(--pri-d); font-size: 13px; }
 .verifyShell .card { padding: 20px; border-radius: var(--radius-xl); gap: 14px; }
 .verifyShell .explain { padding: 18px 20px; border-radius: var(--radius-xl); gap: 8px; }
 .verifyShell .actions { gap: 10px; }

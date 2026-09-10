@@ -180,6 +180,9 @@ export function CertificateCarousel({
 
       {n > 1 && <button type="button" className={styles.nav} onClick={() => go(1)} aria-label="다음 증서">›</button>}
       </div>
+      <div className={styles.controls}>
+        <span className={styles.position} aria-live="polite" aria-atomic="true">{index + 1} / {n}</span>
+      </div>
       <div className={styles.dots}>
         {certificates.map((certificate, i) => (
           <button
@@ -187,6 +190,7 @@ export function CertificateCarousel({
             type="button"
             className={styles.dot}
             data-active={i === index}
+            aria-current={i === index ? "true" : undefined}
             aria-label={`${i + 1}번째 증서로 이동`}
             onClick={() => setIndex(i)}
           />
