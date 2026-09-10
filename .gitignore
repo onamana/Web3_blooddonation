@@ -4,3 +4,6 @@ node_modules/
 dist/
 build/
 *.log
+.gjc/                                                                                                                                                                     
+contract/artifacts/                                                                                                                                                       
+contract/cache/
