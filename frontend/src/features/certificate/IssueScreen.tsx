@@ -163,20 +163,25 @@ export function IssueScreen() {
 
                     {value === "WHOLE_BLOOD" && donationType === "WHOLE_BLOOD" && (
                       <div className={styles.issueVolumeBlock}>
-                        <div className={styles.issueVolumeChoices} role="group" aria-label="전혈 헌혈량">
+                        <div className={styles.issueVolumeChoices} role="radiogroup" aria-label="전혈 헌혈량">
                           {([320, 400] as const).map((amount) => (
-                            <button
-                              key={amount}
-                              type="button"
-                              data-active={volumeMl === amount}
-                              aria-pressed={volumeMl === amount}
-                              aria-label={`${amount}mL`}
-                              onClick={() => setVolumeMl(amount)}
-                              disabled={pending}
-                            >
-                              <strong>{amount}</strong>
-                            </button>
+                            <Fragment key={amount}>
+                              <input
+                                className={styles.issueVolumeRadio}
+                                type="radio"
+                                id={`issue-volume-${amount}`}
+                                name="issue-volume"
+                                value={amount}
+                                checked={volumeMl === amount}
+                                onChange={() => setVolumeMl(amount)}
+                                disabled={pending}
+                              />
+                              <label className={styles.issueVolumeTab} htmlFor={`issue-volume-${amount}`}>
+                                {amount}
+                              </label>
+                            </Fragment>
                           ))}
+                          <span className={styles.issueVolumeGlider} aria-hidden="true" />
                         </div>
                       </div>
                     )}

@@ -1601,34 +1601,77 @@
 .issueVolumeBlock {
   position: absolute;
   z-index: 1;
-  top: 21px;
+  /* 첫 번째 전혈 카드(최소 높이 72px)의 상하 중앙에 맞춘다. */
+  top: 36px;
   right: calc(50% + 12px);
+  transform: translateY(-50%);
 }
 
 .issueVolumeChoices {
+  position: relative;
   display: flex;
-  gap: 4px;
-}
-
-.issueVolumeChoices button {
-  appearance: none;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  padding: 4px 7px;
+  padding: 4px;
+  border-radius: 99px;
   background: #fff;
-  color: var(--sub);
-  cursor: pointer;
+  box-shadow: 0 0 1px 0 rgb(var(--pri-rgb) / 0.15), 0 6px 12px 0 rgb(var(--pri-rgb) / 0.15);
 }
 
-.issueVolumeChoices button[data-active="true"] {
-  border-color: var(--pri);
-  background: var(--pri);
-  color: #fff;
+.issueVolumeRadio {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
-.issueVolumeChoices strong {
+.issueVolumeTab {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 25px;
+  border-radius: 99px;
+  color: var(--ink);
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: color 0.15s ease-in;
+}
+
+.issueVolumeRadio:checked + .issueVolumeTab {
+  color: var(--pri);
+}
+
+.issueVolumeRadio:focus-visible + .issueVolumeTab {
+  outline: 2px solid var(--pri);
+  outline-offset: 2px;
+}
+
+.issueVolumeRadio:disabled + .issueVolumeTab {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.issueVolumeGlider {
+  position: absolute;
+  z-index: 1;
+  top: 4px;
+  left: 4px;
+  width: 42px;
+  height: 25px;
+  border-radius: 99px;
+  background: var(--pri-tint);
+  pointer-events: none;
+  transition: transform 0.25s ease-out;
+}
+
+.issueVolumeRadio:nth-of-type(2):checked ~ .issueVolumeGlider {
+  transform: translateX(100%);
 }
 
 
