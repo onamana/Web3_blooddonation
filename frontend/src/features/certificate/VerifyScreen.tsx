@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { Check } from "lucide-react";
 import { markCertificateUsed, verifyCertificate } from "../../api/certificate";
 import { ApiError } from "../../api/client";
 import { Badge } from "../../components/Badge";
@@ -177,9 +178,9 @@ export function VerifyScreen() {
         <span>
           사용 처리 <span className={styles.sessionValue}>{useCount}</span>건
         </span>
-        <span className={styles.sessionNetwork}>
-          {DEMO_MODE ? "데모 모드 · 온체인 미연결" : `${NETWORK_NAME} · 테스트 네트워크`}
-        </span>
+        {!DEMO_MODE && <span className={styles.sessionNetwork}>
+          {NETWORK_NAME} · 테스트 네트워크
+        </span>}
       </div>
       </section>
 
@@ -340,13 +341,15 @@ export function VerifyScreen() {
       {/* STATE 2 — 사용 가능. 사용 처리 전에 "정말 이 지갑의 증서인지"를 근거로 보여준다. */}
       {valid && (
         <>
-          <div className={`${styles.verdict} ${styles.verdictOk}`}>
-            <div className={`${styles.verdictMark} ${styles.verdictMarkOk}`}>✓</div>
-            <div className={`${styles.verdictTitle} ${styles.verdictTitleOk}`}>사용 가능</div>
-            <div className={`${styles.verdictDesc} ${styles.verdictDescOk}`}>
-              {formatTokenId(valid.tokenId)} · {valid.bloodType}형
+          <div className={verifyStyles.availableCard}>
+            <div className={verifyStyles.availableIcon}>
+              <Check size={20} aria-hidden="true" />
             </div>
-            <div className={styles.verdictMeta}>
+            <div className={verifyStyles.availableTitle}>사용 가능</div>
+            <div className={verifyStyles.availableDescription}>
+              증서 {formatTokenId(valid.tokenId)} · {valid.bloodType}형
+            </div>
+            <div className={verifyStyles.availableMeta}>
               {formatOnchainDate(valid.issuedAt)} {valid.issuer} 발급
             </div>
           </div>
@@ -369,8 +372,11 @@ export function VerifyScreen() {
             )}
           </div>
 
-          <details className={styles.card} key={valid.tokenId}>
-            <summary className={verifyStyles.historySummary}>온체인 이력 ({valid.history.length}건)</summary>
+          <details className={`${styles.card} ${verifyStyles.historyDetails}`} key={valid.tokenId}>
+            <summary className={verifyStyles.historySummary}>
+              <span className={verifyStyles.bubbleFloat} aria-hidden="true"><span className={verifyStyles.bubble} /></span>
+              <span>온체인 이력 ({valid.history.length}건)</span>
+            </summary>
             <div className={styles.subtitle}>
               발급부터 현재 소유자까지의 온체인 기록입니다. 사용 처리 전에 증서의 출처를 확인하세요.
             </div>

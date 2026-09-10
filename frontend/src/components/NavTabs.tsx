@@ -11,7 +11,7 @@ interface Indicator {
 /** 경로가 있는 탭들. 마지막 "지갑 연결 해제"는 이동이 아니라 동작이라 따로 처리한다. */
 const ROUTES = [
   { label: "내 증서", to: "/certificates" },
-  { label: "병원 검증", to: "/verify" },
+  { label: "증서 검증", to: "/verify" },
   { label: "혈액원 발급", to: "/issue" },
 ];
 

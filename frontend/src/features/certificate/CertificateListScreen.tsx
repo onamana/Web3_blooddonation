@@ -75,6 +75,7 @@ export function CertificateListScreen() {
       <section className={listStyles.overview} aria-labelledby="certificate-title">
       <div className={listStyles.heading}>
         <div>
+          <span className={listStyles.eyebrow}>MY CERTIFICATES</span>
           <h1 id="certificate-title" className={listStyles.title}>내 증서</h1>
           <p className={listStyles.description}>나눔의 기록을 한곳에, 소중한 마음을 다음으로.</p>
         </div>

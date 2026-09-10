@@ -182,7 +182,7 @@ export function IssueScreen() {
             </div>
             <OnchainProof txHash={issued.txHash} />
             <div className={styles.verdictMeta}>
-              이 번호를 헌혈자에게 전달하면 병원 검증에서 바로 조회됩니다.
+              이 번호를 헌혈자에게 전달하면 증서 검증에서 바로 조회됩니다.
             </div>
           </div>
 
