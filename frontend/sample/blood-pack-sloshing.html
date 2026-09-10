@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>혈액팩 3D 카드 - 출렁이는 액체</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #EDE7D8;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Pretendard", sans-serif;
+    padding: 60px 24px;
+  }
+
+  .btn-primary, .btn-secondary {
+    transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+  }
+  .btn-primary:hover { transform: translateY(-3px) scale(1.02); background: #A81F19; box-shadow: 0 14px 24px rgba(199,38,31,0.45); }
+  .btn-secondary:hover { transform: translateY(-3px) scale(1.02); background: #FFFFFF; border-color: #C7261F; color: #C7261F; box-shadow: 0 12px 20px rgba(60,40,20,0.18); }
+  .btn-primary:active, .btn-secondary:active { transform: translateY(-1px) scale(0.99); }
+</style>
+</head>
+<body>
+
+<div id="cardWrap" style="perspective: 1400px;">
+  <div id="card" style="width: 280px; border-radius: 18px; background: linear-gradient(160deg, #FBF6EC, #EFE4CD); border: 1px solid #E4D9BE; position: relative; box-shadow: 0 30px 60px rgba(60,40,20,0.22); transform-style: preserve-3d; transition: transform 0.1s ease-out; padding: 20px 20px 22px;">
+
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; transform: translateZ(26px);">
+      <span style="font-size:11px; letter-spacing:0.5px; color:#8A7B5C; font-weight:600;">BloodPass</span>
+      <span style="font-size:10px; color:#C7261F; font-weight:700; border:1px solid #C7261F; border-radius:6px; padding:2px 6px; background:#FBF6EC;">순환중</span>
+    </div>
+
+    <div style="position:relative; height:200px; transform-style: preserve-3d;">
+
+      <svg width="100%" height="200" viewBox="0 0 240 200" style="display:block; position:absolute; top:0; left:0; transform: translateZ(0px);">
+        <defs>
+          <clipPath id="bagClip">
+            <rect x="14" y="10" width="212" height="150" rx="14"/>
+          </clipPath>
+          <linearGradient id="liquidGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#E85A4C"/>
+            <stop offset="60%" stop-color="#C4261E"/>
+            <stop offset="100%" stop-color="#7A1610"/>
+          </linearGradient>
+        </defs>
+
+        <ellipse cx="120" cy="192" rx="95" ry="9" fill="#3A2E1E" opacity="0.16"/>
+        <rect x="104" y="0" width="32" height="10" rx="5" fill="#C9BFA6"/>
+        <circle cx="120" cy="5" r="3" fill="#FBF6EC"/>
+
+        <rect x="14" y="10" width="212" height="150" rx="14" fill="#FBEAE4" stroke="#5C0E09" stroke-width="1.2"/>
+
+        <g clip-path="url(#bagClip)">
+          <path id="liquidPath" d="M14,160 L14,58 Q120,58 226,58 L226,160 Z" fill="url(#liquidGrad)"></path>
+          <ellipse id="liquidHighlight" cx="70" cy="70" rx="45" ry="14" fill="#ffffff" opacity="0.14"></ellipse>
+        </g>
+
+        <ellipse cx="70" cy="30" rx="50" ry="18" fill="#ffffff" opacity="0.12"/>
+        <ellipse cx="185" cy="120" rx="35" ry="55" fill="#000000" opacity="0.08"/>
+        <path d="M30 18 Q26 90 30 152" stroke="#ffffff" stroke-width="3" opacity="0.12" fill="none" stroke-linecap="round"/>
+        <path d="M206 20 Q212 90 208 150" stroke="#3A0805" stroke-width="3" opacity="0.16" fill="none" stroke-linecap="round"/>
+
+        <path d="M60 160 Q56 175 58 192" stroke="#C9BFA6" stroke-width="5" fill="none" stroke-linecap="round"/>
+        <path d="M100 160 Q98 178 100 194" stroke="#C9BFA6" stroke-width="5" fill="none" stroke-linecap="round"/>
+        <path d="M140 160 Q142 178 140 194" stroke="#C9BFA6" stroke-width="5" fill="none" stroke-linecap="round"/>
+        <path d="M180 160 Q184 175 182 192" stroke="#C9BFA6" stroke-width="5" fill="none" stroke-linecap="round"/>
+        <circle cx="58" cy="194" r="4" fill="#E8E1CC" stroke="#9C8E6E" stroke-width="1"/>
+        <circle cx="100" cy="196" r="4" fill="#E8E1CC" stroke="#9C8E6E" stroke-width="1"/>
+        <circle cx="140" cy="196" r="4" fill="#E8E1CC" stroke="#9C8E6E" stroke-width="1"/>
+        <circle cx="182" cy="194" r="4" fill="#E8E1CC" stroke="#9C8E6E" stroke-width="1"/>
+      </svg>
+
+      <div style="position:absolute; top:22px; left:14px; width:188px; background:#FBF6EC; border-radius:6px; padding:12px 12px 10px; transform: translateZ(34px); box-shadow: 0 10px 18px rgba(60,40,20,0.35);">
+        <div style="font-size:17px; font-weight:700; color:#3A2E1E;">CPD 400ml</div>
+        <div style="height:1px; background:#D8CBA6; margin:6px 0;"></div>
+        <div style="display:flex; justify-content:space-between; font-size:11px; margin-bottom:4px;">
+          <span style="color:#8A7B5C;">혈액형</span><span style="font-weight:700; color:#C7261F;">O Rh+</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; font-size:11px; margin-bottom:4px;">
+          <span style="color:#8A7B5C;">채혈일자</span><span style="color:#3A2E1E;">2026.03.14</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; font-size:11px; margin-bottom:8px;">
+          <span style="color:#8A7B5C;">유효기한</span><span style="color:#3A2E1E;">2026.04.25</span>
+        </div>
+        <div style="height:14px; background: repeating-linear-gradient(90deg, #3A2E1E 0px, #3A2E1E 1.4px, transparent 1.4px, transparent 3px); opacity:0.85;"></div>
+        <div style="font-size:9px; color:#8A7B5C; margin-top:4px;">#096</div>
+      </div>
+
+      <div id="glareInner" style="position:absolute; inset:0; pointer-events:none; border-radius:14px; transform: translateZ(45px); background: radial-gradient(circle at 50% 30%, rgba(255,255,255,0.35), transparent 55%);"></div>
+    </div>
+
+    <div style="display:flex; gap:8px; margin-top:16px; transform: translateZ(38px);">
+      <button class="btn-primary" style="flex:1; background:#C7261F; color:#FDF6EC; border:none; border-radius:9px; height:38px; font-size:12.5px; font-weight:600; cursor:pointer; box-shadow:0 8px 16px rgba(199,38,31,0.35);">양도 하기</button>
+      <button class="btn-secondary" style="flex:1; background:#FBF6EC; color:#3A2E1E; border:1px solid #D8CBA6; border-radius:9px; height:38px; font-size:12.5px; font-weight:600; cursor:pointer; box-shadow:0 6px 12px rgba(60,40,20,0.12);">상세 보기</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const wrap = document.getElementById('cardWrap');
+const card = document.getElementById('card');
+const glareInner = document.getElementById('glareInner');
+const liquidPath = document.getElementById('liquidPath');
+const liquidHighlight = document.getElementById('liquidHighlight');
+
+let targetRotY = 0, targetRotX = 0;
+let tiltPos = 0, tiltVel = 0;
+let rippleT = 0;
+const baseY = 58;
+
+wrap.addEventListener('mousemove', (e) => {
+  const rect = card.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+  targetRotY = ((x - rect.width/2) / (rect.width/2)) * 12;
+  targetRotX = -((y - rect.height/2) / (rect.height/2)) * 12;
+  card.style.transform = `perspective(1400px) rotateX(${targetRotX}deg) rotateY(${targetRotY}deg)`;
+  const px = (x / rect.width) * 100;
+  const py = (y / rect.height) * 100;
+  glareInner.style.background = `radial-gradient(circle at ${px}% ${py}%, rgba(255,255,255,0.4), transparent 55%)`;
+});
+wrap.addEventListener('mouseleave', () => {
+  targetRotY = 0; targetRotX = 0;
+  card.style.transform = 'perspective(1400px) rotateX(0deg) rotateY(0deg)';
+  glareInner.style.background = 'radial-gradient(circle at 50% 30%, rgba(255,255,255,0.35), transparent 55%)';
+});
+
+function animate() {
+  const targetTiltPx = Math.max(-30, Math.min(30, targetRotY * 2.3));
+  const levelShift = targetRotX * 0.7;
+  tiltVel += (targetTiltPx - tiltPos) * 0.16;
+  tiltVel *= 0.80;
+  tiltPos += tiltVel;
+
+  rippleT += 0.09;
+  const waveAmp = Math.min(Math.abs(tiltVel) * 2.2, 9);
+  const wave = Math.sin(rippleT) * waveAmp;
+
+  const leftY = baseY - levelShift - tiltPos + wave * 0.4;
+  const rightY = baseY - levelShift + tiltPos + wave * 0.4;
+  const midY = baseY - levelShift + wave;
+
+  liquidPath.setAttribute('d', `M14,160 L14,${leftY.toFixed(1)} Q120,${midY.toFixed(1)} 226,${rightY.toFixed(1)} L226,160 Z`);
+  liquidHighlight.setAttribute('cy', (midY + 12).toFixed(1));
+
+  requestAnimationFrame(animate);
+}
+animate();
+</script>
+
+</body>
+</html>
