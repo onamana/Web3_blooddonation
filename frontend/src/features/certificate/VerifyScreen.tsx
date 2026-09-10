@@ -2,7 +2,6 @@ import { useRef, useState } from "react";
 import { markCertificateUsed, verifyCertificate } from "../../api/certificate";
 import { ApiError } from "../../api/client";
 import { Badge } from "../../components/Badge";
-import { DemoModeBanner } from "../../components/DemoModeBanner";
 import { DEMO_MODE, EXPLORER_BASE_URL } from "../../api/env";
 import type { CertificateVerifyResult } from "../../types/certificate";
 import { formatOnchainDate, formatOnchainDateTime } from "../../utils/onchain";
@@ -253,7 +252,7 @@ export function VerifyScreen() {
       ) : (
         /* STATE 3 — 이중사용 차단 (하이라이트) */
         result?.status === "used" &&
-        result.certificate && <VerifyFailure certificate={result.certificate} onReset={handleReset} />
+        result.certificate && <VerifyFailure certificate={result.certificate} />
       )}
 
       {/* STATE 5 — 존재하지 않는 번호. "그래서 뭘 확인해야 하는지"까지 알려준다. */}
@@ -325,8 +324,6 @@ export function VerifyScreen() {
             <Button onClick={() => void handleUse()} disabled={pending}>
               {pending ? "처리 중..." : "사용 처리하기"}
             </Button>
-            <Button to={`/certificates/${valid.tokenId}`}>이력 보기</Button>
-            <Button onClick={handleReset}>다른 증서 검증</Button>
           </div>
         </>
       )}
@@ -337,8 +334,6 @@ export function VerifyScreen() {
           ↗ Etherscan
         </a>
       </div>
-
-      <DemoModeBanner />
     </div>
   );
 }

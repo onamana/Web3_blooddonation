@@ -1,3 +1,4 @@
+import { DEMO_MODE } from "../../api/env";
 import { NavTabs } from "../../components/NavTabs";
 import styles from "./Certificate.module.css";
 
@@ -23,6 +24,7 @@ export function BrandBar() {
           alt=""
         />
         <span className={styles.brandName}>BloodPass</span>
+        {DEMO_MODE && <span className={styles.demoTag}>DEMO</span>}
       </div>
       <NavTabs />
     </div>

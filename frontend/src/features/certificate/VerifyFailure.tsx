@@ -2,13 +2,10 @@ import type { Certificate } from "../../types/certificate";
 import { formatOnchainDate, txUrl } from "../../utils/onchain";
 import { formatTokenId } from "./certificateLabels";
 import { HistoryTimeline } from "./HistoryTimeline";
-import { Button } from "./Button";
 import styles from "./Certificate.module.css";
 
 interface VerifyFailureProps {
   certificate: Certificate;
-  /** 결과를 지우고 다음 환자의 번호를 받을 수 있게 입력 상태로 되돌린다. */
-  onReset: () => void;
 }
 
 /**
@@ -18,8 +15,9 @@ interface VerifyFailureProps {
  * 판정만 보여주면 "왜 블록체인인가"가 설명되지 않으므로,
  * 차단 이유(한 문장) + 발급→양도→사용 전체 이력을 함께 제시한다.
  * 이력은 이미 verify 응답에 들어 있는 데이터로, 추가 조회가 필요하지 않다.
+ * 다른 번호 조회는 상단 검색창에서 바로 되므로 별도 리셋 버튼은 두지 않는다.
  */
-export function VerifyFailure({ certificate, onReset }: VerifyFailureProps) {
+export function VerifyFailure({ certificate }: VerifyFailureProps) {
   const usedEvent = [...certificate.history].reverse().find((event) => event.type === "used");
 
   return (
@@ -56,10 +54,6 @@ export function VerifyFailure({ certificate, onReset }: VerifyFailureProps) {
           <span className={styles.tokenId}>전체 이력 ({certificate.history.length}건)</span>
         </div>
         <HistoryTimeline history={certificate.history} />
-      </div>
-
-      <div className={styles.actions}>
-        <Button onClick={onReset}>다른 증서 검증</Button>
       </div>
     </>
   );

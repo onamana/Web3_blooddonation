@@ -1,13 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
 import { listCertificates, transferCertificate } from "../../api/certificate";
 import { ApiError } from "../../api/client";
-import { DemoModeBanner } from "../../components/DemoModeBanner";
 import { useWallet } from "../../hooks/walletContext";
 import type { Certificate } from "../../types/certificate";
 import { WalletGate } from "./WalletGate";
 import { AddressDisplay } from "./AddressDisplay";
 import { BrandBar } from "./BrandBar";
-import { CertificateCard } from "./CertificateCard";
+import { CertificateCarousel } from "./CertificateCarousel";
 import { formatTokenId } from "./certificateLabels";
 import { OnchainProofBox } from "./OnchainProof";
 import styles from "./Certificate.module.css";
@@ -99,22 +98,19 @@ export function CertificateListScreen() {
         <div className={styles.empty}>이 지갑이 보유한 증서가 없습니다.</div>
       )}
 
-      {certificates.map((certificate) => (
-        <CertificateCard
-          key={certificate.tokenId}
-          certificate={certificate}
-          transferOpen={transferTokenId === certificate.tokenId}
+      {status === "success" && certificates.length > 0 && (
+        <CertificateCarousel
+          certificates={certificates}
+          transferTokenId={transferTokenId}
           transferPending={transferPending}
-          onOpenTransfer={() => {
-            setTransferTokenId(certificate.tokenId);
+          onOpenTransfer={(tokenId) => {
+            setTransferTokenId(tokenId);
             setTransferResult(null);
           }}
           onCancelTransfer={() => setTransferTokenId(null)}
-          onTransfer={(to) => void handleTransfer(certificate.tokenId, to)}
+          onTransfer={(tokenId, to) => void handleTransfer(tokenId, to)}
         />
-      ))}
-
-      <DemoModeBanner />
+      )}
     </div>
   );
 }

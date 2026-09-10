@@ -1,7 +1,8 @@
 /* MVP 배치용 최소 스타일. 디자인은 이후 별도로 손본다. */
 
+/* 초기 화면(WalletGate)의 폭(880px)을 기준으로 모든 화면이 같은 폭을 쓴다. */
 .shell {
-  max-width: 560px;
+  max-width: 880px;
   margin: 0 auto;
   padding: 16px 16px 40px;
   display: flex;
@@ -46,6 +47,17 @@
   font-size: 16px;
   font-weight: 800;
   letter-spacing: -0.2px;
+}
+
+/* BloodSupplyPanel 의 활성 탭(적혈구/혈소판)과 같은 모양 — 빨간 배경 + 흰 글씨 알약. */
+.demoTag {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  color: #fff;
+  background: var(--pri);
+  border-radius: 999px;
+  padding: 3px 8px;
 }
 
 .brandActions {
@@ -884,10 +896,9 @@
 
 /* 파티클 글자를 카드 밖 히어로로 크게 쓴다. 카드 안에 두면 본문 가독 폭에 갇혀 작아진다. */
 .gateShell {
-  max-width: 880px;
   /*
     공용 .shell 은 하단을 40px 로 크게 잡는데, 초기 화면은 그 아래에 아무것도 없어서
-    그냥 빈 공간으로만 남는다. 상단(16px)과 같게 맞춘다.
+    그냥 빈 공간으로만 남는다. 상단(16px)과 같게 맞춘다. (폭은 .shell 과 이미 같다.)
   */
   padding-bottom: 16px;
 }

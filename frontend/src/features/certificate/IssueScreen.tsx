@@ -2,7 +2,6 @@ import { useState } from "react";
 import { issueCertificate } from "../../api/certificate";
 import { ApiError } from "../../api/client";
 import { DEMO_BLOOD_CENTER_NAME, DEMO_MODE } from "../../api/env";
-import { DemoModeBanner } from "../../components/DemoModeBanner";
 import { DEMO_WALLET_ADDRESS } from "../../data/demoWallet";
 import type { BloodType } from "../../types/common";
 import type { Certificate } from "../../types/certificate";
@@ -214,8 +213,6 @@ export function IssueScreen() {
           </div>
         </>
       )}
-
-      <DemoModeBanner />
     </div>
   );
 }
