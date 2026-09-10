@@ -1,0 +1,60 @@
+.hero {
+  padding: clamp(20px, 4vw, 32px);
+  border-radius: var(--radius-xl);
+  background: linear-gradient(180deg, var(--pri-tint), var(--card) 90%);
+}
+.inputError { color: var(--pri-d); font-size: 13px; }
+.historySummary { cursor: pointer; font-size: 14px; font-weight: 700; padding: 4px 0; line-height: 1.6; }
+.historySummary:focus-visible { outline: 2px solid var(--pri); outline-offset: 4px; }
+.secondary { background: var(--card); color: var(--sub); border: 1px solid var(--line); box-shadow: none; }
+.secondary:hover { background: var(--page-bg); color: var(--ink); }
+.confirmDetails { display: flex; flex-direction: column; gap: 12px; padding: 16px; background: var(--pri-tint); border-radius: 12px; }
+.confirmDetails > div { display: flex; justify-content: space-between; gap: 16px; font-size: 13px; }
+.confirmDetails dt { flex-shrink: 0; color: var(--sub); }
+.confirmDetails dd { margin: 0; text-align: right; overflow-wrap: anywhere; font-weight: 600; }
+.confirmCheck { display: flex; align-items: center; gap: 10px; min-height: 44px; font-size: 13px; cursor: pointer; }
+.confirmCheck input { width: 18px; height: 18px; accent-color: var(--pri); flex-shrink: 0; }
+.eyebrow { color: var(--pri-d); font-size: 11px; font-weight: 800; letter-spacing: 0.14em; }
+.title { margin: 8px 0; font-size: clamp(26px, 4vw, 32px); line-height: 1.25; letter-spacing: -0.05em; }
+.description { margin: 0; color: var(--sub); font-size: 14px; line-height: 1.7; word-break: keep-all; }
+.steps { display: flex; flex-wrap: wrap; gap: 12px 28px; padding: 0; margin: 24px 0; list-style: none; }
+.steps li { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; color: var(--sub); }
+.steps span { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--card); color: var(--pri-d); font-size: 11px; border: 1px solid var(--pri-line); }
+.lookup { padding: clamp(20px, 4vw, 28px); border: 1px solid var(--line); border-radius: var(--radius-xl); background: var(--card); box-shadow: 0 4px 8px -4px rgb(28 25 23 / 0.08); }
+.sectionHead { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
+.sectionHead h2 { margin: 0; font-size: 17px; letter-spacing: -0.03em; }
+.sectionHead > span { color: var(--mute); font-size: 12px; }
+.form { display: flex; flex-direction: column; gap: 10px; }
+.label { font-size: 13px; font-weight: 700; color: var(--sub); }
+.inputRow { display: flex; gap: 16px; padding: 0 6px 8px 0; }
+/* Adapted from anniekoop's Uiverse input (MIT); see licenses/uiverse-anniekoop.txt. */
+.inputRow input {
+  flex: 1;
+  min-width: 0;
+  min-height: 52px;
+  padding: 0.875rem;
+  font-size: 16px;
+  color: var(--ink);
+  background: var(--card);
+  border: 1.5px solid var(--pri);
+  border-radius: 8px;
+  box-shadow: 2.5px 3px 0 var(--pri);
+  outline: none;
+  transition: box-shadow 0.25s ease, border-color 0.25s ease;
+}
+.inputRow input:focus { box-shadow: 5.5px 7px 0 var(--pri); border-color: var(--pri-d); }
+.inputRow input::placeholder { color: var(--mute); }
+.inputRow input:disabled { background: var(--bg); box-shadow: 2.5px 3px 0 var(--pri-line); cursor: wait; }
+@media (prefers-reduced-motion: reduce) { .inputRow input { transition: none; } }
+.inputRow button { height: 52px; min-width: 132px; border-radius: var(--radius-md); font-size: 14px; }
+.results { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.idle { padding: 36px 20px; text-align: center; border-radius: var(--radius-xl); background: linear-gradient(0deg, var(--pri-tint), var(--card)); }
+.idleMark { display: grid; place-items: center; width: 40px; height: 40px; margin: 0 auto 14px; border: 1px solid var(--pri-line); border-radius: 50%; color: var(--pri); background: var(--card); font-size: 20px; }
+.idle strong { font-size: 14px; line-height: 1.7; color: var(--sub); word-break: keep-all; }
+.idle p { margin: 6px 0 0; color: var(--mute); font-size: 12px; line-height: 1.7; word-break: keep-all; }
+@media (max-width: 520px) {
+  .steps { gap: 10px 16px; }
+  .inputRow { flex-direction: column; }
+  .inputRow button { width: 100%; }
+  .sectionHead { margin-bottom: 20px; }
+}

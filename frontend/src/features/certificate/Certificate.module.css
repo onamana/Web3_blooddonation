@@ -10,6 +10,24 @@
   gap: 14px;
 }
 
+.verifyShell .sessionStrip { background: var(--card); border: 0; padding: 12px 14px; border-radius: 12px; gap: 8px; }
+.verifyShell .sessionNetwork { font-size: 11px; }
+.verifyShell .recentChips { margin-top: 16px; }
+.verifyShell .recentChip { min-height: 36px; padding: 6px 12px; }
+.verifyShell .verdict { padding: clamp(24px, 5vw, 40px); gap: 12px; }
+.verifyShell .verdictMark { font-size: 44px; }
+.verifyShell .verdictTitle { font-size: clamp(24px, 4.5vw, 36px); letter-spacing: -0.04em; word-break: keep-all; }
+.verifyShell .verdictDesc { font-size: clamp(15px, 2.5vw, 18px); word-break: keep-all; }
+.verifyShell .verdictMeta { font-size: 13px; line-height: 1.7; overflow-wrap: anywhere; }
+.verifyShell .card { padding: 20px; border-radius: var(--radius-xl); gap: 14px; }
+.verifyShell .explain { padding: 18px 20px; border-radius: var(--radius-xl); gap: 8px; }
+.verifyShell .actions { gap: 10px; }
+.verifyShell .trustFooter { line-height: 1.7; padding-top: 16px; }
+@media (max-width: 520px) {
+  .verifyShell .sessionNetwork { flex-basis: 100%; margin-left: 0; }
+  .verifyShell .actions > * { flex: 1; }
+}
+
 .shellWide {
   max-width: 960px;
 }
