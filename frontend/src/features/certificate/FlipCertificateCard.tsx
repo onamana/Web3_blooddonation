@@ -80,7 +80,7 @@ export function FlipCertificateCard({
             <div className={styles.label}>
               <div className={styles.labelHeader}>
                 <div className={styles.labelHeaderCol}>
-                  <span>헌혈</span>
+                  <span>헌혈일자</span>
                   <span className={`${styles.labelHeaderValue} mono`}>{formatOnchainDate(certificate.issuedAt)}</span>
                 </div>
                 <div className={styles.labelHeaderCol}>
@@ -102,8 +102,9 @@ export function FlipCertificateCard({
               <div className={styles.labelBody}>
                 <div className={styles.labelBodyLeft}>
                   <div className={styles.labelBodyLeftMain}>
-                    <div className={styles.labelCaption}>BloodPass</div>
-                    <div className={styles.labelBig}>{certificate.issuer}</div>
+                    <div className={styles.labelCaption}>헌혈 종류</div>
+                    <div className={styles.labelBig}>{donationTypeLabel(certificate.donationType, certificate.donationVolume)}</div>
+                    <div className={styles.labelIssuer}>{certificate.issuer}</div>
                   </div>
                   <div className={styles.labelFooterStrip} data-center>
                     ERC-721 온체인 인증서
@@ -127,7 +128,7 @@ export function FlipCertificateCard({
 
               <div className={styles.detailRow}>
                 <span className={styles.detailLabel}>헌혈 종류</span>
-                <span className={styles.detailValue}>{donationTypeLabel(certificate.donationType)}</span>
+                <span className={styles.detailValue}>{donationTypeLabel(certificate.donationType, certificate.donationVolume)}</span>
               </div>
               <div className={styles.detailRow}>
                 <span className={styles.detailLabel}>발급기관</span>

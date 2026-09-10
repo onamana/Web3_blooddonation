@@ -68,7 +68,7 @@
   position: relative;
   height: 100%;
   transform-style: preserve-3d;
-  font-family: Helvetica, Arial, sans-serif;
+  font-family: var(--font-sans);
 }
 
 /* 위쪽 튜브 포트. 원본: left 245/291/337, top116, 24x66, border-radius 7 7 0 0 */
@@ -291,11 +291,20 @@
 }
 
 .labelBig {
-  font-size: 18px;
+  font-size: clamp(16px, 2.4vw, 20px);
   font-weight: 800;
   color: var(--pri);
   letter-spacing: -0.1px;
-  white-space: nowrap;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+}
+
+.labelIssuer {
+  font-size: 12px;
+  color: var(--sub);
+  line-height: 1.4;
+  overflow-wrap: anywhere;
 }
 
 .labelFooterStrip {
@@ -414,4 +423,8 @@
 
 .detailFooter {
   flex: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flipInner { transition: none; }
 }

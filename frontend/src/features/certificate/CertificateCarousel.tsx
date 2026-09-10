@@ -124,6 +124,8 @@ export function CertificateCarousel({
 
   return (
     <div className={styles.wrap}>
+      <div className={styles.row}>
+      {n > 1 && <button type="button" className={styles.nav} onClick={() => go(-1)} aria-label="이전 증서">‹</button>}
       <div
         className={styles.viewport}
         role="group"
@@ -134,6 +136,7 @@ export function CertificateCarousel({
         onPointerUp={endDrag}
         onPointerCancel={endDrag}
         onKeyDown={(e) => {
+          if (e.target !== e.currentTarget) return;
           if (e.key === "ArrowLeft") go(-1);
           if (e.key === "ArrowRight") go(1);
           if (e.key === "Enter" || e.key === " ") {
@@ -175,6 +178,8 @@ export function CertificateCarousel({
         </div>
       </div>
 
+      {n > 1 && <button type="button" className={styles.nav} onClick={() => go(1)} aria-label="다음 증서">›</button>}
+      </div>
       <div className={styles.dots}>
         {certificates.map((certificate, i) => (
           <button
