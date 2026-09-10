@@ -1,7 +1,13 @@
 import { demoCertificateStore } from "../data/certificateStore";
-import type { Certificate, CertificateTxResult, CertificateVerifyResult } from "../types/certificate";
+import { demoBloodProfileStore } from "../data/demoBloodProfileStore";
+import type {
+  Certificate,
+  CertificateTxResult,
+  CertificateVerifyResult,
+  DonationType,
+} from "../types/certificate";
 import { ApiError, apiRequest } from "./client";
-import { CERTIFICATE_CONTRACT_ADDRESS, DEMO_BLOOD_CENTER_NAME, DEMO_MODE } from "./env";
+import { CERTIFICATE_CONTRACT_ADDRESS, CHAIN_ID, DEMO_BLOOD_CENTER_NAME, DEMO_MODE } from "./env";
 import {
   certificateListResponseSchema,
   certificateSchema,
@@ -48,20 +54,47 @@ export async function verifyCertificate(tokenId: string): Promise<CertificateVer
 export interface IssueCertificateRequest {
   /** 증서를 받을 헌혈자 지갑 주소 */
   to: string;
-  /** 혈액원 검사 결과 */
-  bloodType: Certificate["bloodType"];
+  /** 혈액원 담당자가 선택한 헌혈 종류 */
+  donationType: DonationType;
+  /** 전혈일 때 선택한 헌혈량(mL) */
+  volumeMl?: 320 | 400;
+  requestId: string;
 }
 
 /**
  * 발급. 발급기관 명(issuer)은 보내지 않는다 — 서버가 정한다.
  * 클라이언트가 발급기관을 적을 수 있으면 검증 화면의 "OO혈액원 발급"이 의미를 잃는다.
  */
-export async function issueCertificate({ to, bloodType }: IssueCertificateRequest): Promise<CertificateTxResult> {
-  if (DEMO_MODE) return demoCertificateStore.issue(to, bloodType, DEMO_BLOOD_CENTER_NAME);
+export async function issueCertificate({
+  to,
+  donationType,
+  volumeMl,
+  requestId,
+}: IssueCertificateRequest): Promise<CertificateTxResult> {
+  if (DEMO_MODE) {
+    const profile = demoBloodProfileStore.getByWallet(to);
+    if (!profile) {
+      throw new ApiError(
+        404,
+        "이 지갑 주소에 등록된 데모 혈액 검사정보가 없습니다.",
+        "데모 지갑 주소 채우기 버튼을 사용하세요.",
+      );
+    }
+
+    const result = demoCertificateStore.issue(
+      to,
+      DEMO_BLOOD_CENTER_NAME,
+      donationType,
+      volumeMl,
+    );
+    demoBloodProfileStore.linkCertificate(result.certificate.tokenId, profile);
+    return result;
+  }
 
   const raw = await apiRequest<unknown>("/certificate/issue", {
     method: "POST",
-    body: { to, bloodType },
+    body: { to, donationType, volumeMl },
+    headers: { "Idempotency-Key": requestId },
   });
   return certificateTxResponseSchema.parse(raw);
 }
@@ -115,6 +148,13 @@ async function sendSafeTransferFrom({
   if (!eth) throw new ApiError(0, "MetaMask가 필요합니다.");
 
   try {
+    const chainId = await eth.request<string>({ method: "eth_chainId" });
+    if (chainId.toLowerCase() !== CHAIN_ID.toLowerCase()) {
+      await eth.request({ method: "wallet_switchEthereumChain", params: [{ chainId: CHAIN_ID }] });
+      if ((await eth.request<string>({ method: "eth_chainId" })).toLowerCase() !== CHAIN_ID.toLowerCase()) {
+        throw new Error("지갑 네트워크를 확인해 주세요.");
+      }
+    }
     return await eth.request<string>({
       method: "eth_sendTransaction",
       params: [{ from, to: CERTIFICATE_CONTRACT_ADDRESS, data: encodeSafeTransferFromCalldata(from, to, tokenId) }],
@@ -142,6 +182,9 @@ async function waitForTransactionReceipt(
   if (!eth) throw new ApiError(0, "MetaMask가 필요합니다.");
 
   for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+    if ((await eth.request<string>({ method: "eth_chainId" })).toLowerCase() !== CHAIN_ID.toLowerCase()) {
+      throw new ApiError(0, "확인 중 지갑 네트워크가 변경되었습니다.");
+    }
     const receipt = await eth.request<TransactionReceipt | null>({
       method: "eth_getTransactionReceipt",
       params: [txHash],

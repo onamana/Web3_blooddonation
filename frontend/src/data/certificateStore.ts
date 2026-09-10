@@ -49,12 +49,18 @@ export const demoCertificateStore = {
    * 발급. 혈액원이 헌혈자 지갑으로 새 증서를 민팅하는 동작에 대응한다.
    * tokenId와 issuedAt은 호출자가 정하지 않는다(실제 컨트랙트와 같은 규칙).
    */
-  issue(to: string, bloodType: Certificate["bloodType"], issuer: string) {
+  issue(
+    to: string,
+    issuer: string,
+    donationType: NonNullable<Certificate["donationType"]>,
+    volumeMl?: 320 | 400,
+  ) {
     const issuedAt = nowSeconds();
     const certificate: Certificate = {
       tokenId: String(nextTokenId++),
       owner: to,
-      bloodType,
+      donationType,
+      ...(volumeMl === undefined ? {} : { volumeMl }),
       issuedAt,
       issuer,
       status: "active",

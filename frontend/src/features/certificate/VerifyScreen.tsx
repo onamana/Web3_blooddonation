@@ -287,7 +287,7 @@ export function VerifyScreen() {
             <div className={`${styles.verdictMark} ${styles.verdictMarkOk}`}>✓</div>
             <div className={`${styles.verdictTitle} ${styles.verdictTitleOk}`}>사용 가능</div>
             <div className={`${styles.verdictDesc} ${styles.verdictDescOk}`}>
-              {formatTokenId(valid.tokenId)} · {valid.bloodType}형
+              {formatTokenId(valid.tokenId)}
             </div>
             <div className={styles.verdictMeta}>
               {formatOnchainDate(valid.issuedAt)} {valid.issuer} 발급

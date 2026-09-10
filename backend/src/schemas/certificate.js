@@ -1,5 +1,7 @@
 import { z } from "zod";
-import { ethAddressSchema, bloodTypeSchema } from "./common.js";
+import { ethAddressSchema } from "./common.js";
+
+export const donationTypeSchema = z.enum(["WHOLE_BLOOD", "PLASMA", "PLATELETS", "PLATELETS_PLASMA"]);
 
 export const tokenIdSchema = z
   .string()
@@ -31,7 +33,8 @@ export const certificateSchema = z
   .object({
     tokenId: tokenIdSchema,
     owner: ethAddressSchema,
-    bloodType: bloodTypeSchema,
+    donationType: donationTypeSchema.optional(),
+    volumeMl: z.number().int().positive().optional(),
     issuedAt: z.number().int(),
     issuer: z.string(),
     status: z.enum(["active", "used"]),
@@ -53,9 +56,18 @@ export const certificateListResponseSchema = z
  * (BLOOD_CENTER_NAME)에서만 결정한다. `issuedAt`도 컨트랙트의 block.timestamp를 쓴다.
  */
 export const certificateIssueBodySchema = z
-  .object({
+  .strictObject({
     to: ethAddressSchema.meta({ description: "증서를 받을 헌혈자 지갑 주소" }),
-    bloodType: bloodTypeSchema.meta({ description: "혈액원 검사 결과 (헌혈자 자기 신고가 아니다)" }),
+    donationType: donationTypeSchema,
+    volumeMl: z.union([z.literal(320), z.literal(400)]).optional(),
+  })
+  .superRefine((value, ctx) => {
+    if (value.donationType === "WHOLE_BLOOD" && value.volumeMl === undefined) {
+      ctx.addIssue({ code: "custom", path: ["volumeMl"], message: "전혈은 320 또는 400mL를 선택해야 합니다" });
+    }
+    if (value.donationType !== "WHOLE_BLOOD" && value.volumeMl !== undefined) {
+      ctx.addIssue({ code: "custom", path: ["volumeMl"], message: "성분헌혈에는 전혈 헌혈량을 지정할 수 없습니다" });
+    }
   })
   .meta({ id: "CertificateIssueRequest" });
 

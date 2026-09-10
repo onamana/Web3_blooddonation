@@ -13,7 +13,6 @@ export const INITIAL_CERTIFICATES: Certificate[] = [
   {
     tokenId: "94",
     owner: DEMO_WALLET_ADDRESS,
-    bloodType: "A",
     issuedAt: ts("2026-05-12T10:24:00+09:00"),
     issuer: "대전혈액원",
     status: "active",
@@ -34,7 +33,6 @@ export const INITIAL_CERTIFICATES: Certificate[] = [
   {
     tokenId: "95",
     owner: DEMO_WALLET_ADDRESS,
-    bloodType: "O",
     issuedAt: ts("2026-07-03T14:10:00+09:00"),
     issuer: "대전혈액원",
     status: "active",
@@ -64,7 +62,6 @@ export const INITIAL_CERTIFICATES: Certificate[] = [
   {
     tokenId: "88",
     owner: DEMO_WALLET_ADDRESS,
-    bloodType: "B",
     issuedAt: ts("2026-03-11T11:40:00+09:00"),
     issuer: "충남혈액원",
     status: "used",

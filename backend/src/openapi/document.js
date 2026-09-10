@@ -125,11 +125,13 @@ registry.registerPath({
   path: "/certificate/issue",
   summary: "증서 발급 (혈액원 → 헌혈자 지갑으로 민팅). issuer/issuedAt은 서버·컨트랙트가 정한다",
   request: {
+    headers: z.object({ "Idempotency-Key": z.string().min(16).max(100) }),
     body: { content: { "application/json": { schema: certificateIssueBodySchema } } },
   },
   responses: {
     200: { description: "발급 성공", content: { "application/json": { schema: certificateTxResponseSchema } } },
-    400: { description: "to/bloodType 형식 오류", content: { "application/json": { schema: errorResponseSchema } } },
+    400: { description: "지갑/헌혈 종류/헌혈량/발급 키 형식 오류", content: { "application/json": { schema: errorResponseSchema } } },
+    409: { description: "발급 키 입력 불일치 또는 이전 발급 미확정" },
     502: {
       description: "발급 트랜잭션에서 tokenId를 찾지 못함",
       content: { "application/json": { schema: errorResponseSchema } },

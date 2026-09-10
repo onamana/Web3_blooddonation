@@ -159,17 +159,6 @@
   {
     "inputs": [
       {
-        "internalType": "uint8",
-        "name": "bloodType",
-        "type": "uint8"
-      }
-    ],
-    "name": "InvalidBloodType",
-    "type": "error"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "uint256",
         "name": "tokenId",
         "type": "uint256"
@@ -427,11 +416,6 @@
     "name": "certificateInfo",
     "outputs": [
       {
-        "internalType": "uint8",
-        "name": "bloodType",
-        "type": "uint8"
-      },
-      {
         "internalType": "uint256",
         "name": "issuedAt",
         "type": "uint256"
@@ -589,11 +573,6 @@
         "internalType": "address",
         "name": "to",
         "type": "address"
-      },
-      {
-        "internalType": "uint8",
-        "name": "bloodType",
-        "type": "uint8"
       },
       {
         "internalType": "string",

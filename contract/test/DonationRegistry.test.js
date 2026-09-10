@@ -15,36 +15,35 @@ describe("DonationRegistry", function () {
     const { registry, donationHash } = await deploy();
     const timestamp = Math.floor(Date.now() / 1000);
 
-    await expect(registry.record(donationHash, timestamp, 1))
+    await expect(registry.record(donationHash, timestamp))
       .to.emit(registry, "DonationRecorded")
-      .withArgs(donationHash, timestamp, 1);
+      .withArgs(donationHash, timestamp);
   });
 
   it("verify() reflects whether a hash has been recorded", async function () {
     const { registry, donationHash } = await deploy();
 
     expect(await registry.verify(donationHash)).to.equal(false);
-    await registry.record(donationHash, Math.floor(Date.now() / 1000), 1);
+    await registry.record(donationHash, Math.floor(Date.now() / 1000));
     expect(await registry.verify(donationHash)).to.equal(true);
   });
 
-  it("query() returns the recorded timestamp and bloodType", async function () {
+  it("query() returns only the recorded timestamp", async function () {
     const { registry, donationHash } = await deploy();
     const timestamp = Math.floor(Date.now() / 1000);
 
-    await registry.record(donationHash, timestamp, 2);
+    await registry.record(donationHash, timestamp);
 
     const result = await registry.query(donationHash);
-    expect(result.timestamp).to.equal(timestamp);
-    expect(result.bloodType).to.equal(2);
+    expect(result).to.equal(timestamp);
   });
 
   it("rejects recording the same hash twice", async function () {
     const { registry, donationHash } = await deploy();
     const timestamp = Math.floor(Date.now() / 1000);
 
-    await registry.record(donationHash, timestamp, 0);
-    await expect(registry.record(donationHash, timestamp, 0)).to.be.revertedWithCustomError(
+    await registry.record(donationHash, timestamp);
+    await expect(registry.record(donationHash, timestamp)).to.be.revertedWithCustomError(
       registry,
       "DonationAlreadyRecorded"
     );
@@ -53,19 +52,12 @@ describe("DonationRegistry", function () {
   it("rejects record() from an account without RECORDER_ROLE", async function () {
     const { registry, other, donationHash } = await deploy();
 
-    await expect(registry.connect(other).record(donationHash, Math.floor(Date.now() / 1000), 0)).to.be.reverted;
+    await expect(registry.connect(other).record(donationHash, Math.floor(Date.now() / 1000))).to.be.reverted;
   });
 
-  it("rejects record() with an out-of-range blood type code", async function () {
-    const { registry, donationHash } = await deploy();
-    const timestamp = Math.floor(Date.now() / 1000);
-
-    await expect(registry.record(donationHash, timestamp, 4))
-      .to.be.revertedWithCustomError(registry, "InvalidBloodType")
-      .withArgs(4);
-    await expect(registry.record(donationHash, timestamp, 255))
-      .to.be.revertedWithCustomError(registry, "InvalidBloodType")
-      .withArgs(255);
+  it("has no blood type fields in the public ABI", async function () {
+    const { registry } = await deploy();
+    expect(JSON.stringify(registry.interface.fragments)).not.to.match(/bloodType|InvalidBloodType/);
   });
 
   it("rejects query() for a hash that was never recorded", async function () {

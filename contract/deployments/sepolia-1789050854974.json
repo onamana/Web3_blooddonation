@@ -1,0 +1,16 @@
+{
+  "chainId": 11155111,
+  "deployer": "0x3B79f76063e251dd5C46422936dfDA169e509A63",
+  "backendSigner": "0x3B79f76063e251dd5C46422936dfDA169e509A63",
+  "rolesGranted": true,
+  "BloodCertificate": {
+    "address": "0x622bC4B23a5e13CA4d5208b578c38e8d360944fB",
+    "blockNumber": 11675549,
+    "txHash": "0x59cf881f3bd17353786785dadce12e96903c011363d80e2d940b110b5eeeb4d0"
+  },
+  "DonationRegistry": {
+    "address": "0x689390A0D4aD3F0e5ae49a0362785035507CbFb4",
+    "blockNumber": 11675550,
+    "txHash": "0x31408db3ba8bec71d06af046610588f000624e50b0340f1f37ecd95d85a6689d"
+  }
+}

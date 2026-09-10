@@ -12,26 +12,24 @@ describe("BloodCertificate", function () {
   }
 
   it("issues a certificate and emits Transfer(0x0 -> to)", async function () {
-    const { certificate, admin, donor } = await deploy();
+    const { certificate, donor } = await deploy();
 
-    await expect(certificate.issue(donor.address, 0, "대전혈액원"))
+    await expect(certificate.issue(donor.address, "대전혈액원"))
       .to.emit(certificate, "Transfer")
       .withArgs(ethers.ZeroAddress, donor.address, 0);
 
     expect(await certificate.ownerOf(0)).to.equal(donor.address);
 
     const info = await certificate.certificateInfo(0);
-    expect(info.bloodType).to.equal(0);
     expect(info.issuer).to.equal("대전혈액원");
     expect(info.used).to.equal(false);
   });
 
   it("returns every certificateInfo field correctly", async function () {
     const { certificate, donor } = await deploy();
-    await certificate.issue(donor.address, 2, "대전혈액원");
+    await certificate.issue(donor.address, "대전혈액원");
 
     const info = await certificate.certificateInfo(0);
-    expect(info.bloodType).to.equal(2);
     expect(info.issuer).to.equal("대전혈액원");
     expect(info.used).to.equal(false);
     expect(info.usedAt).to.equal(0);
@@ -50,23 +48,17 @@ describe("BloodCertificate", function () {
   it("rejects issue() from an account without ISSUER_ROLE", async function () {
     const { certificate, donor, other } = await deploy();
 
-    await expect(certificate.connect(other).issue(donor.address, 0, "대전혈액원")).to.be.reverted;
+    await expect(certificate.connect(other).issue(donor.address, "대전혈액원")).to.be.reverted;
   });
 
-  it("rejects issue() with an out-of-range blood type code", async function () {
-    const { certificate, donor } = await deploy();
-
-    await expect(certificate.issue(donor.address, 4, "대전혈액원"))
-      .to.be.revertedWithCustomError(certificate, "InvalidBloodType")
-      .withArgs(4);
-    await expect(certificate.issue(donor.address, 255, "대전혈액원"))
-      .to.be.revertedWithCustomError(certificate, "InvalidBloodType")
-      .withArgs(255);
+  it("has no blood type fields in the public ABI", async function () {
+    const { certificate } = await deploy();
+    expect(JSON.stringify(certificate.interface.fragments)).not.to.match(/bloodType|InvalidBloodType/);
   });
 
   it("blocks double use and emits CertificateUsed with hospital/timestamp", async function () {
     const { certificate, donor } = await deploy();
-    await certificate.issue(donor.address, 0, "대전혈액원");
+    await certificate.issue(donor.address, "대전혈액원");
 
     await expect(certificate.markUsed(0, "서울병원"))
       .to.emit(certificate, "CertificateUsed")
@@ -81,7 +73,7 @@ describe("BloodCertificate", function () {
 
   it("rejects markUsed() from an account without ISSUER_ROLE", async function () {
     const { certificate, donor, other } = await deploy();
-    await certificate.issue(donor.address, 0, "대전혈액원");
+    await certificate.issue(donor.address, "대전혈액원");
 
     await expect(certificate.connect(other).markUsed(0, "서울병원")).to.be.reverted;
   });
@@ -102,7 +94,7 @@ describe("BloodCertificate", function () {
 
   it("transfers an unused certificate and emits Transfer", async function () {
     const { certificate, donor, other } = await deploy();
-    await certificate.issue(donor.address, 0, "대전혈액원");
+    await certificate.issue(donor.address, "대전혈액원");
 
     await expect(certificate.connect(donor).transferFrom(donor.address, other.address, 0))
       .to.emit(certificate, "Transfer")
@@ -113,7 +105,7 @@ describe("BloodCertificate", function () {
 
   it("blocks transferFrom() of a used certificate (backend policy enforced on-chain)", async function () {
     const { certificate, donor, other } = await deploy();
-    await certificate.issue(donor.address, 0, "대전혈액원");
+    await certificate.issue(donor.address, "대전혈액원");
     await certificate.markUsed(0, "서울병원");
 
     await expect(
@@ -126,12 +118,21 @@ describe("BloodCertificate", function () {
     const issuerRole = await certificate.ISSUER_ROLE();
     await certificate.connect(admin).grantRole(issuerRole, backendSigner.address);
 
-    await expect(certificate.connect(backendSigner).issue(donor.address, 0, "대전혈액원"))
+    await expect(certificate.connect(backendSigner).issue(donor.address, "대전혈액원"))
       .to.emit(certificate, "Transfer")
       .withArgs(ethers.ZeroAddress, donor.address, 0);
 
     await expect(certificate.connect(backendSigner).markUsed(0, "서울병원"))
       .to.emit(certificate, "CertificateUsed")
       .withArgs(0, "서울병원", anyValue);
+  });
+  it("supports direct safeTransferFrom and rejects unauthorized/used transfers", async function () {
+    const { certificate, donor, other } = await deploy();
+    await certificate.issue(donor.address, "Test Center");
+    await expect(certificate.connect(other)["safeTransferFrom(address,address,uint256)"](donor.address, other.address, 0)).to.be.reverted;
+    await certificate.connect(donor)["safeTransferFrom(address,address,uint256)"](donor.address, other.address, 0);
+    await certificate.markUsed(0, "Test Hospital");
+    await expect(certificate.connect(other)["safeTransferFrom(address,address,uint256)"](other.address, donor.address, 0))
+      .to.be.revertedWithCustomError(certificate, "UsedCertificateCannotBeTransferred");
   });
 });

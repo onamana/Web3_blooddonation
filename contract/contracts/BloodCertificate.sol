@@ -9,7 +9,6 @@ contract BloodCertificate is ERC721, AccessControl {
     bytes32 public constant ISSUER_ROLE = keccak256("ISSUER_ROLE");
 
     struct CertificateInfo {
-        uint8 bloodType;
         uint256 issuedAt;
         string issuer;
         bool used;
@@ -24,7 +23,6 @@ contract BloodCertificate is ERC721, AccessControl {
 
     error CertificateAlreadyUsed(uint256 tokenId);
     error CertificateDoesNotExist(uint256 tokenId);
-    error InvalidBloodType(uint8 bloodType);
     error UsedCertificateCannotBeTransferred(uint256 tokenId);
 
     constructor(address admin) ERC721("BloodPass Certificate", "BPC") {
@@ -32,16 +30,13 @@ contract BloodCertificate is ERC721, AccessControl {
         _grantRole(ISSUER_ROLE, admin);
     }
 
-    function issue(address to, uint8 bloodType, string calldata issuer)
+    function issue(address to, string calldata issuer)
         external
         onlyRole(ISSUER_ROLE)
         returns (uint256 tokenId)
     {
-        if (bloodType > 3) revert InvalidBloodType(bloodType);
-
         tokenId = _nextTokenId++;
         _certificates[tokenId] = CertificateInfo({
-            bloodType: bloodType,
             issuedAt: block.timestamp,
             issuer: issuer,
             used: false,
@@ -74,11 +69,11 @@ contract BloodCertificate is ERC721, AccessControl {
     function certificateInfo(uint256 tokenId)
         external
         view
-        returns (uint8 bloodType, uint256 issuedAt, string memory issuer, bool used, uint256 usedAt, string memory usedBy)
+        returns (uint256 issuedAt, string memory issuer, bool used, uint256 usedAt, string memory usedBy)
     {
         if (_ownerOf(tokenId) == address(0)) revert CertificateDoesNotExist(tokenId);
         CertificateInfo storage cert = _certificates[tokenId];
-        return (cert.bloodType, cert.issuedAt, cert.issuer, cert.used, cert.usedAt, cert.usedBy);
+        return (cert.issuedAt, cert.issuer, cert.used, cert.usedAt, cert.usedBy);
     }
 
     /// @dev 사용 처리된 증서는 이력 보존을 위해 이후 양도를 막는다 (민팅 자체는 막지 않는다).

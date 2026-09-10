@@ -819,6 +819,38 @@
   color: var(--sub);
   margin-top: 4px;
 }
+.volumeToggle {
+  display: inline-flex;
+  align-self: flex-start;
+  gap: 4px;
+  padding: 3px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--card);
+}
+
+.volumeOption {
+  appearance: none;
+  border: 0;
+  border-radius: 999px;
+  padding: 7px 16px;
+  background: transparent;
+  color: var(--sub);
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.volumeOption[data-active="true"] {
+  background: var(--pri);
+  color: #fff;
+}
+
+.volumeOption:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
 
 .banner {
   background: var(--fail-bg);
@@ -929,6 +961,720 @@
   color: var(--mute);
 }
 
+
+/* --- 혈액원 발급: 입력 플로우와 증서 미리보기를 나란히 둔 발급 데스크 --- */
+
+.srOnly {
+  position: absolute;
+  overflow: hidden;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.issueShell {
+  max-width: 620px;
+  padding-bottom: 24px;
+}
+
+.issueStep {
+  color: var(--pri);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.13em;
+}
+
+.issueComposer {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: 14px;
+  overflow: hidden;
+  border-radius: var(--radius-xl);
+  background: linear-gradient(
+    180deg,
+    var(--pri-tint) 0%,
+    var(--card) 28%,
+    var(--card) 72%,
+    var(--pri-tint) 100%
+  );
+}
+
+.issueWalletSection,
+.issueDonationSection {
+  grid-column: 1;
+}
+
+.issueInputSection {
+  border: 0;
+  border-radius: var(--radius-xl);
+  padding: 20px;
+  background: transparent;
+}
+
+.issueInputHead {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  margin-bottom: 17px;
+}
+
+.issueWalletSection .issueInputHead {
+  margin-bottom: 8px;
+}
+
+.issueInputHead > span {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 9px;
+  background: var(--pri);
+  color: #fff;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.issueInputHead h2 {
+  margin: 0 0 3px;
+  color: var(--ink);
+  font-size: 15px;
+  letter-spacing: -0.02em;
+}
+
+.issueInputHead p {
+  margin: 0;
+  color: var(--mute);
+  font-size: 11.5px;
+  line-height: 1.55;
+}
+
+.issueAddressBox {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  overflow: hidden;
+  border: 1.5px solid var(--pri);
+  border-radius: 0.5rem;
+  background: var(--bg);
+  box-shadow: 2.5px 3px 0 var(--pri);
+  transition: border-color 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+}
+
+.issueAddressBox:focus-within {
+  border-color: var(--pri);
+  background: #fff;
+  box-shadow: 5.5px 7px 0 var(--pri);
+}
+
+.issueAddressBox[data-valid="true"] {
+  border-color: var(--done);
+  background: var(--done-bg);
+  box-shadow: 2.5px 3px 0 var(--done);
+}
+
+.issueAddressBox[data-valid="true"]:focus-within {
+  box-shadow: 5.5px 7px 0 var(--done);
+}
+
+.issueAddressPrefix {
+  display: grid;
+  align-self: stretch;
+  min-width: 42px;
+  place-items: center;
+  border-right: 1.5px solid var(--pri);
+  color: var(--pri);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.issueAddressBox[data-valid="true"] .issueAddressPrefix {
+  border-color: var(--done);
+}
+
+.issueAddressBox input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  padding: 0.625rem 0.75rem;
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+}
+
+.issueAddressBox input::placeholder {
+  color: #a8a29e;
+}
+
+.issueAddressBox input:disabled {
+  cursor: not-allowed;
+}
+
+.issueAddressClear {
+  display: grid;
+  width: 26px;
+  height: 26px;
+  margin-right: 8px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  padding: 0;
+  background: transparent;
+  color: var(--mute);
+  font-size: 19px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.issueAddressClear:hover,
+.issueAddressClear:focus-visible {
+  background: rgb(28 25 23 / 0.08);
+  color: var(--ink);
+  outline: none;
+}
+
+.issueAddressClear:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.issueAddressAssist {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-top: 11px;
+  color: var(--mute);
+  font-size: 11.5px;
+}
+
+.issueAddressAssist button {
+  appearance: none;
+  flex: 0 0 auto;
+  border: 0;
+  border-bottom: 1px solid currentColor;
+  padding: 1px 0;
+  background: transparent;
+  color: var(--pri);
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.issueAddressAssist button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.issueTypeGrid {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.issueTypeOption {
+  position: relative;
+  display: grid;
+  grid-template-columns: 22px 1fr;
+  align-items: center;
+  column-gap: 9px;
+  min-height: 72px;
+  user-select: none;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  padding: 12px;
+  background: #fff;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 0.14s ease, border-color 0.14s ease, background 0.14s ease;
+}
+
+.issueTypeOption:hover:not([data-disabled="true"]) {
+  border-color: #c7c3c0;
+  transform: translateY(-1px);
+}
+
+.issueTypeOption:focus-within {
+  outline: 2px solid rgb(var(--pri-rgb) / 0.24);
+  outline-offset: 2px;
+}
+
+.issueTypeOption[data-disabled="true"] {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.issueTypeOption[data-active="true"] {
+  border-color: rgb(var(--pri-rgb) / 0.38);
+  background: var(--pri-tint);
+}
+
+.issueTypeCheck {
+  --primary-color: var(--pri);
+  --secondary-color: #fff;
+  --primary-hover-color: var(--pri-d);
+  --checkbox-diameter: 20px;
+  --checkbox-border-radius: 5px;
+  --checkbox-border-color: var(--pri);
+  --checkbox-border-width: 1px;
+  --checkbox-border-style: solid;
+  --checkmark-size: 1.2;
+
+  position: relative;
+  align-self: center;
+  width: var(--checkbox-diameter);
+  height: var(--checkbox-diameter);
+  margin: 0;
+  appearance: none;
+  border: var(--checkbox-border-width) var(--checkbox-border-style) var(--checkbox-border-color);
+  border-radius: var(--checkbox-border-radius);
+  background: var(--secondary-color);
+  box-sizing: border-box;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.issueTypeCheck::before,
+.issueTypeCheck::after {
+  box-sizing: border-box;
+}
+
+.issueTypeCheck::after {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: 0 0 0 calc(var(--checkbox-diameter) / 2.5) var(--primary-color);
+  content: "";
+  opacity: 0;
+  transition: all 0.5s cubic-bezier(0.12, 0.4, 0.29, 1.46);
+}
+
+.issueTypeCheck::before {
+  position: absolute;
+  top: 45%;
+  left: 50%;
+  width: 4px;
+  height: 7px;
+  border-right: 2px solid var(--secondary-color);
+  border-bottom: 2px solid var(--secondary-color);
+  content: "";
+  opacity: 0;
+  transform: translate(-50%, -50%) rotate(45deg) scale(0);
+  transition: all 0.1s cubic-bezier(0.71, -0.46, 0.88, 0.6), opacity 0.1s;
+}
+
+.issueTypeCheck:hover {
+  border-color: var(--primary-hover-color);
+}
+
+.issueTypeCheck:checked {
+  border-color: transparent;
+  background: var(--primary-color);
+}
+
+.issueTypeCheck:checked::before {
+  opacity: 1;
+  transform: translate(-50%, -50%) rotate(45deg) scale(var(--checkmark-size));
+  transition: all 0.2s cubic-bezier(0.12, 0.4, 0.29, 1.46) 0.1s;
+}
+
+.issueTypeCheck:active:not(:checked)::after {
+  box-shadow: none;
+  opacity: 1;
+  transition: none;
+}
+
+.issueTypeCheck:disabled {
+  cursor: not-allowed;
+}
+
+.issueTypeOption strong {
+  color: var(--ink);
+  font-size: 14px;
+}
+
+.issueVolumeBlock {
+  position: absolute;
+  z-index: 1;
+  /* 첫 번째 전혈 카드(최소 높이 72px)의 상하 중앙에 맞춘다. */
+  top: 36px;
+  right: calc(50% + 12px);
+  transform: translateY(-50%);
+}
+
+.issueVolumeChoices {
+  position: relative;
+  display: flex;
+  padding: 4px;
+  border-radius: 99px;
+  background: #fff;
+  box-shadow: 0 0 1px 0 rgb(var(--pri-rgb) / 0.15), 0 6px 12px 0 rgb(var(--pri-rgb) / 0.15);
+}
+
+.issueVolumeRadio {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.issueVolumeTab {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 25px;
+  border-radius: 99px;
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: color 0.15s ease-in;
+}
+
+.issueVolumeRadio:checked + .issueVolumeTab {
+  color: var(--pri);
+}
+
+.issueVolumeRadio:focus-visible + .issueVolumeTab {
+  outline: 2px solid var(--pri);
+  outline-offset: 2px;
+}
+
+.issueVolumeRadio:disabled + .issueVolumeTab {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.issueVolumeGlider {
+  position: absolute;
+  z-index: 1;
+  top: 4px;
+  left: 4px;
+  width: 42px;
+  height: 25px;
+  border-radius: 99px;
+  background: var(--pri-tint);
+  pointer-events: none;
+  transition: transform 0.25s ease-out;
+}
+
+.issueVolumeRadio:nth-of-type(2):checked ~ .issueVolumeGlider {
+  transform: translateX(100%);
+}
+
+
+.issuePreview {
+  position: static;
+  grid-column: 1;
+  overflow: hidden;
+  border: 0;
+  border-radius: 18px;
+  background: transparent;
+}
+
+.issuePreviewTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 13px 16px;
+  background: var(--pri);
+  color: #fff;
+}
+
+.issuePreviewTop span {
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.issuePreviewTop small {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  opacity: 0.72;
+}
+
+.issuePreviewBody {
+  position: relative;
+  margin: 0 9px;
+  padding: 23px 15px 20px;
+  background: #fff;
+  text-align: center;
+}
+
+.issuePreviewBody::before,
+.issuePreviewBody::after {
+  position: absolute;
+  top: -8px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--pri-tint);
+  content: "";
+}
+
+.issuePreviewBody::before {
+  left: -17px;
+}
+
+.issuePreviewBody::after {
+  right: -17px;
+}
+
+.issuePreviewMark {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  margin: 0 auto 10px;
+  place-items: center;
+  border-radius: 12px 12px 12px 4px;
+  background: var(--pri);
+  color: #fff;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.issuePreviewToken {
+  color: var(--mute);
+  font-family: var(--font-mono);
+  font-size: 8px;
+  letter-spacing: 0.08em;
+}
+
+.issuePreviewBody h2 {
+  margin: 6px 0 5px;
+  color: var(--ink);
+  font-size: 16px;
+  letter-spacing: -0.025em;
+}
+
+.issuePreviewVolume {
+  color: var(--pri);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.issuePreviewRows {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  margin-top: 20px;
+  border-top: 1px dashed var(--line);
+  padding-top: 15px;
+  text-align: left;
+}
+
+.issuePreviewRows > div {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.issuePreviewRows span {
+  flex: 0 0 auto;
+  color: var(--mute);
+  font-size: 9.5px;
+}
+
+.issuePreviewRows strong {
+  overflow: hidden;
+  color: var(--ink);
+  font-size: 10.5px;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.issueReadyText {
+  color: var(--done) !important;
+}
+
+.issuePrivacyStrip {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 10px 12px;
+  color: var(--sub);
+  font-size: 9.5px;
+  line-height: 1.5;
+}
+
+.issuePrivacyStrip span {
+  flex: 0 0 auto;
+  border-radius: 999px;
+  padding: 2px 5px;
+  background: rgb(var(--pri-rgb) / 0.1);
+  color: var(--pri);
+  font-family: var(--font-mono);
+  font-size: 7.5px;
+  font-weight: 800;
+}
+
+.issuePreview > .banner,
+.issuePreview > .bannerWarn {
+  margin: 10px 12px;
+}
+
+.issuePreview > .issueIssueButton {
+  display: flex;
+  width: 100px;
+  height: 45px;
+  margin: 10px auto 8px;
+  border-radius: 8px;
+  background: var(--pri-line);
+  box-shadow: none;
+  color: var(--pri);
+  font-weight: 700;
+  transition: background-color 0.3s, box-shadow 0.3s, color 0.3s;
+}
+
+.issuePreview > .issueIssueButton:hover {
+  background: var(--pri);
+  box-shadow: 0 0 0 5px rgb(var(--pri-rgb) / 0.37);
+  color: #fff;
+}
+
+.issueSubmitNote {
+  margin: 0 12px 14px;
+  color: var(--mute);
+  font-size: 9px;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.issuePanel {
+  overflow: hidden;
+  border: 0;
+  border-radius: var(--radius-xl);
+  background:
+    radial-gradient(circle at 10% 0%, rgb(var(--pri-rgb) / 0.07), transparent 34%),
+    linear-gradient(0deg, var(--pri-tint), var(--card) 74%);
+  box-shadow: 0 18px 55px rgb(28 25 23 / 0.07);
+}
+
+.issueSuccessPanel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 34px clamp(20px, 6vw, 58px);
+  text-align: center;
+}
+
+.issueSuccessPanel h2 {
+  margin: 4px 0 0;
+  color: var(--ink);
+  font-size: 20px;
+  letter-spacing: -0.025em;
+}
+
+.issueSuccessMark {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  margin-bottom: 13px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--done-bg);
+  color: var(--done);
+  font-size: 22px;
+  font-weight: 900;
+}
+
+.issueSuccessSummary {
+  margin: 10px 0 14px;
+  color: var(--pri);
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.issueReceipt {
+  width: min(100%, 520px);
+  margin-top: 20px;
+  border: 1px dashed var(--pri-line);
+  border-radius: var(--radius-lg);
+  padding: 16px 18px;
+  background: rgb(255 255 255 / 0.84);
+  text-align: left;
+}
+
+.issueReceipt .row + .row {
+  margin-top: 10px;
+}
+
+.issueSuccessActions {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+
+@media (max-width: 760px) {
+  .issueComposer {
+    grid-template-columns: 1fr;
+  }
+
+  .issueWalletSection,
+  .issueDonationSection,
+  .issuePreview {
+    grid-column: 1;
+  }
+
+  .issuePreview {
+    position: static;
+  }
+}
+
+@media (max-width: 520px) {
+
+  .issueInputSection {
+    padding: 17px;
+  }
+
+  .issueTypeGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .issueVolumeBlock {
+    right: 8px;
+  }
+
+  .issueAddressAssist {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .issueSuccessActions {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .issueSuccessActions .btn {
+    width: 100%;
+  }
+}
 .mockCompareItem[data-kind="chain"] {
   background: var(--pri-tint);
   color: var(--pri-d);

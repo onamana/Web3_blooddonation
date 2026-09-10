@@ -57,10 +57,6 @@ export function CertificateDetailScreen() {
               <Badge variant={statusVariant(certificate.status)}>{statusLabel(certificate.status)}</Badge>
             </div>
             <div className={styles.row}>
-              <span className={styles.rowLabel}>혈액형</span>
-              <span className={styles.rowValue}>{certificate.bloodType}형</span>
-            </div>
-            <div className={styles.row}>
               <span className={styles.rowLabel}>발급기관</span>
               <span className={styles.rowValue}>{certificate.issuer}</span>
             </div>

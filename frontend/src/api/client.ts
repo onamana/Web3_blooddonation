@@ -18,6 +18,7 @@ export class ApiError extends Error {
 interface RequestOptions {
   method?: "GET" | "POST";
   body?: unknown;
+  headers?: Record<string, string>;
 }
 
 export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
@@ -25,7 +26,7 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
   try {
     response = await fetch(`${API_BASE_URL}${path}`, {
       method: options.method ?? "GET",
-      headers: options.body ? { "Content-Type": "application/json" } : undefined,
+      headers: { ...(options.body ? { "Content-Type": "application/json" } : {}), ...options.headers },
       body: options.body ? JSON.stringify(options.body) : undefined,
     });
   } catch (err) {

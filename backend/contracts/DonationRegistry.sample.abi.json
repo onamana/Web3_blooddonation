@@ -54,17 +54,6 @@
     "type": "error"
   },
   {
-    "inputs": [
-      {
-        "internalType": "uint8",
-        "name": "bloodType",
-        "type": "uint8"
-      }
-    ],
-    "name": "InvalidBloodType",
-    "type": "error"
-  },
-  {
     "anonymous": false,
     "inputs": [
       {
@@ -78,12 +67,6 @@
         "internalType": "uint256",
         "name": "timestamp",
         "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint8",
-        "name": "bloodType",
-        "type": "uint8"
       }
     ],
     "name": "DonationRecorded",
@@ -265,11 +248,6 @@
         "internalType": "uint256",
         "name": "timestamp",
         "type": "uint256"
-      },
-      {
-        "internalType": "uint8",
-        "name": "bloodType",
-        "type": "uint8"
       }
     ],
     "stateMutability": "view",
@@ -286,11 +264,6 @@
         "internalType": "uint256",
         "name": "timestamp",
         "type": "uint256"
-      },
-      {
-        "internalType": "uint8",
-        "name": "bloodType",
-        "type": "uint8"
       }
     ],
     "name": "record",

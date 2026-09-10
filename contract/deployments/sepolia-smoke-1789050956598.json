@@ -1,0 +1,10 @@
+{
+  "chainId": 11155111,
+  "startedAt": "2026-09-10T14:35:56.597Z",
+  "checks": [],
+  "transactions": {},
+  "certificateAddress": "0x622bC4B23a5e13CA4d5208b578c38e8d360944fB",
+  "donor": "0x3B79f76063e251dd5C46422936dfDA169e509A63",
+  "recipient": "0xC7B12ceE20970687079EEeFb1C8d5C7b6AB5534D",
+  "failure": "EPERM"
+}

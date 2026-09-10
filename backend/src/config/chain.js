@@ -21,7 +21,7 @@ export const bloodCertificateAbi = JSON.parse(readFileSync(certificateAbiPath, "
 export function getProvider() {
   const rpcUrl = process.env.SEPOLIA_RPC_URL;
   if (!rpcUrl) throw new Error("SEPOLIA_RPC_URL is not set in .env");
-  return new ethers.JsonRpcProvider(rpcUrl, undefined, { batchMaxCount: 1 });
+  return new ethers.JsonRpcProvider(rpcUrl, Number(process.env.CHAIN_ID || 11155111), { batchMaxCount: 1, cacheTimeout: -1 });
 }
 
 export function getSigner() {

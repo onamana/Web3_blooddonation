@@ -33,10 +33,6 @@ export function CertificateCard({
       </div>
 
       <div className={styles.row}>
-        <span className={styles.rowLabel}>혈액형</span>
-        <span className={styles.rowValue}>{certificate.bloodType}형</span>
-      </div>
-      <div className={styles.row}>
         <span className={styles.rowLabel}>발급</span>
         <span className={styles.rowValue}>
           {formatOnchainDate(certificate.issuedAt)} · {certificate.issuer}

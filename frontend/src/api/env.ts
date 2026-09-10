@@ -16,6 +16,7 @@ export const EXPLORER_BASE_URL =
  * MetaMask가 직접 safeTransferFrom()을 호출하므로 프론트가 이 주소를 알아야 한다.
  */
 export const CERTIFICATE_CONTRACT_ADDRESS = import.meta.env.VITE_CERTIFICATE_CONTRACT_ADDRESS || "";
+export const CHAIN_ID = import.meta.env.VITE_CHAIN_ID || "0xaa36a7";
 
 /**
  * 데모 모드에서 발급 화면이 쓰는 발급기관 명.

@@ -5,6 +5,7 @@ interface ImportMetaEnv {
   readonly VITE_DEMO_MODE?: string;
   readonly VITE_EXPLORER_BASE_URL?: string;
   readonly VITE_CERTIFICATE_CONTRACT_ADDRESS?: string;
+  readonly VITE_CHAIN_ID?: string;
 }
 
 interface ImportMeta {
