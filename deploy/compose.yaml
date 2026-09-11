@@ -1,0 +1,76 @@
+services:
+  web:
+    build:
+      context: ..
+      dockerfile: deploy/web.Dockerfile
+      args:
+        CERTIFICATE_CONTRACT_ADDRESS: ${CERTIFICATE_CONTRACT_ADDRESS:?Set certificate address}
+    environment:
+      DEMO_DOMAIN: ${DEMO_DOMAIN:?Set public domain}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+  backend:
+    build:
+      context: ..
+      dockerfile: deploy/backend.Dockerfile
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      CERTIFICATE_DB_PATH: /data/certificates.sqlite
+      DID_MODULE_BASE_URL: http://did:5001
+      DID_ISSUE_API_KEY: ${DID_ISSUE_API_KEY:?Set internal API key}
+      DEMO_ACCESS_PASSWORD: ${DEMO_ACCESS_PASSWORD:?Set demo password}
+      DEMO_SESSION_SECRET: ${DEMO_SESSION_SECRET:?Set session secret}
+      ALLOWED_ORIGINS: https://${DEMO_DOMAIN}
+      PUBLIC_API_PREFIX: /api
+      TRUST_PROXY: "1"
+      CHAIN_ID: 11155111
+      SEPOLIA_RPC_URL: ${SEPOLIA_RPC_URL:?Set RPC URL}
+      BACKEND_SIGNER_PRIVATE_KEY: ${BACKEND_SIGNER_PRIVATE_KEY:?Set authorized testnet signer}
+      CERTIFICATE_CONTRACT_ADDRESS: ${CERTIFICATE_CONTRACT_ADDRESS:?Set certificate address}
+      CERTIFICATE_DEPLOY_BLOCK: ${CERTIFICATE_DEPLOY_BLOCK:?Set deployment block}
+      DONATION_CONTRACT_ADDRESS: ${DONATION_CONTRACT_ADDRESS:?Set registry address}
+      BLOOD_CENTER_NAME: ${BLOOD_CENTER_NAME:-Demo Blood Center}
+    volumes:
+      - certificate_data:/data
+    depends_on:
+      did:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:4000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 20s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+  did:
+    build:
+      context: ..
+      dockerfile: deploy/did.Dockerfile
+    environment:
+      NODE_ENV: production
+      PORT: 5001
+      DID_DB_PATH: /data/credentials.sqlite
+      DID_SEED_DEMO: "false"
+      DID_ISSUER_PRIVATE_KEY: ${DID_ISSUER_PRIVATE_KEY:?Set DID issuer key}
+      DID_ISSUE_API_KEY: ${DID_ISSUE_API_KEY:?Set internal API key}
+    volumes:
+      - credential_data:/data
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:5001/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 20s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+volumes:
+  caddy_data:
+  caddy_config:
+  certificate_data:
+  credential_data:

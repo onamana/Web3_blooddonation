@@ -13,6 +13,7 @@ const ROUTES = [
   { label: "내 증서", to: "/certificates" },
   { label: "증서 검증", to: "/verify" },
   { label: "혈액원 발급", to: "/issue" },
+  { label: "자격·매칭", to: "/credentials" },
 ];
 
 /** /certificates/94 처럼 하위 경로도 "내 증서" 탭이 활성이어야 한다. */

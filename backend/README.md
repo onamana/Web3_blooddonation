@@ -1,7 +1,7 @@
 # backend
 
 Node.js 22.13 이상, Express + ethers + SQLite 기반 시연용 API입니다.
-현재 데이터 형식과 배포 절차는 [통합 가이드](../docs/contract-integration.md)를 기준으로 합니다.
+현재 DID 연동, 로그인과 배포 절차는 [데모 배포 안내](../docs/demo-deployment.md)를 기준으로 합니다.
 
 ## 실행
 
@@ -42,19 +42,22 @@ Swagger: `http://localhost:4000/docs`, 스펙: `/openapi.json`.
 혈액형, Rh, issuer 등 추가 입력은 거절합니다. 같은 키/입력의 재시도는 기존 발급을 복구합니다.
 같은 키에 다른 입력은 409입니다. 응답의 종류/헌혈량은 DB에서 합치며 온체인에는 올리지 않습니다.
 
-양도용 POST API는 없습니다. 소유자 지갑이 직접 `safeTransferFrom`을 보낸 후 상세를 재조회합니다.
+`POST /certificate/:tokenId/transfer`는 소유자의 EIP-712 서명을 검증한 뒤 `transferWithAuthorization`으로 릴레이합니다. 사용자가 가스비를 부담하지 않습니다.
 사용된 증서는 컨트랙트가 양도를 차단합니다. 재사용 요청은 409입니다.
 
 ## 별도 기능
 
 - POST /donation/auth: address/message/signature → 무작위 기록 해시와 시각 등록 (혈액형 없음).
 - GET /donation/verify/:hash, GET /donation/:hash: 해시 기록 조회.
-- POST /match: DID_MODULE_BASE_URL의 /match로 중계. DID 연결과 소비 화면은 이번 증서 통합 범위 밖입니다.
+- POST /match: DID_MODULE_BASE_URL의 /match로 중계. bloodType/minDaysSinceLastDonation/onlyEligible을 검증합니다.
+- POST /credentials/issue, /credentials/verify, /credentials/revoke: DID 자격 발급·검증·취소. 내부 키는 서버만 사용합니다.
+- GET /session, POST /session/login, POST /session/logout: 초대형 데모 접속. production에서는 로그인 설정이 필수입니다.
 
 ## 테스트
 
 ```powershell
 npm run test:integration
+npm run test:did
 ```
 
 contract/frontend 의존성과 컴파일된 artifacts가 필요합니다.
@@ -64,6 +67,6 @@ contract/frontend 의존성과 컴파일된 artifacts가 필요합니다.
 
 ## 시연 범위
 
-직원/병원 인증, 실제 헌혈 확인, 검사정보·DID 연결은 미구현입니다.
-API 호출자의 인증 없이 서버가 relayer 권한을 사용하므로 공개 운영 서비스로 간주하면 안 됩니다.
+데모 접속 암호 인증과 DID 연동을 제공합니다. 실제 직원/병원 신원 인증, 실제 헌혈 확인과 검사정보 연동은 미구현입니다.
+초대받은 참여자는 공통 운영자 권한으로 시연합니다. 실제 개인정보·메인넷 자산을 사용하는 운영 서비스가 아닙니다.
 발급 요청 키는 같은 요청의 거래 중복을 막을 뿐, 다른 키로 같은 헌혈 건을 발급하는 것까지 검증하지 않습니다.

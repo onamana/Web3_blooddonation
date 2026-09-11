@@ -26,7 +26,8 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
   try {
     response = await fetch(`${API_BASE_URL}${path}`, {
       method: options.method ?? "GET",
-      headers: { ...(options.body ? { "Content-Type": "application/json" } : {}), ...options.headers },
+      credentials: 'include',
+      headers: { 'X-Demo-Request': '1', ...(options.body ? { "Content-Type": "application/json" } : {}), ...options.headers },
       body: options.body ? JSON.stringify(options.body) : undefined,
     });
   } catch (err) {
@@ -44,6 +45,7 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
   }
 
   if (!response.ok) {
+    if (response.status === 401 && !path.startsWith('/session') && typeof window !== 'undefined') window.dispatchEvent(new Event('demo-session-expired'));
     const errorBody = payload as { error?: string; detail?: string } | null;
     const message =
       response.status === 501

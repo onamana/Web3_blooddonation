@@ -4,7 +4,7 @@ import { markCertificateUsed, verifyCertificate } from "../../api/certificate";
 import { ApiError } from "../../api/client";
 import { Badge } from "../../components/Badge";
 import { Modal } from "../../components/Modal";
-import { DEMO_MODE, EXPLORER_BASE_URL } from "../../api/env";
+import { DEMO_MODE, EXPLORER_BASE_URL, NETWORK_NAME } from "../../api/env";
 import type { CertificateVerifyResult } from "../../types/certificate";
 import { formatOnchainDate, formatOnchainDateTime } from "../../utils/onchain";
 import { AddressDisplay } from "./AddressDisplay";
@@ -19,7 +19,6 @@ import styles from "./Certificate.module.css";
 import verifyStyles from "./Verify.module.css";
 
 const HOSPITAL_NAME = "충남대병원";
-const NETWORK_NAME = "Sepolia";
 const RECENT_LIMIT = 4;
 const resultLabels = { valid: "사용 가능", used: "사용됨", notfound: "번호 없음" };
 
@@ -421,9 +420,9 @@ export function VerifyScreen() {
 
       <div className={styles.trustFooter}>
         <span>{NETWORK_NAME} Testnet · 컨트랙트 상태를 매 요청마다 직접 조회합니다</span>
-        <a className={styles.proofLink} href={EXPLORER_BASE_URL} target="_blank" rel="noreferrer">
+        {EXPLORER_BASE_URL && <a className={styles.proofLink} href={EXPLORER_BASE_URL} target="_blank" rel="noreferrer">
           ↗ Etherscan
-        </a>
+        </a>}
       </div>
     </div>
   );

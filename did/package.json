@@ -1,0 +1,30 @@
+{
+  "name": "did",
+  "version": "1.0.0",
+  "description": "DID/VC Verification & Matching Module",
+  "main": "src/server.js",
+"scripts": {
+    "start": "node --env-file=.env src/server.js",
+    "dev": "node --watch --env-file=.env src/server.js",
+    "test": "jest --runInBand --detectOpenHandles"
+  },
+  "keywords": [
+    "did",
+    "verifiable-credentials",
+    "ethers"
+  ],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "engines": { "node": ">=24" },
+  "dependencies": {
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "ethers": "^6.17.0",
+    "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "supertest": "^7.2.2"
+  }
+}

@@ -3,6 +3,7 @@ import { formatOnchainDate, txUrl } from "../../utils/onchain";
 import { formatTokenId } from "./certificateLabels";
 import { HistoryTimeline } from "./HistoryTimeline";
 import styles from "./Certificate.module.css";
+import { EXPLORER_BASE_URL } from '../../api/env';
 
 interface VerifyFailureProps {
   certificate: Certificate;
@@ -33,7 +34,7 @@ export function VerifyFailure({ certificate }: VerifyFailureProps) {
           {formatTokenId(certificate.tokenId)}
           {certificate.usedBy ? ` · ${certificate.usedBy}` : ""}
         </div>
-        {usedEvent && (
+        {usedEvent && EXPLORER_BASE_URL && (
           <a className={styles.verdictLinkFail} href={txUrl(usedEvent.txHash)} target="_blank" rel="noreferrer">
             ↗ 사용 기록을 Etherscan에서 확인
           </a>

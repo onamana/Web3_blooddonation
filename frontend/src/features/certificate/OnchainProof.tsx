@@ -1,5 +1,6 @@
 import { shortenTxHash, txUrl } from "../../utils/onchain";
 import styles from "./Certificate.module.css";
+import { EXPLORER_BASE_URL } from '../../api/env';
 
 interface OnchainProofProps {
   txHash: string;
@@ -13,9 +14,9 @@ export function OnchainProof({ txHash, label }: OnchainProofProps) {
     <div className={styles.proof}>
       {label && <span>{label}</span>}
       <span className="mono">{shortenTxHash(txHash)}</span>
-      <a className={styles.proofLink} href={txUrl(txHash)} target="_blank" rel="noreferrer">
+      {EXPLORER_BASE_URL && <a className={styles.proofLink} href={txUrl(txHash)} target="_blank" rel="noreferrer">
         ↗ Etherscan에서 보기
-      </a>
+      </a>}
     </div>
   );
 }

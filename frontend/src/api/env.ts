@@ -24,7 +24,7 @@ export function stopRuntimeDemoMode(): void {
 
 /** 트랜잭션 해시를 확인할 블록 익스플로러. 컨트랙트는 Sepolia에 배포된다. */
 export const EXPLORER_BASE_URL =
-  import.meta.env.VITE_EXPLORER_BASE_URL || "https://sepolia.etherscan.io";
+  import.meta.env.VITE_EXPLORER_BASE_URL ?? "https://sepolia.etherscan.io";
 
 /**
  * BloodCertificate(ERC-721) 컨트랙트 주소. 양도는 백엔드 릴레이가 아니라 소유자의
@@ -32,6 +32,7 @@ export const EXPLORER_BASE_URL =
  */
 export const CERTIFICATE_CONTRACT_ADDRESS = import.meta.env.VITE_CERTIFICATE_CONTRACT_ADDRESS || "";
 export const CHAIN_ID = import.meta.env.VITE_CHAIN_ID || "0xaa36a7";
+export const NETWORK_NAME = CHAIN_ID === '0x7a69' ? 'Local Demo' : 'Sepolia';
 
 /**
  * 데모 모드에서 발급 화면이 쓰는 발급기관 명.

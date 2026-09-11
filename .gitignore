@@ -5,5 +5,8 @@ dist/
 build/
 *.log
 backend/data/
+did/data/
+deploy/.env
+.demo/
 *.tsbuildinfo
 .gjc

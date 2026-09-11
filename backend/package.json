@@ -8,6 +8,7 @@
     "dev": "node --watch src/server.js",
     "start": "node src/server.js",
     "test:integration": "node --test test/integration.test.js",
+    "test:did": "node --test test/did-integration.test.js",
     "test:sepolia": "node scripts/smoke-sepolia.js",
     "ethers:playground": "node scripts/ethersPlayground.js"
   },

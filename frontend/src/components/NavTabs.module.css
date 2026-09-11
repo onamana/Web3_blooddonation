@@ -12,6 +12,8 @@
   display: inline-block;
   /* 밑줄이 bottom: -6px 로 삐져나오므로 잘리지 않게 여유를 둔다 */
   padding-bottom: 6px;
+  max-width: 100%;
+  overflow-x: auto;
 }
 
 .pill {

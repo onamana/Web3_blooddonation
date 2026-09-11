@@ -19,8 +19,28 @@ import {
 } from "../schemas/certificate.js";
 import { matchConditionsSchema } from "../schemas/match.js";
 import { errorResponseSchema } from "../schemas/common.js";
+import { credentialIssueSchema, credentialVerifySchema, credentialRevokeSchema } from '../schemas/credential.js';
 
 const registry = new OpenAPIRegistry();
+registry.registerComponent('securitySchemes', 'demoSession', { type: 'apiKey', in: 'cookie', name: 'bloodpass_demo' });
+for (const [action, schema, summary] of [
+  ['issue', credentialIssueSchema, '가상 검사정보로 자격 VC 발급·갱신 (기존 VC 무효화)'],
+  ['verify', credentialVerifySchema, '자격 VC 서명·만료·취소 검증'],
+  ['revoke', credentialRevokeSchema, '자격 VC 취소'],
+]) {
+  registry.registerPath({ method: 'post', path: `/credentials/${action}`, summary,
+    request: { body: { content: { 'application/json': { schema } } } },
+    responses: { [action === 'issue' ? 201 : 200]: { description: '처리 결과' },
+      400: { description: '입력 오류' }, 401: { description: '데모 로그인 필요' },
+      404: { description: '취소 대상 없음' }, 502: { description: 'DID 연결 실패' }, 503: { description: 'DID 미설정' } },
+  });
+}
+registry.registerPath({ method: 'get', path: '/session', security: [], responses: { 200: { description: 'required, authenticated' } } });
+registry.registerPath({ method: 'post', path: '/session/login', security: [],
+  request: { body: { content: { 'application/json': { schema: z.object({ password: z.string() }) } } } },
+  responses: { 200: { description: 'HttpOnly 세션 쿠키 발급' }, 401: { description: '암호 불일치' }, 429: { description: '시도 제한' } },
+});
+registry.registerPath({ method: 'post', path: '/session/logout', responses: { 200: { description: '브라우저 세션 쿠키 삭제' } } });
 
 registry.registerPath({
   method: "get",
@@ -158,15 +178,15 @@ registry.registerPath({
 registry.registerPath({
   method: "post",
   path: "/match",
-  summary: "병원 매칭 조건을 B(DID 모듈)로 중계",
+  summary: "최신 자격 VC 기반 후보자 조건 검색 (병원 배정 아님)",
   request: {
     body: { content: { "application/json": { schema: matchConditionsSchema } } },
   },
   responses: {
-    200: { description: "매칭 결과 (B 모듈 응답을 그대로 전달)" },
+    200: { description: "matchedCount, matches: holderDid/bloodType/isEligible/lastDonationDate/issuerDid/verifiedSignature" },
     400: { description: "요청 형식 오류", content: { "application/json": { schema: errorResponseSchema } } },
-    501: {
-      description: "DID_MODULE_BASE_URL 미설정 (B의 구현 대기 중)",
+    503: {
+      description: "DID_MODULE_BASE_URL 또는 DID_ISSUE_API_KEY 미설정",
       content: { "application/json": { schema: errorResponseSchema } },
     },
     502: { description: "DID 모듈 연결 실패", content: { "application/json": { schema: errorResponseSchema } } },
@@ -180,8 +200,9 @@ export function generateOpenApiDocument() {
     info: {
       title: "헌혈 이력 / 병원 매칭 API",
       version: "0.1.0",
-      description: "blockhack.kr 해커톤 백엔드 API",
+      description: '초대형 테스트넷 데모. production API는 세션 쿠키가 필요합니다. POST는 X-Demo-Request: 1 헤더 필수. 실제 개인정보 입력 금지.',
     },
-    servers: [{ url: "/" }],
+    servers: [{ url: process.env.PUBLIC_API_PREFIX || '/' }],
+    security: [{ demoSession: [] }],
   });
 }

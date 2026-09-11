@@ -253,7 +253,7 @@ router.post(
 // 소유자가 없어서 그 방식을 쓸 수 없다. 따라서 권한의 원천은 "지갑"이 아니라
 // "혈액원이라는 기관"이어야 한다.
 //
-// TODO(C): 혈액원 직원 인증. 지금 이 라우트는 무인증이라 데모 전용이다.
+// production에서는 공통 데모 로그인으로 보호한다. 실제 혈액원 직원 신원 확인은 별도다.
 router.post(
   "/issue",
   validateBody(certificateIssueBodySchema),

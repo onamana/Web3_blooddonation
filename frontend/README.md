@@ -3,7 +3,7 @@
 ## 현재 통합 기준 (2026-09-10)
 
 로컬 main `2df9770`의 헌혈 종류·헌혈량 발급 화면에 맞춰 백엔드/컨트랙트를 연결했다.
-현재 설정/검증 절차는 [통합 가이드](../docs/contract-integration.md)를 기준으로 한다.
+현재 DID 연동·로그인·배포 절차는 [데모 배포 안내](../docs/demo-deployment.md)를 기준으로 한다. `/credentials`에서 VC 발급·검증·취소·후보자 검색을 제공한다.
 공개 증서에는 혈액형/Rh가 없으며, 종류·헌혈량은 백엔드 SQLite에서 조회한다.
 `/issue`는 발급 화면이다. `VITE_CERTIFICATE_CONTRACT_ADDRESS`에 새 증서 주소를 설정하고
 `VITE_CHAIN_ID=0xaa36a7`, `VITE_DEMO_MODE=false`로 실행한다. `/certificates` 시작 화면에서

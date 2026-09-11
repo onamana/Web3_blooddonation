@@ -1,23 +1,25 @@
-# BloodPass — 헌혈 증서
+# BloodPass — 헌혈 증서 · DID 자격 검증
 
-혈액형을 온체인에 기록하지 않는 헌혈 증서 MVP입니다.
-로컬 `main`의 `2df9770` (`did + contract 반영전`) 발급 화면을 기준으로 프론트·백엔드·컨트랙트를 맞췄습니다.
+혈액형을 온체인에 기록하지 않는 Web3 헌혈증서 및 자격 검증 데모입니다.
+**[로컬 데모 실행과 HTTPS 배포 안내](docs/demo-deployment.md)**에서 설치·로그인·시연·배포·백업 절차를 확인하세요.
 
-## 현재 연결 (2026-09-10)
+## 현재 연결 (2026-09-11)
 
 | 구성 | 역할 |
 | --- | --- |
-| frontend | 증서 발급·목록·상세·병원 검증 화면, 소유자 지갑의 직접 양도 |
+| frontend | 기존 증서 화면 + 자격 등록·검증·취소·후보자 검색, 데모 로그인 |
 | backend | API, relayer, SQLite에 헌혈 종류·헌혈량 보관 |
 | BloodCertificate | 증서 소유권·발급·양도·사용 이력 (ERC-721) |
 | DonationRegistry | 혈액형 없는 기록 식별자 해시·시각 |
-| DID/VC | 별도 did-module 브랜치. 현재 증서 API와 아직 연결하지 않음 |
+| DID/VC | 백엔드 `/credentials`·`/match`와 연결, SQLite 저장, 갱신·취소·서명 검증 |
 
-발급·사용은 백엔드 signer가 수행하고, 양도는 소유자 지갑이 `safeTransferFrom`을 직접 호출합니다.
+발급·사용은 백엔드 signer가 수행하고, 양도는 소유자의 EIP-712 서명을 백엔드가 `transferWithAuthorization`으로 릴레이합니다.
 프론트는 조회할 때 백엔드가 합친 온체인 상태와 오프체인 메타데이터를 받습니다.
-혈액형/Rh는 증서·헌혈 기록 API와 두 컨트랙트에 포함하지 않습니다. 데모 검사정보는 프론트 가상 저장소에만 있습니다.
+혈액형/Rh는 증서·헌혈 기록 API와 두 컨트랙트에 포함하지 않습니다. 자격 VC는 혈액형·적격 여부·최근 헌혈일을 별도 DID DB에 보관합니다. 가상 정보만 입력하는 초대형 데모이며 실제 병원 연동은 포함하지 않습니다.
 
 ## Sepolia 새 배포
+
+아래는 초기 배포 기록입니다. 현재 기능에 맞는 주소는 `contract/deployments/`의 사용 대상 manifest와 `scripts/preflight-demo.mjs` 검사로 확인하세요.
 
 - BloodCertificate: `0x622bC4B23a5e13CA4d5208b578c38e8d360944fB`
 - DonationRegistry: `0x689390A0D4aD3F0e5ae49a0362785035507CbFb4`
