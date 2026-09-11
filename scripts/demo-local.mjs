@@ -65,11 +65,13 @@ try {
     await new Promise(resolve => setTimeout(resolve, 100));
   }
   const admin = ethers.Wallet.createRandom().connect(provider);
+  // The provider caches eth_getTransactionCount briefly, so back-to-back deploys would reuse a nonce.
+  const deployer = new ethers.NonceManager(admin);
   const donor = new ethers.Wallet(secrets.donorPrivateKey);
   for (const address of [admin.address, donor.address]) await provider.send('hardhat_setBalance', [address, ethers.toQuantity(ethers.parseEther('100'))]);
   async function deploy(name) {
     const artifact = JSON.parse(readFileSync(path.join(root, `contract/artifacts/contracts/${name}.sol/${name}.json`), 'utf8'));
-    const contract = await new ethers.ContractFactory(artifact.abi, artifact.bytecode, admin).deploy(admin.address);
+    const contract = await new ethers.ContractFactory(artifact.abi, artifact.bytecode, deployer).deploy(admin.address);
     await contract.waitForDeployment(); return contract;
   }
   const certificate = await deploy('BloodCertificate');
