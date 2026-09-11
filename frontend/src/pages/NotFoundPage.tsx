@@ -19,7 +19,7 @@ export function NotFoundPage() {
       <div style={{ fontSize: 13, color: "var(--mute)" }}>주소를 다시 확인해주세요.</div>
       <div style={{ display: "flex", gap: 12, marginTop: 8 }}>
         <Link to="/certificates">내 증서로</Link>
-        <Link to="/verify">병원 검증으로</Link>
+        <Link to="/verify">증서 검증으로</Link>
       </div>
     </div>
   );

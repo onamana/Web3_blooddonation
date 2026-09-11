@@ -2,7 +2,6 @@ import { useState } from "react";
 import { issueCertificate } from "../../api/certificate";
 import { ApiError } from "../../api/client";
 import { DEMO_BLOOD_CENTER_NAME, DEMO_MODE } from "../../api/env";
-import { DemoModeBanner } from "../../components/DemoModeBanner";
 import { DEMO_WALLET_ADDRESS } from "../../data/demoWallet";
 import type { BloodType } from "../../types/common";
 import type { Certificate } from "../../types/certificate";
@@ -183,7 +182,7 @@ export function IssueScreen() {
             </div>
             <OnchainProof txHash={issued.txHash} />
             <div className={styles.verdictMeta}>
-              이 번호를 헌혈자에게 전달하면 병원 검증에서 바로 조회됩니다.
+              이 번호를 헌혈자에게 전달하면 증서 검증에서 바로 조회됩니다.
             </div>
           </div>
 
@@ -214,8 +213,6 @@ export function IssueScreen() {
           </div>
         </>
       )}
-
-      <DemoModeBanner />
     </div>
   );
 }

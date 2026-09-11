@@ -1,0 +1,19 @@
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&display=swap");
+
+/* User-provided connected-wallet reference, adapted to the live wallet address. */
+.wallet { position: relative; display: inline-flex; flex-direction: column; gap: 6px; align-items: flex-start; max-width: 100%; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; }
+.label { display: flex; align-items: center; gap: 7px; font-size: 10px; font-weight: 800; letter-spacing: 0.18em; text-transform: uppercase; color: #8a6b6e; }
+.dot { width: 7px; height: 7px; border-radius: 50%; background: #1f9d63; }
+.row { display: flex; align-items: center; gap: 8px; }
+.address { font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 18px; line-height: 26px; font-weight: 600; letter-spacing: -0.01em; color: #1f1315; }
+.copy { flex: none; width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; border: 1.5px solid #2b1a1c; border-radius: 7px; background: transparent; color: #2b1a1c; cursor: pointer; transition: background 0.15s ease, color 0.15s ease, transform 0.1s ease; }
+.copy:hover { background: #2b1a1c; color: #fdf3f4; }
+.copy:active { transform: scale(0.94); }
+.copy:focus-visible { outline: 2px solid #2b1a1c; outline-offset: 2px; }
+.icon { display: block; width: 10px; height: 12px; border: 1.5px solid currentColor; border-radius: 3px; box-shadow: 3px -3px 0 -1.5px currentColor; }
+/* Include the underline in the wallet's height so its bottom aligns with the description. */
+.rule { align-self: stretch; height: 1px; background: rgba(43, 26, 28, 0.14); }
+.toast { position: absolute; top: calc(100% + 8px); right: 0; width: max-content; max-width: min(280px, 80vw); font-size: 11px; line-height: 14px; font-weight: 600; color: #2b1a1c; opacity: 0; pointer-events: none; transition: opacity 0.2s ease; }
+.toast[data-visible="true"] { opacity: 1; }
+@media (max-width: 420px) { .address { font-size: 16px; } .toast { left: 0; right: auto; } }
+@media (prefers-reduced-motion: reduce) { .copy, .toast { transition: none; } }

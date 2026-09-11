@@ -1,0 +1,438 @@
+/*
+  증서 카드 앞/뒷면.
+
+  앞면 = sample/blood-pack-sloshing.html 의 혈액팩 시각 자료를 정적으로 옮긴 것
+  (카드가 캐러셀 안에서 이미 3D로 기울어 있어서, 마우스 추적 틸트는 여기서는 빼고
+  출렁이는 액체 그라데이션만 남겼다).
+
+  뒷면 = sample/new-card-design-sample/card.css 의 flip-card 뒤집기(rotateY(180deg),
+  backface-visibility: hidden)를 그대로 쓰되, hover 대신 부모(캐러셀)가 내려주는
+  data-flipped 로 트리거한다.
+*/
+
+.flipOuter {
+  width: 100%;
+  height: 100%;
+  perspective: 1400px;
+}
+
+.flipInner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.55s cubic-bezier(0.4, 0.1, 0.2, 1);
+}
+
+/* 오른쪽에서 왼쪽으로 — 오른쪽 모서리가 먼저 화면 안쪽으로 접혀 들어간다. */
+.flipInner[data-flipped="true"] {
+  transform: rotateY(180deg);
+}
+
+.face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  border-radius: 18px;
+  overflow: hidden;
+}
+
+.face[data-side="front"] {
+  overflow: visible;
+  border-radius: 0;
+}
+
+.face[data-side="back"] {
+  transform: rotateY(180deg);
+}
+
+/*
+  backface-visibility: hidden 은 "그리는 것"만 숨기고 클릭 판정(elementsFromPoint 등)에서는
+  뒤로 돌아간 면을 계속 맨 위로 잡는 브라우저 버그가 있다 — 그래서 뒤집힌 뒤에도 앞면 위의
+  링크/버튼이 클릭을 가로채 간다. 지금 안 보이는 면은 pointer-events 로 아예 꺼서 막는다.
+*/
+.flipInner[data-flipped="true"] .face[data-side="front"] {
+  pointer-events: none;
+}
+
+.flipInner:not([data-flipped="true"]) .face[data-side="back"] {
+  pointer-events: none;
+}
+
+/*
+  --- 앞면: 혈액팩 ---
+
+  사용자가 만든 Desktop/sam/Blood Bag.dc 디자인을 그대로 옮긴 것이다. 그 파일은
+  612x612 캔버스 안에 152,116 ~ 460,584 박스(가로308 x 세로468)로 팩을 그렸는데,
+  여기서는 그 박스를 카드 전체(100% x 100%)로 놓고 모든 좌표를 그 박스 기준
+  퍼센트로 환산했다. 숫자만 바뀐 것뿐, 배치·비율·색은 원본 그대로다.
+*/
+
+.bag {
+  /* The stationary front face handles hover/click; the visual cannot change hit testing. */
+  pointer-events: none;
+  position: relative;
+  height: 100%;
+  transform-style: preserve-3d;
+  font-family: var(--font-sans);
+}
+
+/* 위쪽 튜브 포트. 원본: left 245/291/337, top116, 24x66, border-radius 7 7 0 0 */
+.port {
+  position: absolute;
+  top: 0;
+  width: 7.79%;
+  height: 14.1%;
+  border-radius: 7px 7px 0 0;
+  background: linear-gradient(90deg, #d8dade 0%, #ffffff 30%, #f4f5f7 62%, #c9ccd2 100%);
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.18);
+  transform: translateZ(20px);
+}
+
+.portBandShort,
+.portBandLong {
+  position: absolute;
+  left: 5px;
+  right: 5px;
+  border-radius: 4px;
+  background: linear-gradient(180deg, #a51219 0%, #cf2a26 100%);
+  opacity: 0.85;
+}
+
+.portBandShort {
+  top: 8px;
+  height: 16px;
+}
+
+.portBandLong {
+  top: 4px;
+  height: 26px;
+  border-radius: 3px;
+  opacity: 1;
+  background: linear-gradient(180deg, #8f0f16 0%, #c72420 100%);
+}
+
+.bag[data-used="true"] .portBandShort,
+.bag[data-used="true"] .portBandLong {
+  background: linear-gradient(180deg, #8a8580 0%, #a9a29a 100%);
+}
+
+/* 겉 플라스틱 껍질. 원본: left152 top168 308x424, radius 46 46 40 40 + 안쪽 광택 테두리 */
+.shell {
+  position: absolute;
+  left: 0;
+  top: 11.11%;
+  width: 100%;
+  height: 90.6%;
+  border-radius: 14.94% 14.94% 12.99% 12.99%;
+  background: linear-gradient(100deg, #e9eaee 0%, #ffffff 12%, #fbfbfc 50%, #e4e5ea 88%, #d5d7dd 100%);
+  box-shadow:
+    0 6px 18px rgba(90, 90, 100, 0.18),
+    inset 0 0 0 3px rgba(255, 255, 255, 0.85),
+    inset 0 0 12px rgba(120, 120, 130, 0.25);
+}
+
+/* 아래쪽 배출구. 원본: left296 top570 34x14, radius 0 0 8 8 */
+.spout {
+  position: absolute;
+  left: 46.75%;
+  top: 97.01%;
+  width: 11.04%;
+  height: 3%;
+  border-radius: 0 0 8px 8px;
+  border: 2px solid #d2d4da;
+  border-top: none;
+  background: linear-gradient(180deg, #f7f7f9, #e6e7eb);
+}
+
+/* 안쪽 혈액. 원본: left165 top181 282x398, radius 38 38 32 32 */
+.fill {
+  position: absolute;
+  left: 4.22%;
+  top: 13.89%;
+  width: 91.56%;
+  height: 85.04%;
+  border-radius: 13.48% 13.48% 11.35% 11.35%;
+  background:
+    radial-gradient(ellipse at 34% 26%, rgba(255, 255, 255, 0.42) 0%, rgba(255, 255, 255, 0) 42%),
+    radial-gradient(ellipse at 30% 34%, #cf2a2a 0%, #b31119 38%, #8c0a12 72%, #6d060c 100%);
+  box-shadow:
+    inset 0 0 26px rgba(70, 0, 4, 0.55),
+    inset 0 8px 14px rgba(255, 255, 255, 0.14);
+}
+
+/* 사용된 증서는 혈액이 바랜 색으로 */
+.bag[data-used="true"] .fill {
+  background:
+    radial-gradient(ellipse at 34% 26%, rgba(255, 255, 255, 0.42) 0%, rgba(255, 255, 255, 0) 42%),
+    radial-gradient(ellipse at 30% 34%, #b8b0a6 0%, #97897d 38%, #756a60 72%, #564d45 100%);
+}
+
+.fillHighlight1 {
+  position: absolute;
+  left: 4.96%;
+  top: 5.03%;
+  width: 21.99%;
+  height: 37.69%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at 50% 40%, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0) 70%);
+  transform: rotate(-8deg);
+}
+
+.fillHighlight2 {
+  position: absolute;
+  right: 4.26%;
+  bottom: 6.03%;
+  width: 18.44%;
+  height: 30.15%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at 50% 50%, rgba(255, 120, 110, 0.22), rgba(255, 255, 255, 0) 72%);
+}
+
+.bag[data-used="true"] .fillHighlight2 {
+  background: radial-gradient(ellipse at 50% 50%, rgba(180, 180, 180, 0.18), rgba(255, 255, 255, 0) 72%);
+}
+
+/* 마우스를 따라 도는 하이라이트 — useBloodTilt 가 배경을 직접 갱신한다. */
+.bagGlare {
+  position: absolute;
+  inset: 11.11% 0 0;
+  pointer-events: none;
+  border-radius: 15% 15% 13% 13%;
+  transform: translateZ(50px);
+  background: radial-gradient(circle at 50% 30%, rgba(255, 255, 255, 0.35), transparent 55%);
+}
+
+/*
+  팩에 붙은 정보 라벨. 원본: left187 top252 238x249, radius 3 3 12 3, 흰 라벨지 위에
+  얇은 검정 그리드 선. 내부 칸(헤더/본문/푸터)의 높이도 라벨 자기 자신의 %로 잡아서
+  카드 크기가 달라져도 원본과 같은 비례를 유지한다.
+*/
+.label {
+  position: absolute;
+  left: 11.36%;
+  top: 29.06%;
+  width: 77.27%;
+  height: 53.21%;
+  background: #fdfdfb;
+  border-radius: 3px 3px 14px 3px;
+  box-shadow: 0 2px 6px rgba(60, 0, 4, 0.28);
+  color: #1a1a1a;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transform: translateZ(40px);
+}
+
+.labelHeader {
+  display: flex;
+  height: 22%;
+  flex: none;
+  border-bottom: 1px solid #2b2b2b;
+}
+
+.labelHeaderCol {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  color: #55524e;
+  border-right: 1px solid #2b2b2b;
+  padding: 0 6px;
+}
+
+.labelHeaderCol[data-last] {
+  border-right: none;
+}
+
+.labelHeaderValue {
+  font-size: clamp(14px, 1.8vw, 17px);
+  overflow-wrap: anywhere;
+  color: #1a1a1a;
+}
+
+.labelHeaderValue[data-ok="true"] {
+  color: var(--done);
+}
+
+.labelHeaderValue[data-used="true"] {
+  color: #6b6b6b;
+}
+
+.labelBody {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.labelBodyLeft {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.labelBodyLeftMain {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 8px;
+  text-align: center;
+}
+
+.labelCaption {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--pri);
+  letter-spacing: 0.2px;
+}
+
+.labelBig {
+  font-size: clamp(19px, 2.6vw, 23px);
+  font-weight: 800;
+  color: var(--pri);
+  letter-spacing: -0.1px;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+}
+
+.labelIssuer {
+  font-size: 15px;
+  color: var(--sub);
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.labelFooterStrip {
+  flex: none;
+  height: 22%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 6px;
+  font-size: clamp(12px, 1.6vw, 14px);
+  font-weight: 700;
+  color: #3a3733;
+  border-top: 1px solid #2b2b2b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.labelFooterStrip[data-center] {
+  justify-content: center;
+  padding-left: 0;
+  color: var(--pri-d);
+}
+
+/* --- 뒷면: 상세 정보 --- */
+
+/* 증서번호 뱃지 */
+.bagTokenId {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--ink);
+  background: var(--pri-tint);
+  border-radius: 999px;
+  padding: 3px 10px;
+}
+
+/*
+  뒷면 전체는 더 이상 스크롤되지 않는다 — 기본 정보(.detailTop)와 양도 버튼(.detailFooter)은
+  항상 고정으로 보이고, 이력(.detailHistoryCard)만 자기 자리 안에서 따로 스크롤(드래그)된다.
+  위/아래가 서로 다른 카드처럼 보이도록 이력 칸에 배경·테두리를 따로 준다.
+*/
+.detail {
+  height: 100%;
+  overflow: hidden;
+  background: var(--card);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.detailTop {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.detailHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 2px;
+}
+
+.detailRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 14px;
+}
+
+.detailLabel {
+  color: var(--mute);
+  flex: 0 0 auto;
+}
+
+.detailValue {
+  font-weight: 600;
+  color: var(--ink);
+  text-align: right;
+  word-break: break-all;
+}
+
+/* 이력 — 독립된 칸. 나머지가 밀리지 않도록 남는 공간만 차지하고 그 안에서만 스크롤된다. */
+.detailHistoryCard {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--page-bg);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.detailHistoryTitle {
+  flex: none;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--sub);
+  padding: 8px 10px 6px;
+}
+
+.detailHistoryScroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  padding: 0 10px 8px;
+}
+
+.detailFooter {
+  flex: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flipInner { transition: none; }
+}

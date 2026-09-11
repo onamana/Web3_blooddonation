@@ -4,6 +4,7 @@ import type {
   certificateSchema,
   certificateTxResponseSchema,
   certificateVerifyResponseSchema,
+  donationTypeSchema,
 } from "../api/schemas";
 
 /**
@@ -11,6 +12,7 @@ import type {
  * 데모 목업도 같은 타입을 쓰므로 데모/실제 API 모드의 화면 코드가 완전히 같다.
  */
 export type Certificate = z.infer<typeof certificateSchema>;
+export type DonationType = z.infer<typeof donationTypeSchema>;
 export type CertificateEvent = z.infer<typeof certificateEventSchema>;
 export type CertificateEventType = CertificateEvent["type"];
 export type CertificateVerifyResult = z.infer<typeof certificateVerifyResponseSchema>;

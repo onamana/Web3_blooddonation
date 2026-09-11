@@ -1,16 +1,16 @@
 import { useCallback, useEffect, useState } from "react";
 import { listCertificates, transferCertificate } from "../../api/certificate";
 import { ApiError } from "../../api/client";
-import { DemoModeBanner } from "../../components/DemoModeBanner";
 import { useWallet } from "../../hooks/walletContext";
 import type { Certificate } from "../../types/certificate";
 import { WalletGate } from "./WalletGate";
-import { AddressDisplay } from "./AddressDisplay";
+import { ConnectedWallet } from "./ConnectedWallet";
 import { BrandBar } from "./BrandBar";
-import { CertificateCard } from "./CertificateCard";
+import { CertificateCarousel } from "./CertificateCarousel";
 import { formatTokenId } from "./certificateLabels";
 import { OnchainProofBox } from "./OnchainProof";
 import styles from "./Certificate.module.css";
+import listStyles from "./CertificateList.module.css";
 
 /** 화면 1: 증서 목록 (지갑) — 보유 증서 카드 + 양도 */
 export function CertificateListScreen() {
@@ -68,17 +68,31 @@ export function CertificateListScreen() {
   }
 
   return (
-    <div className={styles.shell}>
+    <div className={`${styles.shell} ${listStyles.page}`}>
       <BrandBar />
 
-      <div className={styles.topbar}>
+      <div className={listStyles.surface}>
+      <section className={listStyles.overview} aria-labelledby="certificate-title">
+      <div className={listStyles.heading}>
         <div>
-          <div className={styles.title}>내 헌혈 증서</div>
-          <div className={styles.subtitle}>
-            <AddressDisplay address={address} />
-          </div>
+          <span className={listStyles.eyebrow}>MY CERTIFICATES</span>
+          <h1 id="certificate-title" className={listStyles.title}>내 증서</h1>
+          <p className={listStyles.description}>나눔의 기록을 한곳에, 소중한 마음을 다음으로.</p>
         </div>
+        <ConnectedWallet key={address} address={address} />
       </div>
+      <div className={listStyles.stats} aria-live="polite">
+        {[
+          { label: "보유 증서", count: certificates.length },
+          { label: "사용 가능", count: certificates.filter((c) => c.status === "active").length },
+          { label: "사용 완료", count: certificates.filter((c) => c.status === "used").length },
+        ].map(({ label, count }, i) => (
+          <div key={label} className={listStyles.stat} data-highlight={i === 1}>
+            <span>{label}</span><strong>{status === "success" ? count : "—"}<small>장</small></strong>
+          </div>
+        ))}
+      </div>
+      </section>
 
       {error && (
         <div className={styles.banner} role="alert">
@@ -99,22 +113,23 @@ export function CertificateListScreen() {
         <div className={styles.empty}>이 지갑이 보유한 증서가 없습니다.</div>
       )}
 
-      {certificates.map((certificate) => (
-        <CertificateCard
-          key={certificate.tokenId}
-          certificate={certificate}
-          transferOpen={transferTokenId === certificate.tokenId}
+      {status === "success" && certificates.length > 0 && (
+        <section className={listStyles.collection} aria-label="보유 증서 둘러보기">
+        <div className={listStyles.collectionHead}><h2>나의 나눔 기록</h2><span>카드를 눌러 상세 정보와 이력을 확인하세요</span></div>
+        <CertificateCarousel
+          certificates={certificates}
+          transferTokenId={transferTokenId}
           transferPending={transferPending}
-          onOpenTransfer={() => {
-            setTransferTokenId(certificate.tokenId);
+          onOpenTransfer={(tokenId) => {
+            setTransferTokenId(tokenId);
             setTransferResult(null);
           }}
           onCancelTransfer={() => setTransferTokenId(null)}
-          onTransfer={(to) => void handleTransfer(certificate.tokenId, to)}
+          onTransfer={(tokenId, to) => void handleTransfer(tokenId, to)}
         />
-      ))}
-
-      <DemoModeBanner />
+        </section>
+      )}
+      </div>
     </div>
   );
 }

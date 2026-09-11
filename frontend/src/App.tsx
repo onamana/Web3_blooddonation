@@ -4,10 +4,12 @@ import { CertificateListScreen } from "./features/certificate/CertificateListScr
 import { IssueScreen } from "./features/certificate/IssueScreen";
 import { VerifyScreen } from "./features/certificate/VerifyScreen";
 import { NotFoundPage } from "./pages/NotFoundPage";
+import { Academy } from "./features/academy/Academy";
 
 export function App() {
   return (
     <Routes>
+      <Route path="/learn" element={<Academy />} />
       <Route path="/" element={<Navigate to="/certificates" replace />} />
       <Route path="/certificates" element={<CertificateListScreen />} />
       <Route path="/certificates/:tokenId" element={<CertificateDetailScreen />} />
