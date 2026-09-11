@@ -8,6 +8,7 @@ import { shortenAddress } from "../../utils/address";
 import { formatOnchainDateTime } from "../../utils/onchain";
 import { AddressDisplay } from "./AddressDisplay";
 import { BrandBar } from "./BrandBar";
+import { BlockingLoader } from "./BlockingLoader";
 import { Button } from "./Button";
 import { formatTokenId } from "./certificateLabels";
 import { OnchainProof } from "./OnchainProof";
@@ -21,6 +22,8 @@ const DONATION_TYPES: { value: DonationType; label: string }[] = [
 ];
 
 const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{40}$/;
+// 이전 버전은 성공한 키도 남겨 동일 payload의 발급을 재사용했다. v2부터 성공 시 즉시 지운다.
+const PENDING_ISSUE_KEY = "bloodpass.pendingIssue.v2";
 
 /** 혈액원 담당자가 검사가 끝난 헌혈 건을 헌혈자 지갑으로 발급하는 데모 화면. */
 export function IssueScreen() {
@@ -46,7 +49,7 @@ export function IssueScreen() {
 
   const handleReset = () => {
     request.current = null;
-    sessionStorage.removeItem("bloodpass.pendingIssue");
+    sessionStorage.removeItem(PENDING_ISSUE_KEY);
     setTo("");
     setDonationType("WHOLE_BLOOD");
     setVolumeMl(320);
@@ -60,26 +63,29 @@ export function IssueScreen() {
 
     const payload = JSON.stringify({ to: trimmedTo.toLowerCase(), donationType, volumeMl: issuedVolumeMl });
     if (!request.current) {
-      try { request.current = JSON.parse(sessionStorage.getItem("bloodpass.pendingIssue") || "null"); }
+      try { request.current = JSON.parse(sessionStorage.getItem(PENDING_ISSUE_KEY) || "null"); }
       catch { request.current = null; }
     }
     if (!request.current || request.current.payload !== payload) {
       request.current = { payload, id: crypto.randomUUID() };
     }
-    sessionStorage.setItem("bloodpass.pendingIssue", JSON.stringify(request.current));
+    sessionStorage.setItem(PENDING_ISSUE_KEY, JSON.stringify(request.current));
 
     setPending(true);
     setError(null);
     setIssued(null);
     try {
-      setIssued(
-        await issueCertificate({
-          to: trimmedTo,
-          donationType,
-          volumeMl: issuedVolumeMl,
-          requestId: request.current.id,
-        }),
-      );
+      const result = await issueCertificate({
+        to: trimmedTo,
+        donationType,
+        volumeMl: issuedVolumeMl,
+        requestId: request.current.id,
+      });
+      // 성공한 발급 키는 재사용하면 같은 온체인 증서를 다시 돌려준다. 응답을 받은
+      // 시점에는 재시도 보호가 끝났으므로 비워 다음 발급에서 새 tokenId를 만들게 한다.
+      request.current = null;
+      sessionStorage.removeItem(PENDING_ISSUE_KEY);
+      setIssued(result);
     } catch (err) {
       setError({
         message: err instanceof Error ? err.message : "발급에 실패했습니다.",
@@ -93,6 +99,7 @@ export function IssueScreen() {
   return (
     <div className={`${styles.shell} ${styles.issueShell}`}>
       <BrandBar />
+      {pending && <BlockingLoader message="증서를 발급 중입니다..." />}
 
 
       {!issued ? (

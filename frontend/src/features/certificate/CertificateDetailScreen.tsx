@@ -9,6 +9,7 @@ import { AddressDisplay } from "./AddressDisplay";
 import { BrandBar } from "./BrandBar";
 import { formatTokenId, statusLabel, statusVariant } from "./certificateLabels";
 import { HistoryTimeline } from "./HistoryTimeline";
+import { LoadingIndicator } from "./LoadingIndicator";
 import styles from "./Certificate.module.css";
 
 /** 화면 2: 증서 상세 — 이력 타임라인 + 온체인 증거 */
@@ -41,7 +42,7 @@ export function CertificateDetailScreen() {
     <div className={styles.shell}>
       <BrandBar />
 
-      {status === "loading" && <div className={styles.empty}>불러오는 중...</div>}
+      {status === "loading" && <LoadingIndicator />}
 
       {status === "error" && (
         <div className={styles.banner} role="alert">

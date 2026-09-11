@@ -8,6 +8,7 @@ import type { CertificateVerifyResult } from "../../types/certificate";
 import { formatOnchainDate, formatOnchainDateTime } from "../../utils/onchain";
 import { AddressDisplay } from "./AddressDisplay";
 import { BrandBar } from "./BrandBar";
+import { BlockingLoader } from "./BlockingLoader";
 import { formatTokenId } from "./certificateLabels";
 import { HistoryTimeline } from "./HistoryTimeline";
 import { OnchainProof } from "./OnchainProof";
@@ -39,6 +40,7 @@ export function VerifyScreen() {
   const [tokenId, setTokenId] = useState("");
   const [result, setResult] = useState<CertificateVerifyResult | null>(null);
   const [pending, setPending] = useState(false);
+  const [pendingAction, setPendingAction] = useState<"verify" | "use" | null>(null);
   const [error, setError] = useState<VerifyError | null>(null);
   const [useTxHash, setUseTxHash] = useState<string | null>(null);
   const [usedAt, setUsedAt] = useState<number | null>(null);
@@ -67,6 +69,7 @@ export function VerifyScreen() {
     if (!trimmed) return;
 
     setPending(true);
+    setPendingAction("verify");
     setError(null);
     setResult(null);
     setUseTxHash(null);
@@ -83,6 +86,7 @@ export function VerifyScreen() {
       setError(toVerifyError(err, "검증에 실패했습니다."));
     } finally {
       setPending(false);
+      setPendingAction(null);
     }
   };
 
@@ -99,6 +103,7 @@ export function VerifyScreen() {
   const handleUse = async () => {
     if (!result?.certificate) return;
     setPending(true);
+    setPendingAction("use");
     setError(null);
     try {
       const used = await markCertificateUsed(result.certificate.tokenId, HOSPITAL_NAME);
@@ -111,6 +116,7 @@ export function VerifyScreen() {
       setError(toVerifyError(err, "사용 처리에 실패했습니다."));
     } finally {
       setPending(false);
+      setPendingAction(null);
     }
   };
 
@@ -122,6 +128,9 @@ export function VerifyScreen() {
   return (
     <div className={`${styles.shell} ${styles.shellWide}`}>
       <BrandBar />
+      {pendingAction && (
+        <BlockingLoader message={pendingAction === "verify" ? "증서를 확인 중입니다..." : "증서 사용을 처리 중입니다..."} />
+      )}
 
       <div className={styles.sessionStrip}>
         <span className={styles.sessionDot} />

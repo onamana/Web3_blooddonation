@@ -36,7 +36,7 @@ export function NavTabs() {
     "내 증서" 하나뿐이라서). 그래서 해제 직후 초기 화면으로 돌려보낸다.
   */
   const handleDisconnect = () => {
-    disconnect();
+    void disconnect();
     navigate("/certificates");
   };
 

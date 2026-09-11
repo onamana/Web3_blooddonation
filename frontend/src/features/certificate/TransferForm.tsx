@@ -29,6 +29,9 @@ export function TransferForm({ pending, onSubmit, onCancel }: TransferFormProps)
         placeholder="받는 지갑 주소 (0x…)"
         aria-label="받는 지갑 주소"
       />
+      <p className={styles.inputHint}>
+        MetaMask에는 양도 서명만 요청됩니다. 블록체인 가스비는 서비스 운영 지갑이 부담합니다.
+      </p>
       <div className={styles.actions}>
         <Button type="submit" disabled={!valid || pending}>
           {pending ? "양도 중..." : "양도 확인"}

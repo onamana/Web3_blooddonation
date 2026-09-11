@@ -123,27 +123,18 @@ export async function transferCertificate({
     throw new ApiError(0, "증서 컨트랙트 주소가 설정되지 않았습니다.");
   }
 
-  const txHash = await sendSafeTransferFrom({ from, to, tokenId });
-  await waitForTransactionReceipt(txHash);
-
-  const certificate = await getCertificate(tokenId);
-  return { txHash, certificate };
+  return requestRelayedTransfer({ from, to, tokenId });
 }
 
-const SAFE_TRANSFER_FROM_SELECTOR = "42842e0e"; // keccak256("safeTransferFrom(address,address,uint256)")[:4]
-
-/** `safeTransferFrom(address,address,uint256)` 호출 데이터를 라이브러리 없이 직접 인코딩한다. */
-function encodeSafeTransferFromCalldata(from: string, to: string, tokenId: string): string {
-  const padAddress = (address: string) => address.toLowerCase().replace(/^0x/, "").padStart(64, "0");
-  const padTokenId = BigInt(tokenId).toString(16).padStart(64, "0");
-  return `0x${SAFE_TRANSFER_FROM_SELECTOR}${padAddress(from)}${padAddress(to)}${padTokenId}`;
-}
-
-async function sendSafeTransferFrom({
+/**
+ * MetaMask에는 가스를 쓰지 않는 EIP-712 서명만 요청하고, 서명을 백엔드 릴레이어에 전달한다.
+ * 컨트랙트가 정확한 수신자·토큰·만료·일회성 nonce를 검증하므로 서명을 다른 양도에 쓸 수 없다.
+ */
+async function requestRelayedTransfer({
   from,
   to,
   tokenId,
-}: TransferCertificateRequest): Promise<string> {
+}: TransferCertificateRequest): Promise<CertificateTxResult> {
   const eth = window.ethereum;
   if (!eth) throw new ApiError(0, "MetaMask가 필요합니다.");
 
@@ -155,26 +146,108 @@ async function sendSafeTransferFrom({
         throw new Error("지갑 네트워크를 확인해 주세요.");
       }
     }
-    return await eth.request<string>({
-      method: "eth_sendTransaction",
-      params: [{ from, to: CERTIFICATE_CONTRACT_ADDRESS, data: encodeSafeTransferFromCalldata(from, to, tokenId) }],
+
+    const deadline = Math.floor(Date.now() / 1000) + 10 * 60;
+    const nonce = createNonce();
+    const signature = await eth.request<string>({
+      method: "eth_signTypedData_v4",
+      params: [from, JSON.stringify({
+        domain: {
+          name: "BloodPass Certificate",
+          version: "1",
+          chainId: Number(CHAIN_ID),
+          verifyingContract: CERTIFICATE_CONTRACT_ADDRESS,
+        },
+        primaryType: "TransferAuthorization",
+        types: {
+          EIP712Domain: [
+            { name: "name", type: "string" },
+            { name: "version", type: "string" },
+            { name: "chainId", type: "uint256" },
+            { name: "verifyingContract", type: "address" },
+          ],
+          TransferAuthorization: [
+            { name: "from", type: "address" },
+            { name: "to", type: "address" },
+            { name: "tokenId", type: "uint256" },
+            { name: "nonce", type: "bytes32" },
+            { name: "deadline", type: "uint256" },
+          ],
+        },
+        message: { from, to, tokenId, nonce, deadline: String(deadline) },
+      })],
     });
+
+    const raw = await apiRequest<unknown>(`/certificate/${encodeURIComponent(tokenId)}/transfer`, {
+      method: "POST",
+      body: { from, to, nonce, deadline, signature },
+    });
+    return certificateTxResponseSchema.parse(raw);
   } catch (err) {
+    if (err instanceof ApiError) throw err;
     const message =
       err instanceof Error && "code" in err && (err as { code?: number }).code === 4001
-        ? "양도 트랜잭션 요청을 취소했습니다."
-        : "양도 트랜잭션 전송에 실패했습니다.";
+        ? "양도 서명을 취소했습니다."
+        : "양도 서명 요청에 실패했습니다.";
     throw new ApiError(0, message, err instanceof Error ? err.message : String(err));
   }
 }
 
-interface TransactionReceipt {
+function createNonce(): string {
+  const bytes = crypto.getRandomValues(new Uint8Array(32));
+  return `0x${Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("")}`;
+}
+
+/**
+ * MetaMask 확인 화면이 비활성화되는 가장 흔한 원인(보내는 지갑의 가스비 부족)을
+ * 지갑 팝업 전에 알려 준다. 수신 지갑의 잔액은 확인하지 않는다.
+ */
+export async function assertSenderCanPayGas({ from, data }: { from: string; data: string }): Promise<void> {
+  const eth = window.ethereum;
+  if (!eth) return;
+
+  try {
+    const transaction = { from, to: CERTIFICATE_CONTRACT_ADDRESS, data };
+    const [balanceHex, gasHex, gasPriceHex] = await Promise.all([
+      eth.request<string>({ method: "eth_getBalance", params: [from, "latest"] }),
+      eth.request<string>({ method: "eth_estimateGas", params: [transaction] }),
+      eth.request<string>({ method: "eth_gasPrice" }),
+    ]);
+    const balance = BigInt(balanceHex);
+    // 수수료 변동을 고려해 추정치보다 20% 여유를 둔다.
+    const required = (BigInt(gasHex) * BigInt(gasPriceHex) * 120n + 99n) / 100n;
+
+    if (balance < required) {
+      throw new ApiError(
+        0,
+        `Sepolia ETH가 부족합니다. 증서를 보내는 지갑(${shortenAddress(from)})에 약 ${formatEth(required)} SepoliaETH 이상이 필요합니다. 받는 지갑에는 ETH가 없어도 됩니다.`
+      );
+    }
+  } catch (error) {
+    // 잔액 부족은 반드시 표시한다. 노드의 추정 API가 일시적으로 실패한 경우에는
+    // MetaMask가 자체적으로 수수료를 계산하도록 양도 요청을 계속 진행한다.
+    if (error instanceof ApiError) throw error;
+  }
+}
+
+function shortenAddress(address: string): string {
+  return `${address.slice(0, 6)}…${address.slice(-4)}`;
+}
+
+function formatEth(wei: bigint): string {
+  const decimals = 1_000_000_000_000_000_000n;
+  const whole = wei / decimals;
+  const fraction = (wei % decimals).toString().padStart(18, "0").slice(0, 6).replace(/0+$/, "");
+  return fraction ? `${whole}.${fraction}` : whole.toString();
+}
+
+export interface TransactionReceipt {
   status: string;
   transactionHash: string;
 }
 
 /** eth_getTransactionReceipt를 폴링해 트랜잭션이 채굴/성공했는지 확인한다 (revert 시 에러). */
-async function waitForTransactionReceipt(
+export async function waitForTransactionReceipt(
   txHash: string,
   { intervalMs = 1500, maxAttempts = 40 }: { intervalMs?: number; maxAttempts?: number } = {}
 ): Promise<TransactionReceipt> {

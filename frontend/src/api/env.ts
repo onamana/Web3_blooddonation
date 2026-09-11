@@ -5,7 +5,22 @@ export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localho
  * false면 실제 백엔드 `/certificate` 를 호출한다.
  * 기본값은 true — 아직 증서 컨트랙트가 배포되지 않았기 때문.
  */
-export const DEMO_MODE = import.meta.env.VITE_DEMO_MODE !== "false";
+const RUNTIME_DEMO_MODE_KEY = "bloodpass.runtimeDemoMode";
+export const LIVE_CONTRACT_MODE = import.meta.env.VITE_DEMO_MODE === "false";
+
+/** 실제 컨트랙트 모드에서도 MetaMask가 없는 사용자가 데모를 둘러볼 수 있게 하는 임시 세션이다. */
+export const RUNTIME_DEMO_MODE =
+  typeof window !== "undefined" && window.sessionStorage.getItem(RUNTIME_DEMO_MODE_KEY) === "true";
+
+export const DEMO_MODE = !LIVE_CONTRACT_MODE || RUNTIME_DEMO_MODE;
+
+export function startRuntimeDemoMode(): void {
+  window.sessionStorage.setItem(RUNTIME_DEMO_MODE_KEY, "true");
+}
+
+export function stopRuntimeDemoMode(): void {
+  window.sessionStorage.removeItem(RUNTIME_DEMO_MODE_KEY);
+}
 
 /** 트랜잭션 해시를 확인할 블록 익스플로러. 컨트랙트는 Sepolia에 배포된다. */
 export const EXPLORER_BASE_URL =
