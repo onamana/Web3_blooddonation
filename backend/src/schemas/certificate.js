@@ -1,5 +1,7 @@
 import { z } from "zod";
-import { ethAddressSchema, bloodTypeSchema } from "./common.js";
+import { ethAddressSchema } from "./common.js";
+
+export const donationTypeSchema = z.enum(["WHOLE_BLOOD", "PLASMA", "PLATELETS", "PLATELETS_PLASMA"]);
 
 export const tokenIdSchema = z
   .string()
@@ -31,7 +33,8 @@ export const certificateSchema = z
   .object({
     tokenId: tokenIdSchema,
     owner: ethAddressSchema,
-    bloodType: bloodTypeSchema,
+    donationType: donationTypeSchema.optional(),
+    volumeMl: z.number().int().positive().optional(),
     issuedAt: z.number().int(),
     issuer: z.string(),
     status: z.enum(["active", "used"]),
@@ -45,15 +48,6 @@ export const certificateListResponseSchema = z
   .object({ certificates: z.array(certificateSchema) })
   .meta({ id: "CertificateListResponse" });
 
-export const certificateTransferBodySchema = z
-  .object({
-    from: ethAddressSchema,
-    to: ethAddressSchema,
-    message: z.string().min(1).meta({ example: "blood-certificate-transfer:94:1699999999" }),
-    signature: z.string().min(1).meta({ example: "0x..." }),
-  })
-  .meta({ id: "CertificateTransferRequest" });
-
 /**
  * 발급 요청.
  *
@@ -62,9 +56,18 @@ export const certificateTransferBodySchema = z
  * (BLOOD_CENTER_NAME)에서만 결정한다. `issuedAt`도 컨트랙트의 block.timestamp를 쓴다.
  */
 export const certificateIssueBodySchema = z
-  .object({
+  .strictObject({
     to: ethAddressSchema.meta({ description: "증서를 받을 헌혈자 지갑 주소" }),
-    bloodType: bloodTypeSchema.meta({ description: "혈액원 검사 결과 (헌혈자 자기 신고가 아니다)" }),
+    donationType: donationTypeSchema,
+    volumeMl: z.union([z.literal(320), z.literal(400)]).optional(),
+  })
+  .superRefine((value, ctx) => {
+    if (value.donationType === "WHOLE_BLOOD" && value.volumeMl === undefined) {
+      ctx.addIssue({ code: "custom", path: ["volumeMl"], message: "전혈은 320 또는 400mL를 선택해야 합니다" });
+    }
+    if (value.donationType !== "WHOLE_BLOOD" && value.volumeMl !== undefined) {
+      ctx.addIssue({ code: "custom", path: ["volumeMl"], message: "성분헌혈에는 전혈 헌혈량을 지정할 수 없습니다" });
+    }
   })
   .meta({ id: "CertificateIssueRequest" });
 
@@ -73,6 +76,17 @@ export const certificateUseBodySchema = z
     hospital: z.string().min(1).meta({ example: "충남대병원" }),
   })
   .meta({ id: "CertificateUseRequest" });
+
+/** MetaMask EIP-712 무가스 양도 서명. 실제 유효성은 컨트랙트가 검증한다. */
+export const certificateRelayedTransferBodySchema = z
+  .strictObject({
+    from: ethAddressSchema,
+    to: ethAddressSchema,
+    nonce: z.string().regex(/^0x[0-9a-fA-F]{64}$/, "nonce must be a 32-byte hex value"),
+    deadline: z.number().int().positive(),
+    signature: z.string().regex(/^0x[0-9a-fA-F]{130}$/, "signature must be a 65-byte hex value"),
+  })
+  .meta({ id: "CertificateRelayedTransferRequest" });
 
 /**
  * 검증 결과. `used`가 이중사용 차단 케이스이며, 프론트의 "검증 실패" 화면이 이 값을 보고 그려진다.

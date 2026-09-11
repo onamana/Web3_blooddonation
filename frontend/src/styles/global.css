@@ -17,8 +17,9 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* 초기 화면(지갑 미연결)만 배경을 완전 흰색으로. WalletGate 가 마운트되는 동안 표식이 붙는다. */
-body[data-screen="gate"] {
+/* 초기 화면과 혈액원 발급 화면은 넓은 흰색 캔버스를 공유한다. */
+body[data-screen="gate"],
+body[data-screen="issue"] {
   background: var(--card);
 }
 

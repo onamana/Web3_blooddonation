@@ -1,17 +1,16 @@
 import { z } from "zod";
 
 /**
- * backend/src/schemas/*.js 의 응답 계약을 그대로 미러링한 최소 검증 스키마.
- * 백엔드가 응답 형태를 바꾸면 여기서 즉시 실패하도록 유지한다.
+ * 백엔드 응답에서 프론트가 사용하는 공개 증서 필드만 검증한다.
+ * 혈액 검사정보는 데모 오프체인 저장소에만 두고 이 스키마에 포함하지 않는다.
  */
 
-export const bloodTypeSchema = z.enum(["A", "B", "AB", "O"]);
-
-/**
- * 헌혈 종류. 컨트랙트/실제 백엔드에는 아직 없는 값이라 optional이다 —
- * 없는 기록은 화면에서 정보 미등록으로 표시한다.
- */
-export const donationTypeSchema = z.enum(["whole", "plasma", "platelet", "platelet_plasma"]);
+export const donationTypeSchema = z.enum([
+  "WHOLE_BLOOD",
+  "PLASMA",
+  "PLATELETS",
+  "PLATELETS_PLASMA",
+]);
 
 export const certificateEventSchema = z.object({
   type: z.enum(["issued", "transferred", "used"]),
@@ -27,9 +26,8 @@ export const certificateEventSchema = z.object({
 export const certificateSchema = z.object({
   tokenId: z.string(),
   owner: z.string(),
-  bloodType: bloodTypeSchema,
   donationType: donationTypeSchema.optional(),
-  donationVolume: z.union([z.literal(320), z.literal(400)]).optional(),
+  volumeMl: z.number().int().positive().optional(),
   issuedAt: z.number().int(),
   issuer: z.string(),
   status: z.enum(["active", "used"]),

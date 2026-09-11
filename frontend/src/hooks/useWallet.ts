@@ -1,15 +1,16 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { DEMO_MODE, LIVE_CONTRACT_MODE, RUNTIME_DEMO_MODE, startRuntimeDemoMode, stopRuntimeDemoMode } from "../api/env";
 import { DEMO_WALLET_ADDRESS } from "../data/demoWallet";
 
-export type WalletStatus = "disconnected" | "connecting" | "connected" | "error";
+export type WalletStatus = "disconnected" | "connecting" | "selecting" | "connected" | "error";
 
 export interface WalletState {
   status: WalletStatus;
-  /** 전체 지갑 주소. 화면에는 절대 그대로 노출하지 않고 축약해서만 표시한다. */
   address: string | null;
   error: string | null;
   hasMetaMask: boolean;
-  /** true면 실제 MetaMask가 아니라 데모용 가상 지갑으로 연결된 상태 */
+  /** MetaMask가 이 사이트에 공개한 계정들. 두 개 이상이면 사용자가 직접 고른다. */
+  availableAccounts: string[];
   isDemoWallet: boolean;
 }
 
@@ -18,119 +19,183 @@ const initialState: WalletState = {
   address: null,
   error: null,
   hasMetaMask: false,
+  availableAccounts: [],
   isDemoWallet: false,
 };
 
 export interface WalletControls extends WalletState {
   connect: () => Promise<void>;
+  selectAccount: (address: string) => void;
+  cancelAccountSelection: () => void;
   connectDemoWallet: () => void;
-  disconnect: () => void;
-  /** 연결 실패 안내를 닫고 처음 상태로 되돌린다. */
+  /** 앱 상태와 MetaMask의 이 사이트 계정 권한을 함께 해제한다. */
+  disconnect: () => Promise<void>;
   dismissError: () => void;
 }
 
-/**
- * 지갑 연결 상태 머신.
- *
- * 이 훅을 화면 컴포넌트에서 직접 부르면 화면을 옮길 때마다 상태가 초기화되므로
- * (증서 목록 → 상세 → 목록으로 돌아오면 연결이 풀림) 앱 최상단의 WalletProvider가
- * 한 번만 부르고, 화면들은 `hooks/walletContext.ts` 의 useWallet()으로 값을 받는다.
- */
+/** MetaMask 지갑 연결 상태 머신. */
 export function useWalletMachine(): WalletControls {
   const [state, setState] = useState<WalletState>(initialState);
-  const handlersRef = useRef<{
-    onAccountsChanged?: (accounts: string[]) => void;
-    onDisconnect?: () => void;
-  }>({});
+  const knownAccountsRef = useRef<string[]>([]);
 
+  // 실제 서비스에서 "데모 체험하기"를 누른 경우, 새로고침 후에도 데모 지갑으로 바로 들어간다.
   useEffect(() => {
-    setState((s) => ({ ...s, hasMetaMask: Boolean(window.ethereum) }));
+    if (!RUNTIME_DEMO_MODE) return;
+    setState((current) => ({
+      status: "connected",
+      address: DEMO_WALLET_ADDRESS,
+      error: null,
+      hasMetaMask: current.hasMetaMask,
+      availableAccounts: [],
+      isDemoWallet: true,
+    }));
   }, []);
 
-  const teardownListeners = useCallback(() => {
+  /** 연결 전부터 계정 변경을 구독한다. */
+  useEffect(() => {
     const eth = window.ethereum;
     if (!eth) return;
-    if (handlersRef.current.onAccountsChanged) {
-      eth.removeListener("accountsChanged", handlersRef.current.onAccountsChanged as (...a: unknown[]) => void);
-    }
-    if (handlersRef.current.onDisconnect) {
-      eth.removeListener("disconnect", handlersRef.current.onDisconnect as (...a: unknown[]) => void);
-    }
-  }, []);
 
-  useEffect(() => () => teardownListeners(), [teardownListeners]);
+    const onAccountsChanged = (nextAccounts: string[]) => {
+      knownAccountsRef.current = nextAccounts;
+      setState((current) => {
+        if (current.status === "connected") {
+          if (!nextAccounts.length) return { ...initialState, hasMetaMask: true };
+          if (nextAccounts.length === 1) {
+            const [account] = nextAccounts;
+            if (!account) return { ...initialState, hasMetaMask: true };
+            return { ...current, address: account, availableAccounts: nextAccounts, isDemoWallet: false };
+          }
+          return {
+            ...current,
+            status: "selecting",
+            address: null,
+            availableAccounts: nextAccounts,
+            isDemoWallet: false,
+          };
+        }
+        if (current.status === "selecting") {
+          return nextAccounts.length
+            ? { ...current, availableAccounts: nextAccounts }
+            : { ...initialState, hasMetaMask: true };
+        }
+        return current;
+      });
+    };
+
+    const onDisconnect = () => {
+      knownAccountsRef.current = [];
+      setState({ ...initialState, hasMetaMask: true });
+    };
+
+    eth.on("accountsChanged", onAccountsChanged);
+    eth.on("disconnect", onDisconnect);
+    setState((current) => ({ ...current, hasMetaMask: true }));
+    void eth.request<string[]>({ method: "eth_accounts" })
+      .then((accounts) => { knownAccountsRef.current = accounts; })
+      .catch(() => {});
+
+    return () => {
+      eth.removeListener("accountsChanged", onAccountsChanged as (...args: unknown[]) => void);
+      eth.removeListener("disconnect", onDisconnect as (...args: unknown[]) => void);
+    };
+  }, []);
 
   const connect = useCallback(async () => {
     const eth = window.ethereum;
     if (!eth) {
-      setState((s) => ({
-        ...s,
+      setState((current) => ({
+        ...current,
         status: "error",
         error: "MetaMask가 설치되어 있지 않습니다. 브라우저 확장 프로그램을 설치한 뒤 다시 시도해주세요.",
       }));
       return;
     }
 
-    setState((s) => ({ ...s, status: "connecting", error: null }));
-
+    setState((current) => ({ ...current, status: "connecting", error: null }));
     try {
       const accounts = await eth.request<string[]>({ method: "eth_requestAccounts" });
-      const address = accounts[0];
-      if (!address) {
-        setState((s) => ({ ...s, status: "error", error: "연결할 계정을 찾을 수 없습니다." }));
-        return;
-      }
-
-      const onAccountsChanged = (nextAccounts: string[]) => {
-        const next = nextAccounts[0];
-        if (!next) {
-          setState({ ...initialState, hasMetaMask: true });
+      knownAccountsRef.current = accounts;
+      if (!accounts.length) {
+        setState((current) => ({ ...current, status: "error", error: "연결된 계정을 찾을 수 없습니다." }));
+      } else if (accounts.length > 1) {
+        setState({ status: "selecting", address: null, error: null, hasMetaMask: true, availableAccounts: accounts, isDemoWallet: false });
+      } else {
+        const [account] = accounts;
+        if (!account) {
+          setState((current) => ({ ...current, status: "error", error: "연결된 계정을 찾을 수 없습니다." }));
           return;
         }
-        setState((s) => ({ ...s, address: next }));
-      };
-      const onDisconnect = () => {
-        setState({ ...initialState, hasMetaMask: true });
-      };
-      eth.on("accountsChanged", onAccountsChanged);
-      eth.on("disconnect", onDisconnect);
-      handlersRef.current = { onAccountsChanged, onDisconnect };
-
-      setState({
-        status: "connected",
-        address,
-        error: null,
-        hasMetaMask: true,
-        isDemoWallet: false,
-      });
+        setState({ status: "connected", address: account, error: null, hasMetaMask: true, availableAccounts: accounts, isDemoWallet: false });
+      }
     } catch (err) {
       const message =
         err instanceof Error && "code" in err && (err as { code?: number }).code === 4001
           ? "지갑 연결 요청을 취소했습니다."
-          : "지갑 연결에 실패했습니다. 잠시 후 다시 시도해주세요.";
-      setState((s) => ({ ...s, status: "error", error: message }));
+          : "지갑 연결에 실패했습니다. 잠시 뒤 다시 시도해주세요.";
+      setState((current) => ({ ...current, status: "error", error: message }));
     }
   }, []);
 
-  /** 데모 모드 전용: MetaMask 없이도 화면을 체험할 수 있도록 가상 지갑으로 연결한다. */
-  const connectDemoWallet = useCallback(() => {
+  const selectAccount = useCallback((address: string) => {
+    const selected = knownAccountsRef.current.find((account) => account.toLowerCase() === address.toLowerCase());
+    if (!selected) {
+      setState((current) => ({ ...current, status: "error", error: "선택한 지갑 권한을 다시 확인해주세요." }));
+      return;
+    }
     setState({
+      status: "connected",
+      address: selected,
+      error: null,
+      hasMetaMask: true,
+      availableAccounts: knownAccountsRef.current,
+      isDemoWallet: false,
+    });
+  }, []);
+
+  const cancelAccountSelection = useCallback(() => {
+    setState((current) => ({ ...initialState, hasMetaMask: current.hasMetaMask }));
+  }, []);
+
+  const connectDemoWallet = useCallback(() => {
+    if (!DEMO_MODE) {
+      startRuntimeDemoMode();
+      window.location.reload();
+      return;
+    }
+    setState((current) => ({
       status: "connected",
       address: DEMO_WALLET_ADDRESS,
       error: null,
-      hasMetaMask: state.hasMetaMask,
+      hasMetaMask: current.hasMetaMask,
+      availableAccounts: [],
       isDemoWallet: true,
-    });
-  }, [state.hasMetaMask]);
-
-  const dismissError = useCallback(() => {
-    setState((s) => (s.status === "error" ? { ...s, status: "disconnected", error: null } : s));
+    }));
   }, []);
 
-  const disconnect = useCallback(() => {
-    teardownListeners();
-    setState((s) => ({ ...initialState, hasMetaMask: s.hasMetaMask }));
-  }, [teardownListeners]);
+  const dismissError = useCallback(() => {
+    setState((current) => (current.status === "error"
+      ? { ...initialState, hasMetaMask: current.hasMetaMask }
+      : current));
+  }, []);
 
-  return { ...state, connect, connectDemoWallet, disconnect, dismissError };
+  const disconnect = useCallback(async () => {
+    // 실제 컨트랙트 화면에서 데모 지갑을 해제하면 런타임 데모 세션도 종료해 실제 모드로 돌아간다.
+    if (state.isDemoWallet && LIVE_CONTRACT_MODE) {
+      stopRuntimeDemoMode();
+      window.location.reload();
+      return;
+    }
+    const eth = window.ethereum;
+    knownAccountsRef.current = [];
+    setState((current) => ({ ...initialState, hasMetaMask: current.hasMetaMask }));
+    if (!eth) return;
+    try {
+      await eth.request({ method: "wallet_revokePermissions", params: [{ eth_accounts: {} }] });
+    } catch {
+      // 일부 provider는 권한 해제를 지원하지 않는다. 이 경우에도 앱의 연결은 해제한다.
+    }
+  }, [state.isDemoWallet]);
+
+  return { ...state, connect, selectAccount, cancelAccountSelection, connectDemoWallet, disconnect, dismissError };
 }

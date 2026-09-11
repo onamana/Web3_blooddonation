@@ -97,7 +97,7 @@ export function FlipCertificateCard({
                 <div className={styles.labelBodyLeft}>
                   <div className={styles.labelBodyLeftMain}>
                     <div className={styles.labelCaption}>헌혈 종류</div>
-                    <div className={styles.labelBig}>{donationTypeLabel(certificate.donationType, certificate.donationVolume)}</div>
+                    <div className={styles.labelBig}>{donationTypeLabel(certificate.donationType, certificate.volumeMl)}</div>
                     <div className={styles.labelIssuer}>{certificate.issuer}</div>
                   </div>
                   <div className={styles.labelFooterStrip} data-center>
@@ -123,7 +123,7 @@ export function FlipCertificateCard({
 
               <div className={styles.detailRow}>
                 <span className={styles.detailLabel}>헌혈 종류</span>
-                <span className={styles.detailValue}>{donationTypeLabel(certificate.donationType, certificate.donationVolume)}</span>
+                <span className={styles.detailValue}>{donationTypeLabel(certificate.donationType, certificate.volumeMl)}</span>
               </div>
               <div className={styles.detailRow}>
                 <span className={styles.detailLabel}>발급기관</span>

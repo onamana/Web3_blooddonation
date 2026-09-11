@@ -15,14 +15,14 @@ export function statusVariant(status: Certificate["status"]): BadgeVariant {
 }
 
 const DONATION_TYPE_LABEL: Record<DonationType, string> = {
-  whole: "전혈",
-  plasma: "혈장성분헌혈",
-  platelet: "혈소판성분헌혈",
-  platelet_plasma: "혈소판혈장성분헌혈",
+  WHOLE_BLOOD: "전혈",
+  PLASMA: "혈장성분헌혈",
+  PLATELETS: "혈소판성분헌혈",
+  PLATELETS_PLASMA: "혈소판혈장성분헌혈",
 };
 
 /** 실제 기록이 있는 경우에만 종류와 전혈 용량을 표시한다. */
-export function donationTypeLabel(donationType: DonationType | undefined, volume?: 320 | 400) {
+export function donationTypeLabel(donationType: DonationType | undefined, volume?: number) {
   if (!donationType) return "헌혈 종류 미등록";
-  return DONATION_TYPE_LABEL[donationType] + (donationType === "whole" && volume ? ` (${volume}ml)` : "");
+  return DONATION_TYPE_LABEL[donationType] + (donationType === "WHOLE_BLOOD" && volume ? ` (${volume}ml)` : "");
 }

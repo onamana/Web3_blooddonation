@@ -1,17 +1,20 @@
-import { useEffect } from "react";
-import { DEMO_MODE } from "../../api/env";
+import { useEffect, useState } from "react";
 import { AlertIcon } from "../../components/icons";
 import { BloodSupplyPanel } from "../../components/BloodSupplyPanel";
 import { Modal } from "../../components/Modal";
 import { CoverflowCarousel, type CoverflowItem } from "../../components/CoverflowCarousel";
 import { ParticleFlock } from "../../components/ParticleFlock";
 import type { WalletState } from "../../hooks/useWallet";
+import { shortenAddress } from "../../utils/address";
 import { Button } from "./Button";
+import { BlockingLoader } from "./BlockingLoader";
 import styles from "./Certificate.module.css";
 
 interface WalletGateProps {
   wallet: WalletState;
   onConnect: () => void;
+  onSelectAccount: (address: string) => void;
+  onCancelAccountSelection: () => void;
   onConnectDemo: () => void;
   /** 연결 실패 모달을 닫는다. */
   onDismissError: () => void;
@@ -105,8 +108,10 @@ const FEATURES: CoverflowItem[] = [
 ];
 
 /** 지갑 미연결 상태에서 증서 목록(/certificates) 자리에 대신 보여주는 초기 화면. */
-export function WalletGate({ wallet, onConnect, onConnectDemo, onDismissError }: WalletGateProps) {
+export function WalletGate({ wallet, onConnect, onSelectAccount, onCancelAccountSelection, onConnectDemo, onDismissError }: WalletGateProps) {
+  const [startChoiceOpen, setStartChoiceOpen] = useState(false);
   const connecting = wallet.status === "connecting";
+  const selecting = wallet.status === "selecting";
   const failed = wallet.status === "error" && wallet.error !== null;
   // MetaMask 자체가 없는 경우와, 있는데 실패한 경우(취소 등)는 안내와 다음 행동이 다르다.
   const noMetaMask = !wallet.hasMetaMask;
@@ -125,6 +130,7 @@ export function WalletGate({ wallet, onConnect, onConnectDemo, onDismissError }:
 
   return (
     <div className={`${styles.shell} ${styles.gateShell}`}>
+      {connecting && <BlockingLoader message="지갑 연결을 요청 중입니다..." />}
       {/*
         방울들이 모여 서비스명을 만들고, 커서가 지나가면 흩어졌다 다시 모인다.
         카드 안에 두면 카드 폭(=본문 가독 폭)에 갇혀 작아지므로 카드 밖 히어로로 뺐다.
@@ -135,6 +141,22 @@ export function WalletGate({ wallet, onConnect, onConnectDemo, onDismissError }:
 
       <BloodSupplyPanel />
 
+      {selecting && (
+        <section className={styles.walletChoicePanel} aria-labelledby="wallet-choice-title">
+          <span className={styles.walletChoiceEyebrow}>WALLET SELECTION</span>
+          <h2 id="wallet-choice-title">연결할 지갑을 선택하세요</h2>
+          <p>MetaMask가 이 사이트에 허용한 지갑입니다.</p>
+          <div className={styles.walletChoiceList}>
+            {wallet.availableAccounts.map((address) => (
+              <Button key={address} variant="arrow" block onClick={() => onSelectAccount(address)}>
+                {shortenAddress(address)}
+              </Button>
+            ))}
+          </div>
+          <Button onClick={onCancelAccountSelection}>취소</Button>
+        </section>
+      )}
+
       <div className={`${styles.card} ${styles.gateCard}`}>
         <CoverflowCarousel items={FEATURES} />
       </div>
@@ -143,16 +165,55 @@ export function WalletGate({ wallet, onConnect, onConnectDemo, onDismissError }:
         지갑 연결은 이 화면의 유일한 다음 행동이라 항상 보이는 하단 바에 둔다.
         fixed 라서 레이아웃 높이를 차지하지 않아 스크롤이 생기지 않는다.
       */}
-      <div className={styles.gateBar}>
+      {!selecting && <div className={styles.gateBar}>
         <div className={styles.gateBarInner}>
           <span className={styles.gateBarNote}>
             이름·주민번호·병원 기록은 저장되지 않습니다. 지갑 주소로만 조회합니다.
           </span>
-          <Button variant="push" onClick={onConnect} disabled={connecting}>
+          <Button variant="push" onClick={() => setStartChoiceOpen(true)} disabled={connecting}>
             {connecting ? "연결 중..." : "지갑 연결하기"}
           </Button>
         </div>
-      </div>
+      </div>}
+
+      <Modal
+        open={startChoiceOpen}
+        onClose={() => setStartChoiceOpen(false)}
+        title="시작 방법을 선택하세요"
+        actions={
+          <>
+            <Button
+              variant="arrow"
+              block
+              onClick={() => {
+                setStartChoiceOpen(false);
+                if (window.ethereum) {
+                  onConnect();
+                } else {
+                  window.open("https://metamask.io/download/", "_blank", "noopener,noreferrer");
+                  // 설치 페이지는 새 탭에서 열고, 돌아올 원래 화면은 최신 확장 프로그램 상태로 갱신한다.
+                  window.location.reload();
+                }
+              }}
+            >
+              MetaMask로 시작하기
+            </Button>
+            <Button
+              block
+              onClick={() => {
+                setStartChoiceOpen(false);
+                onConnectDemo();
+              }}
+            >
+              데모 체험하기
+            </Button>
+          </>
+        }
+      >
+        <p style={{ margin: 0 }}>
+          MetaMask를 연결해 실제 Sepolia 증서를 확인하거나, 설치 없이 데모 흐름을 체험할 수 있습니다.
+        </p>
+      </Modal>
 
       {/*
         연결 실패는 "설치하거나 데모로 우회해야" 넘어가는 막다른 상황이라
@@ -169,18 +230,16 @@ export function WalletGate({ wallet, onConnect, onConnectDemo, onDismissError }:
               <Button href="https://metamask.io/download/" variant="arrow" block>
                 MetaMask 설치하러 가기
               </Button>
-              {DEMO_MODE && (
-                <Button
-                  variant="arrow"
-                  block
-                  onClick={() => {
-                    onDismissError();
-                    onConnectDemo();
-                  }}
-                >
-                  설치 없이 데모로 체험하기
-                </Button>
-              )}
+              <Button
+                variant="arrow"
+                block
+                onClick={() => {
+                  onDismissError();
+                  onConnectDemo();
+                }}
+              >
+                설치 없이 데모로 체험하기
+              </Button>
             </>
           ) : (
             <Button

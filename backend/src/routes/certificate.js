@@ -1,17 +1,17 @@
 import { Router } from "express";
 import { ethers } from "ethers";
 import { getCertificateContract } from "../config/chain.js";
-import { verifyWalletSignature } from "../utils/verifySignature.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { validateBody, validateParams, validateQuery } from "../middleware/validate.js";
 import {
   certificateIssueBodySchema,
   certificateOwnerQuerySchema,
+  certificateRelayedTransferBodySchema,
   certificateTokenParamSchema,
-  certificateTransferBodySchema,
   certificateUseBodySchema,
 } from "../schemas/certificate.js";
-import { BLOOD_TYPE_TO_CODE, CODE_TO_BLOOD_TYPE } from "../utils/bloodTypeMap.js";
+import { certificateMetadata, findIssuance, prepareIssuance, confirmIssuance, pendingIssuances } from "../services/certificateStore.js";
+import { withChainWrite } from "../services/chainWrites.js";
 
 const router = Router();
 
@@ -34,10 +34,23 @@ function isConfigured() {
 }
 
 /**
+ * 이벤트 로그 조회의 시작 블록. 컨트랙트가 배포된 블록보다 이전은 뒤질 필요가 없고,
+ * 일부 RPC(Infura 등)는 eth_getLogs의 블록 범위를 통째로 제한하기 때문에 fromBlock을
+ * 0(earliest)으로 두면 "range exceeds limit" 에러로 죽는다.
+ */
+const CERTIFICATE_DEPLOY_BLOCK = Number(process.env.CERTIFICATE_DEPLOY_BLOCK || 0);
+
+/**
  * 발급기관 명. 발급 요청 본문이 아니라 서버 설정에서만 온다.
  * 다중 혈액원 지원은 MVP 스코프 밖이라 지금은 단일 값으로 둔다(프론트 HOSPITAL_NAME과 같은 처지).
  */
 const BLOOD_CENTER_NAME = process.env.BLOOD_CENTER_NAME || "대전혈액원";
+
+async function certificateScope(contract) {
+  const provider = contract.runner.provider || contract.runner;
+  const { chainId } = await provider.getNetwork();
+  return `${chainId}:${(await contract.getAddress()).toLowerCase()}`;
+}
 
 /**
  * 발급 트랜잭션에서 새 tokenId를 찾는다.
@@ -68,8 +81,8 @@ async function eventTimestamp(log) {
 /** Transfer + CertificateUsed 로그를 시간순 이력으로 합친다. */
 async function loadHistory(contract, tokenId) {
   const [transfers, uses] = await Promise.all([
-    contract.queryFilter(contract.filters.Transfer(null, null, tokenId)),
-    contract.queryFilter(contract.filters.CertificateUsed(tokenId)),
+    contract.queryFilter(contract.filters.Transfer(null, null, tokenId), CERTIFICATE_DEPLOY_BLOCK),
+    contract.queryFilter(contract.filters.CertificateUsed(tokenId), CERTIFICATE_DEPLOY_BLOCK),
   ]);
 
   const transferEvents = await Promise.all(
@@ -107,7 +120,7 @@ async function loadCertificate(contract, tokenId) {
   return {
     tokenId: String(tokenId),
     owner,
-    bloodType: CODE_TO_BLOOD_TYPE[Number(info.bloodType)],
+    ...certificateMetadata(await certificateScope(contract), String(tokenId)),
     issuedAt: Number(info.issuedAt),
     issuer: info.issuer,
     status: info.used ? "used" : "active",
@@ -124,7 +137,7 @@ router.get("/", validateQuery(certificateOwnerQuerySchema), asyncHandler(async (
 
   const { owner } = res.locals.query;
   const contract = getCertificateContract();
-  const received = await contract.queryFilter(contract.filters.Transfer(null, owner));
+  const received = await contract.queryFilter(contract.filters.Transfer(null, owner), CERTIFICATE_DEPLOY_BLOCK);
   const candidates = [...new Set(received.map((log) => log.args.tokenId.toString()))];
 
   const owned = [];
@@ -155,7 +168,9 @@ router.get("/:tokenId/verify", validateParams(certificateTokenParamSchema), asyn
   let certificate;
   try {
     certificate = await loadCertificate(contract, tokenId);
-  } catch {
+  } catch (error) {
+    const name = error.revert?.name;
+    if (name !== "ERC721NonexistentToken" && name !== "CertificateDoesNotExist") throw error;
     return res.json({ tokenId, status: "notfound", certificate: null });
   }
 
@@ -166,32 +181,39 @@ router.get("/:tokenId/verify", validateParams(certificateTokenParamSchema), asyn
   });
 }));
 
-// 양도: 소유자가 지갑으로 서명한 메시지를 검증한 뒤 백엔드 릴레이어가 transferFrom을 보낸다.
-// TODO: 프론트에서 직접 지갑으로 transferFrom을 보내는 방식으로 바꿀 수 있으면 이 릴레이는 걷어낸다.
+// 양도: 사용자는 EIP-712 서명만 하고, 백엔드 릴레이어가 가스비를 내서 온체인에 기록한다.
+// 컨트랙트가 소유자/수신자/토큰/만료/일회성 nonce를 검증하므로 백엔드는 임의로 증서를 옮길 수 없다.
+// 유효하지 않은 서명은 static call로 먼저 차단해 릴레이어 가스도 보호한다.
 router.post(
   "/:tokenId/transfer",
   validateParams(certificateTokenParamSchema),
-  validateBody(certificateTransferBodySchema),
+  validateBody(certificateRelayedTransferBodySchema),
   asyncHandler(async (req, res) => {
-    const { tokenId } = req.params;
-    const { from, to, message, signature } = req.body;
-
-    if (!verifyWalletSignature({ message, signature, claimedAddress: from })) {
-      return res.status(401).json({ error: "signature verification failed" });
-    }
     if (!isConfigured()) return notImplemented(res);
 
+    const { tokenId } = req.params;
+    const { from, to, nonce, deadline, signature } = req.body;
     const contract = getCertificateContract({ withSigner: true });
-    const currentOwner = await contract.ownerOf(tokenId);
-    if (currentOwner.toLowerCase() !== from.toLowerCase()) {
-      return res.status(403).json({ error: "not the current owner of this certificate" });
+
+    let valid = false;
+    try {
+      valid = await contract.isTransferAuthorizationValid(from, to, tokenId, nonce, deadline, signature);
+    } catch {
+      valid = false;
     }
-    if (await contract.isUsed(tokenId)) {
-      return res.status(409).json({ error: "already used certificate cannot be transferred" });
+    if (!valid) {
+      return res.status(400).json({ error: "양도 서명이 유효하지 않거나 만료되었습니다. 다시 서명해 주세요." });
     }
 
-    const tx = await contract.transferFrom(from, to, tokenId);
-    await tx.wait();
+    const tx = await withChainWrite(async () => {
+      // 대기열 동안 소유자나 서명 상태가 바뀌었을 수 있으므로 가스를 쓰기 직전에 다시 확인한다.
+      if (!await contract.isTransferAuthorizationValid(from, to, tokenId, nonce, deadline, signature)) {
+        throw new Error("양도 서명이 이미 사용되었거나 더 이상 유효하지 않습니다.");
+      }
+      const transaction = await contract.transferWithAuthorization(from, to, tokenId, nonce, deadline, signature);
+      await transaction.wait();
+      return transaction;
+    });
 
     res.json({ txHash: tx.hash, certificate: await loadCertificate(contract, tokenId) });
   })
@@ -215,8 +237,11 @@ router.post(
       });
     }
 
-    const tx = await contract.markUsed(tokenId, req.body.hospital);
-    await tx.wait();
+    const tx = await withChainWrite(async () => {
+      const transaction = await contract.markUsed(tokenId, req.body.hospital);
+      await transaction.wait();
+      return transaction;
+    });
 
     res.json({ txHash: tx.hash, certificate: await loadCertificate(contract, tokenId) });
   })
@@ -224,12 +249,10 @@ router.post(
 
 // 발급: 혈액원이 헌혈자 지갑으로 새 증서(ERC-721)를 민팅한다.
 //
-// 양도/사용과 권한 구조가 다르다. 양도는 소유자의 지갑 서명으로 권한을 증명하지만,
-// 발급은 아직 소유자가 없어서 서명할 사람이 없다. 따라서 권한의 원천은 "지갑 서명"이 아니라
+// 양도는 소유자의 지갑이 직접 온체인 트랜잭션을 보내 권한을 증명하지만, 발급은 아직
+// 소유자가 없어서 그 방식을 쓸 수 없다. 따라서 권한의 원천은 "지갑"이 아니라
 // "혈액원이라는 기관"이어야 한다.
 //
-// TODO(A 협의): 컨트랙트에 발급자 롤(onlyIssuer / AccessControl)을 두고 백엔드 signer를 등록해야
-// 한다. 이게 없으면 누구나 증서를 찍어낼 수 있고 그러면 /verify 화면 전체가 무의미해진다.
 // TODO(C): 혈액원 직원 인증. 지금 이 라우트는 무인증이라 데모 전용이다.
 router.post(
   "/issue",
@@ -237,21 +260,56 @@ router.post(
   asyncHandler(async (req, res) => {
     if (!isConfigured()) return notImplemented(res);
 
-    const { to, bloodType } = req.body;
-    const contract = getCertificateContract({ withSigner: true });
-
-    const tx = await contract.issue(to, BLOOD_TYPE_TO_CODE[bloodType], BLOOD_CENTER_NAME);
-    const receipt = await tx.wait();
-
-    const tokenId = findIssuedTokenId(contract, receipt);
-    if (tokenId === null) {
-      return res.status(502).json({
-        error: "issued tokenId not found",
-        detail: "발급 트랜잭션에 Transfer(0x0 → to) 로그가 없습니다.",
-      });
+    const requestId = req.get("Idempotency-Key");
+    if (!requestId || !/^[a-zA-Z0-9_-]{16,100}$/.test(requestId)) {
+      return res.status(400).json({ error: "Idempotency-Key 헤더가 필요합니다 (16~100자)." });
     }
-
-    res.json({ txHash: tx.hash, certificate: await loadCertificate(contract, tokenId) });
+    const contract = getCertificateContract({ withSigner: true });
+    const scope = await certificateScope(contract);
+    const payload = JSON.stringify({ ...req.body, to: req.body.to.toLowerCase() });
+    const result = await withChainWrite(async () => {
+      let record = findIssuance(scope, requestId);
+      if (record && record.payload !== payload) {
+        return { status: 409, body: { error: "같은 발급 키에 다른 입력값을 사용할 수 없습니다." } };
+      }
+      const signer = contract.runner;
+      const provider = signer.provider;
+      if (!record) {
+        // An interrupted broadcast may not be in the node's mempool. Do not
+        // overwrite its nonce with a new issue; the original key must recover it.
+        for (const pending of pendingIssuances(scope)) {
+          const receipt = await provider.getTransactionReceipt(pending.tx_hash);
+          if (!receipt) return { status: 409, body: { error: "이전 발급이 미확정입니다. 이전 요청을 재시도하세요." } };
+          if (receipt.status === 1) {
+            const tokenId = findIssuedTokenId(contract, receipt);
+            if (tokenId !== null) confirmIssuance(scope, pending.request_id, tokenId);
+          }
+        }
+        const unsigned = await contract.issue.populateTransaction(req.body.to, BLOOD_CENTER_NAME);
+        const transaction = await signer.populateTransaction(unsigned);
+        const rawTx = await signer.signTransaction(transaction);
+        record = prepareIssuance(scope, requestId, payload, rawTx, ethers.keccak256(rawTx));
+      }
+      if (record.token_id !== null) {
+        return { status: 200, body: { txHash: record.tx_hash, certificate: await loadCertificate(contract, record.token_id) } };
+      }
+      let receipt = await provider.getTransactionReceipt(record.tx_hash);
+      if (!receipt) {
+        try { await provider.broadcastTransaction(record.raw_tx); }
+        catch (error) {
+          if (!await provider.getTransaction(record.tx_hash)) throw error;
+        }
+        receipt = await provider.waitForTransaction(record.tx_hash, 1, 120000);
+      }
+      if (!receipt || receipt.status !== 1) {
+        return { status: 502, body: { error: "발급 트랜잭션이 실패했거나 아직 미확정입니다.", txHash: record.tx_hash } };
+      }
+      const tokenId = findIssuedTokenId(contract, receipt);
+      if (tokenId === null) return { status: 502, body: { error: "issued tokenId not found" } };
+      confirmIssuance(scope, requestId, tokenId);
+      return { status: 200, body: { txHash: record.tx_hash, certificate: await loadCertificate(contract, tokenId) } };
+    }, { scope, requestId });
+    res.status(result.status).json(result.body);
   })
 );
 

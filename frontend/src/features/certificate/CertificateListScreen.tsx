@@ -7,6 +7,8 @@ import { WalletGate } from "./WalletGate";
 import { ConnectedWallet } from "./ConnectedWallet";
 import { BrandBar } from "./BrandBar";
 import { CertificateCarousel } from "./CertificateCarousel";
+import { BlockingLoader } from "./BlockingLoader";
+import { LoadingIndicator } from "./LoadingIndicator";
 import { formatTokenId } from "./certificateLabels";
 import { OnchainProofBox } from "./OnchainProof";
 import styles from "./Certificate.module.css";
@@ -61,6 +63,8 @@ export function CertificateListScreen() {
       <WalletGate
         wallet={wallet}
         onConnect={wallet.connect}
+        onSelectAccount={wallet.selectAccount}
+        onCancelAccountSelection={wallet.cancelAccountSelection}
         onConnectDemo={wallet.connectDemoWallet}
         onDismissError={wallet.dismissError}
       />
@@ -70,6 +74,7 @@ export function CertificateListScreen() {
   return (
     <div className={`${styles.shell} ${listStyles.page}`}>
       <BrandBar />
+      {transferPending && <BlockingLoader message="증서를 양도 중입니다..." />}
 
       <div className={listStyles.surface}>
       <section className={listStyles.overview} aria-labelledby="certificate-title">
@@ -107,7 +112,7 @@ export function CertificateListScreen() {
         />
       )}
 
-      {status === "loading" && <div className={styles.empty}>불러오는 중...</div>}
+      {status === "loading" && <LoadingIndicator />}
 
       {status === "success" && certificates.length === 0 && (
         <div className={styles.empty}>이 지갑이 보유한 증서가 없습니다.</div>

@@ -10,6 +10,7 @@ import { formatOnchainDate, formatOnchainDateTime } from "../../utils/onchain";
 import { AddressDisplay } from "./AddressDisplay";
 import { BrandBar } from "./BrandBar";
 import { donationTypeLabel, formatTokenId } from "./certificateLabels";
+import { BlockingLoader } from "./BlockingLoader";
 import { HistoryTimeline } from "./HistoryTimeline";
 import { OnchainProof } from "./OnchainProof";
 import { Button } from "./Button";
@@ -42,6 +43,7 @@ export function VerifyScreen() {
   const [tokenId, setTokenId] = useState("");
   const [result, setResult] = useState<CertificateVerifyResult | null>(null);
   const [pending, setPending] = useState(false);
+  const [pendingAction, setPendingAction] = useState<"verify" | "use" | null>(null);
   const [error, setError] = useState<VerifyError | null>(null);
   const [useTxHash, setUseTxHash] = useState<string | null>(null);
   const [usedAt, setUsedAt] = useState<number | null>(null);
@@ -78,6 +80,7 @@ export function VerifyScreen() {
     setTokenId(trimmed);
 
     setPending(true);
+    setPendingAction("verify");
     setError(null);
     setResult(null);
     setUseTxHash(null);
@@ -93,6 +96,7 @@ export function VerifyScreen() {
     } finally {
       busyRef.current = false;
       setPending(false);
+      setPendingAction(null);
     }
   };
 
@@ -114,6 +118,7 @@ export function VerifyScreen() {
     setConfirmed(false);
     setProcessing(true);
     setPending(true);
+    setPendingAction("use");
     setError(null);
     let submitted = false;
     try {
@@ -146,6 +151,7 @@ export function VerifyScreen() {
       busyRef.current = false;
       setProcessing(false);
       setPending(false);
+      setPendingAction(null);
     }
   };
 
@@ -157,6 +163,9 @@ export function VerifyScreen() {
   return (
     <div className={`${styles.shell} ${styles.verifyShell}`}>
       <BrandBar />
+      {pendingAction && (
+        <BlockingLoader message={pendingAction === "verify" ? "증서를 확인 중입니다..." : "증서 사용을 처리 중입니다..."} />
+      )}
 
       <section className={verifyStyles.hero} aria-labelledby="verify-title">
         <span className={verifyStyles.eyebrow}>CERTIFICATE VERIFICATION</span>
@@ -347,7 +356,7 @@ export function VerifyScreen() {
             </div>
             <div className={`${styles.verdictTitle} ${styles.verdictTitleOk}`}>사용 가능</div>
             <div className={`${styles.verdictDesc} ${styles.verdictDescOk}`}>
-              증서 {formatTokenId(valid.tokenId)} · {valid.bloodType}형
+              {formatTokenId(valid.tokenId)}
             </div>
             <div className={styles.verdictMeta}>
               {formatOnchainDate(valid.issuedAt)} {valid.issuer} 발급
@@ -361,7 +370,7 @@ export function VerifyScreen() {
                 <AddressDisplay address={valid.owner} />
               </span>
             </div>
-            <div className={styles.row}><span className={styles.rowLabel}>헌혈 종류</span><span className={styles.rowValue}>{donationTypeLabel(valid.donationType, valid.donationVolume)}</span></div>
+            <div className={styles.row}><span className={styles.rowLabel}>헌혈 종류</span><span className={styles.rowValue}>{donationTypeLabel(valid.donationType, valid.volumeMl)}</span></div>
             {latestBlock !== null && (
               <div className={styles.row}>
                 <span className={styles.rowLabel}>조회 근거</span>

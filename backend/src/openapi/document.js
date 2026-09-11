@@ -13,7 +13,6 @@ import {
   certificateOwnerQuerySchema,
   certificateSchema,
   certificateTokenParamSchema,
-  certificateTransferBodySchema,
   certificateTxResponseSchema,
   certificateUseBodySchema,
   certificateVerifyResponseSchema,
@@ -126,32 +125,17 @@ registry.registerPath({
   path: "/certificate/issue",
   summary: "증서 발급 (혈액원 → 헌혈자 지갑으로 민팅). issuer/issuedAt은 서버·컨트랙트가 정한다",
   request: {
+    headers: z.object({ "Idempotency-Key": z.string().min(16).max(100) }),
     body: { content: { "application/json": { schema: certificateIssueBodySchema } } },
   },
   responses: {
     200: { description: "발급 성공", content: { "application/json": { schema: certificateTxResponseSchema } } },
-    400: { description: "to/bloodType 형식 오류", content: { "application/json": { schema: errorResponseSchema } } },
+    400: { description: "지갑/헌혈 종류/헌혈량/발급 키 형식 오류", content: { "application/json": { schema: errorResponseSchema } } },
+    409: { description: "발급 키 입력 불일치 또는 이전 발급 미확정" },
     502: {
       description: "발급 트랜잭션에서 tokenId를 찾지 못함",
       content: { "application/json": { schema: errorResponseSchema } },
     },
-    ...certificateNotImplemented,
-  },
-});
-
-registry.registerPath({
-  method: "post",
-  path: "/certificate/{tokenId}/transfer",
-  summary: "증서 양도 (소유자 서명 검증 후 백엔드가 transferFrom 릴레이)",
-  request: {
-    params: certificateTokenParamSchema,
-    body: { content: { "application/json": { schema: certificateTransferBodySchema } } },
-  },
-  responses: {
-    200: { description: "양도 성공", content: { "application/json": { schema: certificateTxResponseSchema } } },
-    401: { description: "서명 검증 실패", content: { "application/json": { schema: errorResponseSchema } } },
-    403: { description: "현재 소유자가 아님", content: { "application/json": { schema: errorResponseSchema } } },
-    409: { description: "이미 사용된 증서", content: { "application/json": { schema: errorResponseSchema } } },
     ...certificateNotImplemented,
   },
 });

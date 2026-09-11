@@ -9,6 +9,7 @@ import { AddressDisplay } from "./AddressDisplay";
 import { BrandBar } from "./BrandBar";
 import { formatTokenId, statusLabel, statusVariant } from "./certificateLabels";
 import { HistoryTimeline } from "./HistoryTimeline";
+import { LoadingIndicator } from "./LoadingIndicator";
 import styles from "./Certificate.module.css";
 
 /** 화면 2: 증서 상세 — 이력 타임라인 + 온체인 증거 */
@@ -41,7 +42,7 @@ export function CertificateDetailScreen() {
     <div className={styles.shell}>
       <BrandBar />
 
-      {status === "loading" && <div className={styles.empty}>불러오는 중...</div>}
+      {status === "loading" && <LoadingIndicator />}
 
       {status === "error" && (
         <div className={styles.banner} role="alert">
@@ -55,10 +56,6 @@ export function CertificateDetailScreen() {
             <div className={styles.cardHead}>
               <span className={styles.tokenId}>{formatTokenId(certificate.tokenId)}</span>
               <Badge variant={statusVariant(certificate.status)}>{statusLabel(certificate.status)}</Badge>
-            </div>
-            <div className={styles.row}>
-              <span className={styles.rowLabel}>혈액형</span>
-              <span className={styles.rowValue}>{certificate.bloodType}형</span>
             </div>
             <div className={styles.row}>
               <span className={styles.rowLabel}>발급기관</span>
