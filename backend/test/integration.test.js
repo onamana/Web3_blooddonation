@@ -89,15 +89,21 @@ test("browserless frontend -> HTTP API -> local contracts", { timeout: 180000 },
   let wallet = donor;
   let chainId = "0x1";
   let switchCount = 0;
-  let lastData;
+  let lastTypedData;
   globalThis.window = { ethereum: { async request({ method, params }) {
     if (method === "eth_chainId") return chainId;
     if (method === "wallet_switchEthereumChain") { chainId = params[0].chainId; switchCount++; return null; }
     if (method === "eth_sendTransaction") {
       assert.equal(params[0].from.toLowerCase(), wallet.address.toLowerCase());
-      lastData = params[0].data;
       const { from, ...transaction } = params[0];
       return (await wallet.sendTransaction(transaction)).hash;
+    }
+    if (method === "eth_signTypedData_v4") {
+      const [signer, serialized] = params;
+      assert.equal(signer.toLowerCase(), wallet.address.toLowerCase());
+      lastTypedData = JSON.parse(serialized);
+      const { EIP712Domain: _domainType, ...types } = lastTypedData.types;
+      return wallet.signTypedData(lastTypedData.domain, types, lastTypedData.message);
     }
     return provider.send(method, params || []);
   } } };
@@ -145,13 +151,18 @@ test("browserless frontend -> HTTP API -> local contracts", { timeout: 180000 },
     ]) assert.equal((await post("/certificate/issue", body)).status, 400);
     assert.equal(await certificate.balanceOf(donor.address), 1n);
   });
-  await t.test("frontend list/verify and wallet safeTransferFrom share the same ABI", async () => {
+  await t.test("frontend signs and backend relays an owner-authorized transfer", async () => {
     const tokenId = issued.certificate.tokenId;
     assert.equal((await frontend.listCertificates(donor.address)).length, 1);
     assert.equal((await frontend.verifyCertificate(tokenId)).status, "valid");
+    const donorBalance = await provider.getBalance(donor.address);
     const transferred = await frontend.transferCertificate({ tokenId, from: donor.address, to: recipient.address });
-    assert.equal(switchCount, 1, "wrong wallet network must switch before sending");
-    assert.equal(lastData, certificate.interface.encodeFunctionData("safeTransferFrom(address,address,uint256)", [donor.address, recipient.address, tokenId]));
+    assert.equal(switchCount, 1, "wrong wallet network must switch before signing");
+    assert.equal(lastTypedData.primaryType, "TransferAuthorization");
+    assert.equal(lastTypedData.message.from.toLowerCase(), donor.address.toLowerCase());
+    assert.equal(lastTypedData.message.to.toLowerCase(), recipient.address.toLowerCase());
+    assert.equal(lastTypedData.message.tokenId, tokenId);
+    assert.equal(await provider.getBalance(donor.address), donorBalance, "signing does not spend the owner's gas");
     assert.equal(transferred.certificate.owner, recipient.address);
     assert.equal(transferred.certificate.volumeMl, 400);
     assert.equal((await frontend.listCertificates(donor.address)).length, 0);

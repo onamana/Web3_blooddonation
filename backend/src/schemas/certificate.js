@@ -77,6 +77,17 @@ export const certificateUseBodySchema = z
   })
   .meta({ id: "CertificateUseRequest" });
 
+/** MetaMask EIP-712 무가스 양도 서명. 실제 유효성은 컨트랙트가 검증한다. */
+export const certificateRelayedTransferBodySchema = z
+  .strictObject({
+    from: ethAddressSchema,
+    to: ethAddressSchema,
+    nonce: z.string().regex(/^0x[0-9a-fA-F]{64}$/, "nonce must be a 32-byte hex value"),
+    deadline: z.number().int().positive(),
+    signature: z.string().regex(/^0x[0-9a-fA-F]{130}$/, "signature must be a 65-byte hex value"),
+  })
+  .meta({ id: "CertificateRelayedTransferRequest" });
+
 /**
  * 검증 결과. `used`가 이중사용 차단 케이스이며, 프론트의 "검증 실패" 화면이 이 값을 보고 그려진다.
  */

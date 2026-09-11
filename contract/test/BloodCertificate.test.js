@@ -135,4 +135,58 @@ describe("BloodCertificate", function () {
     await expect(certificate.connect(other)["safeTransferFrom(address,address,uint256)"](other.address, donor.address, 0))
       .to.be.revertedWithCustomError(certificate, "UsedCertificateCannotBeTransferred");
   });
+
+  async function signedTransferAuthorization(certificate, donor, to, tokenId = 0, deadline) {
+    const { chainId } = await ethers.provider.getNetwork();
+    const nonce = ethers.hexlify(ethers.randomBytes(32));
+    const expiresAt = deadline ?? BigInt(Math.floor(Date.now() / 1000) + 600);
+    const signature = await donor.signTypedData(
+      {
+        name: "BloodPass Certificate",
+        version: "1",
+        chainId,
+        verifyingContract: await certificate.getAddress(),
+      },
+      {
+        TransferAuthorization: [
+          { name: "from", type: "address" },
+          { name: "to", type: "address" },
+          { name: "tokenId", type: "uint256" },
+          { name: "nonce", type: "bytes32" },
+          { name: "deadline", type: "uint256" },
+        ],
+      },
+      { from: donor.address, to, tokenId, nonce, deadline: expiresAt }
+    );
+    return { nonce, expiresAt, signature };
+  }
+
+  it("lets a relayer pay gas for an owner-signed transfer", async function () {
+    const { certificate, donor, other, backendSigner } = await deploy();
+    await certificate.issue(donor.address, "Test Center");
+    const { nonce, expiresAt, signature } = await signedTransferAuthorization(certificate, donor, other.address);
+
+    await expect(
+      certificate.connect(backendSigner).transferWithAuthorization(donor.address, other.address, 0, nonce, expiresAt, signature)
+    )
+      .to.emit(certificate, "Transfer")
+      .withArgs(donor.address, other.address, 0);
+
+    expect(await certificate.ownerOf(0)).to.equal(other.address);
+  });
+
+  it("rejects a replayed or altered relayed transfer authorization", async function () {
+    const { certificate, donor, other, backendSigner, admin } = await deploy();
+    await certificate.issue(donor.address, "Test Center");
+    const { nonce, expiresAt, signature } = await signedTransferAuthorization(certificate, donor, other.address);
+
+    await expect(
+      certificate.connect(backendSigner).transferWithAuthorization(donor.address, admin.address, 0, nonce, expiresAt, signature)
+    ).to.be.revertedWithCustomError(certificate, "InvalidTransferAuthorization");
+
+    await certificate.connect(backendSigner).transferWithAuthorization(donor.address, other.address, 0, nonce, expiresAt, signature);
+    await expect(
+      certificate.connect(backendSigner).transferWithAuthorization(donor.address, other.address, 0, nonce, expiresAt, signature)
+    ).to.be.revertedWithCustomError(certificate, "TransferAuthorizationAlreadyUsed");
+  });
 });

@@ -6,6 +6,7 @@ import { validateBody, validateParams, validateQuery } from "../middleware/valid
 import {
   certificateIssueBodySchema,
   certificateOwnerQuerySchema,
+  certificateRelayedTransferBodySchema,
   certificateTokenParamSchema,
   certificateUseBodySchema,
 } from "../schemas/certificate.js";
@@ -180,12 +181,43 @@ router.get("/:tokenId/verify", validateParams(certificateTokenParamSchema), asyn
   });
 }));
 
-// 양도: relayer 릴레이 방식은 걷어냈다. ERC-721에서 relayer가 transferFrom을 보내려면
-// 소유자가 미리 approve()/setApprovalForAll()을 해야 하는데 그 단계가 없으면 항상
-// ERC721InsufficientApproval로 revert된다. 지금은 프론트 지갑이 직접
-// safeTransferFrom()을 호출하고(frontend/src/api/certificate.ts), 그 tx가 컨트랙트에
-// 반영된 뒤 GET /:tokenId 로 최신 소유자/이력을 다시 읽어오면 된다 — 별도 백엔드 라우트가
-// 필요 없다. 사용된 증서의 양도 차단도 이제 온체인(_update override)에서 강제한다.
+// 양도: 사용자는 EIP-712 서명만 하고, 백엔드 릴레이어가 가스비를 내서 온체인에 기록한다.
+// 컨트랙트가 소유자/수신자/토큰/만료/일회성 nonce를 검증하므로 백엔드는 임의로 증서를 옮길 수 없다.
+// 유효하지 않은 서명은 static call로 먼저 차단해 릴레이어 가스도 보호한다.
+router.post(
+  "/:tokenId/transfer",
+  validateParams(certificateTokenParamSchema),
+  validateBody(certificateRelayedTransferBodySchema),
+  asyncHandler(async (req, res) => {
+    if (!isConfigured()) return notImplemented(res);
+
+    const { tokenId } = req.params;
+    const { from, to, nonce, deadline, signature } = req.body;
+    const contract = getCertificateContract({ withSigner: true });
+
+    let valid = false;
+    try {
+      valid = await contract.isTransferAuthorizationValid(from, to, tokenId, nonce, deadline, signature);
+    } catch {
+      valid = false;
+    }
+    if (!valid) {
+      return res.status(400).json({ error: "양도 서명이 유효하지 않거나 만료되었습니다. 다시 서명해 주세요." });
+    }
+
+    const tx = await withChainWrite(async () => {
+      // 대기열 동안 소유자나 서명 상태가 바뀌었을 수 있으므로 가스를 쓰기 직전에 다시 확인한다.
+      if (!await contract.isTransferAuthorizationValid(from, to, tokenId, nonce, deadline, signature)) {
+        throw new Error("양도 서명이 이미 사용되었거나 더 이상 유효하지 않습니다.");
+      }
+      const transaction = await contract.transferWithAuthorization(from, to, tokenId, nonce, deadline, signature);
+      await transaction.wait();
+      return transaction;
+    });
+
+    res.json({ txHash: tx.hash, certificate: await loadCertificate(contract, tokenId) });
+  })
+);
 
 // 사용 처리: 이미 사용된 증서면 409로 막는다 (이중사용 차단).
 router.post(

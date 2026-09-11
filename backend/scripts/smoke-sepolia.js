@@ -47,6 +47,13 @@ try {
       assert.equal(from.toLowerCase(), wallet.address.toLowerCase());
       return (await wallet.sendTransaction(tx)).hash;
     }
+    if (method === "eth_signTypedData_v4") {
+      const [signer, serialized] = params;
+      assert.equal(signer.toLowerCase(), wallet.address.toLowerCase());
+      const typedData = JSON.parse(serialized);
+      const { EIP712Domain: _domainType, ...types } = typedData.types;
+      return wallet.signTypedData(typedData.domain, types, typedData.message);
+    }
     return provider.send(method, params || []);
   } } };
   const input = { to: wallet.address, donationType: "WHOLE_BLOOD", volumeMl: 400, requestId: `sepolia-smoke-${Date.now()}` };
@@ -71,7 +78,7 @@ try {
   report.transactions.transfer = transferred.txHash;
   assert.equal(transferred.certificate.owner.toLowerCase(), recipient.toLowerCase());
   assert.equal(transferred.certificate.volumeMl, 400);
-  check("frontend safeTransferFrom updates ownership");
+  check("owner-signed relayed transfer updates ownership");
   assert.equal((await frontend.listCertificates(wallet.address)).some((item) => item.tokenId === tokenId), false);
   assert.ok((await frontend.listCertificates(recipient)).some((item) => item.tokenId === tokenId));
   check("owner lists reflect transfer");
