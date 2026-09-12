@@ -1,4 +1,4 @@
-import { Fragment, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import { z } from 'zod';
 import { apiRequest } from '../../api/client';
 import { BrandBar } from '../certificate/BrandBar';
@@ -41,6 +41,13 @@ export function CredentialsScreen() {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
+  useEffect(() => {
+    document.body.dataset.screen = 'credentials';
+    return () => {
+      delete document.body.dataset.screen;
+    };
+  }, []);
+
   async function run(label: string, action: () => Promise<void>) {
     if (busy) return;
     setBusy(true); setPendingLabel(label); setError(''); setMessage('');
@@ -58,7 +65,6 @@ export function CredentialsScreen() {
       {busy && <BlockingLoader message={pendingLabel} />}
 
       <header className={c.hero}>
-        <span className={c.eyebrow}>DID · VERIFIABLE CREDENTIAL</span>
         <h1>헌혈 자격 · 후보자 매칭</h1>
         <p>가상 검사정보로 자격 증명을 발급하고 서명을 검증합니다. 증서의 소유권·양도와는 별도로 관리됩니다.</p>
         <ol className={c.steps} aria-label="자격 증명 절차">
@@ -66,18 +72,15 @@ export function CredentialsScreen() {
           <li><span>02</span> 후보자 조회</li>
           <li><span>03</span> 검증·취소</li>
         </ol>
-        <p className={c.notice}>
-          <span>DEMO</span>
-          기관 담당자 데모 화면입니다. 실제 개인정보를 입력하지 마세요. 검색 결과는 조건에 맞는 후보자이며 실제 의료 적합성이나 병원 배정을 뜻하지 않습니다.
-        </p>
       </header>
 
       {error && <p className={c.error} role="alert">{error}</p>}
       {message && <p className={c.success} role="status">{message}</p>}
 
-      {/* 01 — 발급 화면과 같은 컴포저: 입력 섹션 위에 미리보기 카드가 붙는다. */}
+      {/* 01 — 발급 화면과 같은 컴포저: 입력 섹션 위에 미리보기 카드가 붙는다.
+          그라데이션은 최상단 히어로·최하단 푸터에만 두므로, 여기서는 배경을 흰색으로 눌러 덮는다. */}
       <form
-        className={styles.issueComposer}
+        className={`${styles.issueComposer} ${c.formSection}`}
         onSubmit={event => {
           event.preventDefault();
           void run('자격 증명을 발급 중입니다...', async () => {
@@ -210,15 +213,15 @@ export function CredentialsScreen() {
             <small>PREVIEW</small>
           </div>
 
-          <div className={styles.issuePreviewBody}>
-            <div className={styles.issuePreviewMark}>VC</div>
-            <span className={styles.issuePreviewToken}>CREDENTIAL ID · AUTO</span>
+          <div className={c.issuePreviewBody}>
+            <div className={c.issuePreviewMark}>VC</div>
+            <span className={c.issuePreviewToken}>CREDENTIAL ID · AUTO</span>
             <h2>{bloodType}형 헌혈 자격 증명</h2>
             <span className={`${c.previewBadge} ${eligible ? c.previewBadgeYes : c.previewBadgeNo}`}>
               {eligible ? '적격' : '부적격'}
             </span>
 
-            <div className={styles.issuePreviewRows}>
+            <div className={c.issuePreviewRows}>
               <div>
                 <span>보유자</span>
                 <strong className="mono">{addressValid ? shortenAddress(trimmedAddress) : '주소 입력 대기'}</strong>
@@ -233,12 +236,12 @@ export function CredentialsScreen() {
               </div>
               <div>
                 <span>발급 서명</span>
-                <strong className={styles.issueReadyText}>기관 키로 자동 서명</strong>
+                <strong className={c.issueReadyText}>기관 키로 자동 서명</strong>
               </div>
             </div>
           </div>
 
-          <div className={styles.issuePrivacyStrip}>
+          <div className={c.issuePrivacyStrip}>
             <span>OFF-CHAIN</span>
             자격 정보는 체인에 기록되지 않으며, 증서가 양도돼도 함께 넘어가지 않습니다.
           </div>
@@ -250,10 +253,10 @@ export function CredentialsScreen() {
         </aside>
       </form>
 
-      {/* 02 — 후보자 조회 */}
+      {/* 03 — 후보자 조회 */}
       <section className={c.panel} aria-labelledby="match-title">
         <div className={c.panelHead}>
-          <span>02</span>
+          <span>03</span>
           <div>
             <h2 id="match-title">헌혈 후보자 찾기</h2>
             <p>저장된 최신 자격 증명 중 서명과 유효기간을 통과한 후보자만 조회합니다.</p>
@@ -267,31 +270,44 @@ export function CredentialsScreen() {
             void run('후보자를 조회하고 있습니다...', async () => {
               const response = await apiRequest('/match', {
                 method: 'POST',
-                body: { ...(queryType ? { bloodType: queryType } : {}), minDaysSinceLastDonation: minDays, onlyEligible },
+                body: { bloodType: queryType, minDaysSinceLastDonation: minDays, onlyEligible },
               });
               setResults(resultSchema.parse(response));
             });
           }}
         >
           <fieldset className={c.filterGrid} disabled={busy}>
-            <div className={c.field}>
-              <label className={c.fieldLabel} htmlFor="match-type">혈액형</label>
-              <select id="match-type" value={queryType} onChange={event => setQueryType(event.target.value)}>
-                <option value="">전체</option>
-                {bloodTypes.map(type => <option key={type} value={type}>{type}형</option>)}
-              </select>
-            </div>
-            <div className={c.field}>
-              <label className={c.fieldLabel} htmlFor="match-days">마지막 헌혈 후 최소 경과 일수</label>
-              <input
-                id="match-days"
-                type="number"
-                min="0"
-                max="36500"
-                value={minDays}
-                onChange={event => setMinDays(Number(event.target.value))}
-                required
-              />
+            <div className={c.filterRow}>
+              <div className={c.field}>
+                <span className={c.fieldLabel}>혈액형</span>
+                <div className={c.typeToggle} role="radiogroup" aria-label="검색할 혈액형">
+                  {bloodTypes.map(type => (
+                    <button
+                      key={type}
+                      type="button"
+                      role="radio"
+                      aria-checked={queryType === type}
+                      className={`${c.typeButton} ${queryType === type ? c.typeButtonActive : ''}`}
+                      onClick={() => setQueryType(type)}
+                      disabled={busy}
+                    >
+                      {type}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className={`${c.field} ${c.daysField}`}>
+                <label className={c.fieldLabel} htmlFor="match-days">마지막 헌혈 후 최소 경과 일수</label>
+                <input
+                  id="match-days"
+                  type="number"
+                  min="0"
+                  max="36500"
+                  value={minDays}
+                  onChange={event => setMinDays(Number(event.target.value))}
+                  required
+                />
+              </div>
             </div>
             <div className={c.filterWide}>
               <label className={c.revokeCheck}>
@@ -307,10 +323,10 @@ export function CredentialsScreen() {
           <div aria-live="polite">
             <div className={c.candidateHead}>
               <h3>후보자 {results.matchedCount}명</h3>
-              <span>{queryType ? `${queryType}형` : '전체'} · {minDays}일 경과{onlyEligible ? ' · 적격만' : ''}</span>
+              <span>{queryType}형 · {minDays}일 경과{onlyEligible ? ' · 적격만' : ''}</span>
             </div>
             {results.matches.length === 0 ? (
-              <p className={c.empty}>조건에 맞는 유효한 자격 증명이 없습니다. 경과 일수를 줄이거나 혈액형을 전체로 바꿔 보세요.</p>
+              <p className={c.empty}>조건에 맞는 유효한 자격 증명이 없습니다. 경과 일수를 줄이거나 다른 혈액형을 선택해 보세요.</p>
             ) : (
               <ul className={c.candidates}>
                 {results.matches.map(candidate => (
@@ -334,10 +350,10 @@ export function CredentialsScreen() {
         )}
       </section>
 
-      {/* 03 — 검증·취소 */}
+      {/* 04 — 검증·취소 */}
       <section className={c.panel} aria-labelledby="verify-title">
         <div className={c.panelHead}>
-          <span>03</span>
+          <span>04</span>
           <div>
             <h2 id="verify-title">자격 증명 검증·취소</h2>
             <p>발급한 자격 증명의 서명·만료·취소 여부를 확인합니다. 내용을 한 글자라도 바꾸면 검증에 실패합니다.</p>
