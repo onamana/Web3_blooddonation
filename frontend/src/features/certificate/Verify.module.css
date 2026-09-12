@@ -1,6 +1,6 @@
 body:has(.hero) { background: var(--card); }
 .hero {
-  padding: clamp(20px, 4vw, 32px);
+  padding: clamp(16px, 3vw, 24px) clamp(20px, 4vw, 28px) 12px;
   border-radius: var(--radius-xl) var(--radius-xl) 0 0;
   background: linear-gradient(180deg, var(--pri-tint), var(--card) 90%);
 }
@@ -84,14 +84,13 @@ body:has(.hero) { background: var(--card); }
 .confirmDetails dd { margin: 0; text-align: right; overflow-wrap: anywhere; font-weight: 600; }
 .confirmCheck { display: flex; align-items: center; gap: 10px; min-height: 44px; font-size: 13px; cursor: pointer; }
 .confirmCheck input { width: 18px; height: 18px; accent-color: var(--pri); flex-shrink: 0; }
-.eyebrow { color: var(--pri-d); font-size: 11px; font-weight: 800; letter-spacing: 0.14em; }
 .title { margin: 8px 0; font-size: clamp(26px, 4vw, 32px); line-height: 1.25; letter-spacing: -0.05em; }
 .description { margin: 0; color: var(--sub); font-size: 14px; line-height: 1.7; word-break: keep-all; }
-.steps { display: flex; flex-wrap: wrap; gap: 12px 28px; padding: 0; margin: 24px 0; list-style: none; }
+.steps { display: flex; flex-wrap: wrap; gap: 10px 24px; padding: 0; margin: 16px 0 12px; list-style: none; }
 .steps li { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; color: var(--sub); }
 .steps span { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--card); color: var(--pri-d); font-size: 11px; border: 1px solid var(--pri-line); }
-.lookup { padding: clamp(20px, 4vw, 28px); background: var(--card); }
-.sectionHead { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
+.lookup { padding: 10px clamp(20px, 4vw, 28px) 20px; background: var(--card); }
+.sectionHead { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
 .sectionHead h2 { margin: 0; font-size: 17px; letter-spacing: -0.03em; }
 .sectionHead > span { color: var(--mute); font-size: 12px; }
 .form { display: flex; flex-direction: column; gap: 10px; }
@@ -117,7 +116,8 @@ body:has(.hero) { background: var(--card); }
 .inputRow input:disabled { background: var(--bg); box-shadow: 2.5px 3px 0 var(--pri-line); cursor: wait; }
 @media (prefers-reduced-motion: reduce) { .inputRow input { transition: none; } }
 .inputRow button { height: 52px; min-width: 132px; border-radius: var(--radius-md); font-size: 14px; }
-.results { display: flex; flex-direction: column; gap: 14px; min-width: 0; border-radius: 0 0 var(--radius-xl) var(--radius-xl); background: linear-gradient(0deg, var(--pri-tint), var(--card) 75%); }
+.results { display: flex; flex-direction: column; gap: 14px; min-width: 0; margin-inline: clamp(20px, 4vw, 28px); border-radius: 0 0 var(--radius-xl) var(--radius-xl); background: linear-gradient(0deg, var(--pri-tint), var(--card) 75%); }
+.resultActions { justify-content: center; }
 .idle { padding: 36px 20px; text-align: center; }
 .idleMark { display: grid; place-items: center; width: 40px; height: 40px; margin: 0 auto 14px; border: 1px solid var(--pri-line); border-radius: 50%; color: var(--pri); background: var(--card); font-size: 20px; }
 .idle strong { font-size: 14px; line-height: 1.7; color: var(--sub); word-break: keep-all; }
@@ -126,5 +126,5 @@ body:has(.hero) { background: var(--card); }
   .steps { gap: 10px 16px; }
   .inputRow { flex-direction: column; }
   .inputRow button { width: 100%; }
-  .sectionHead { margin-bottom: 20px; }
+  .sectionHead { margin-bottom: 14px; }
 }

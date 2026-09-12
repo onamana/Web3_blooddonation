@@ -48,14 +48,14 @@ npm run dev
 - `/` → `/certificates` 로 리다이렉트
 - `/certificates` — **증서 목록 (지갑)**. 카드 목록 + 양도. 지갑 미연결이면 같은 주소에서
   연결 화면(`WalletGate`)을 대신 보여주고, 우측 상단 "연결 해제"로 되돌아간다.
-- `/certificates/:tokenId` — **증서 상세**. 이력 타임라인 + 온체인 증거
-- `/verify` — **병원 검증**. 번호 입력 → 판정 → 사용 처리.
+- `/certificates/:tokenId` — **내 증서 상세**. 해당 카드를 가운데에 놓고 뒷면의 정보와 이력을 연다.
+- `/verify` — **증서 검증**. 번호 입력 → 판정 → 사용 처리.
   이미 사용된 증서면 **검증 실패(이중사용 차단)** 화면으로 갈린다.
 - 그 외 경로 — 404 안내 화면
 
 ## 헌혈 증서 (ERC-721)
 
-- `src/features/certificate/` 에 4화면과 공용 조각(`WalletGate`, `HistoryTimeline`,
+- `src/features/certificate/` 에 3개 주요 화면과 공용 조각(`WalletGate`, `HistoryTimeline`,
   `OnchainProof`, `VerifyFailure`)이 모여 있다.
 - `src/api/certificate.ts` 가 `DEMO_MODE` 로 갈린다. 데모면 인메모리 스토어
   (`src/data/certificateStore.ts`), 아니면 백엔드 `/certificate` 를 호출한다. **양쪽이 같은 타입을

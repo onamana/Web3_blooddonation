@@ -13,6 +13,8 @@ import styles from "./CertificateCarousel.module.css";
 
 interface CertificateCarouselProps {
   certificates: Certificate[];
+  /** 상세 경로로 진입했을 때 가운데에 놓고 뒷면을 열 증서 번호. */
+  detailTokenId?: string;
   transferTokenId: string | null;
   transferPending: boolean;
   onOpenTransfer: (tokenId: string) => void;
@@ -32,6 +34,7 @@ interface CertificateCarouselProps {
  */
 export function CertificateCarousel({
   certificates,
+  detailTokenId,
   transferTokenId,
   transferPending,
   onOpenTransfer,
@@ -43,6 +46,9 @@ export function CertificateCarousel({
   const [dragFraction, setDragFraction] = useState(0);
   const [dragging, setDragging] = useState(false);
   const [flipped, setFlipped] = useState(false);
+  const detailIndex = detailTokenId
+    ? certificates.findIndex((certificate) => certificate.tokenId === detailTokenId)
+    : -1;
 
   const cardRef = useRef<HTMLDivElement>(null);
   const [cardWidth, setCardWidth] = useState(0);
@@ -57,10 +63,20 @@ export function CertificateCarousel({
     return () => observer.disconnect();
   }, []);
 
-  // 가운데가 바뀌면 새 카드는 항상 앞면부터 보여준다.
-  useEffect(() => setFlipped(false), [index]);
+  // 기존 상세 경로는 별도 화면 대신 해당 증서를 가운데에 놓고 뒷면을 연다.
+  useEffect(() => {
+    if (detailIndex < 0) {
+      setFlipped(false);
+      return;
+    }
+    setIndex(detailIndex);
+    setFlipped(true);
+  }, [detailIndex, detailTokenId]);
 
-  const go = useCallback((delta: number) => setIndex((i) => (i + delta + n) % n), [n]);
+  const go = useCallback((delta: number) => {
+    setFlipped(false);
+    setIndex((i) => (i + delta + n) % n);
+  }, [n]);
 
   const pressStartX = useRef<number | null>(null);
   const movedRef = useRef(false);
@@ -104,6 +120,7 @@ export function CertificateCarousel({
       if (picked === index) {
         setFlipped((f) => !f);
       } else {
+        setFlipped(false);
         setIndex(picked);
       }
       return;
@@ -192,7 +209,10 @@ export function CertificateCarousel({
             data-active={i === index}
             aria-current={i === index ? "true" : undefined}
             aria-label={`${i + 1}번째 증서로 이동`}
-            onClick={() => setIndex(i)}
+            onClick={() => {
+              setFlipped(false);
+              setIndex(i);
+            }}
           />
         ))}
       </div>

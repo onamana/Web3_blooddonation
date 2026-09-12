@@ -1,9 +1,9 @@
 import type { BadgeVariant } from "../../types/common";
 import type { Certificate, DonationType } from "../../types/certificate";
 
-/** tokenId 94 → 증서 #094 */
+/** tokenId 94 → 증서 #94 */
 export function formatTokenId(tokenId: string) {
-  return `증서 #${tokenId.padStart(3, "0")}`;
+  return `증서 #${tokenId}`;
 }
 
 export function statusLabel(status: Certificate["status"]) {

@@ -11,6 +11,8 @@ import styles from "./FlipCertificateCard.module.css";
 
 interface FlipCertificateCardProps {
   certificate: Certificate;
+  /** 발급 미리보기에서는 실제 카드 앞면만 렌더링한다. */
+  previewOnly?: boolean;
   /** 캐러셀 중앙 카드에서만 true가 될 수 있다 — 중앙이 아니면 항상 앞면이다. */
   flipped: boolean;
   /** 가운데·드래그 중이 아님 — 이때만 혈액팩이 마우스를 따라 기울고 액체가 출렁인다. */
@@ -32,6 +34,7 @@ interface FlipCertificateCardProps {
  */
 export function FlipCertificateCard({
   certificate,
+  previewOnly = false,
   flipped,
   tiltActive,
   transferOpen,
@@ -112,7 +115,7 @@ export function FlipCertificateCard({
           </div>
         </div>
 
-        <div className={styles.face} data-side="back">
+        {!previewOnly && <div className={styles.face} data-side="back">
           <div className={styles.detail}>
             {/* 기본 정보 — 고정. 이력만 아래에서 따로 스크롤된다. */}
             <div className={styles.detailTop}>
@@ -168,7 +171,7 @@ export function FlipCertificateCard({
               )}
             </div>
           </div>
-        </div>
+        </div>}
       </div>
     </div>
   );

@@ -23,6 +23,33 @@ const initialState: WalletState = {
   isDemoWallet: false,
 };
 
+const SELECTED_ACCOUNT_KEY = "bloodpass.selectedAccount";
+
+function findAccount(accounts: string[], address: string | null): string | undefined {
+  if (!address) return undefined;
+  return accounts.find((account) => account.toLowerCase() === address.toLowerCase());
+}
+
+function readSelectedAccount(): string | null {
+  try {
+    return window.sessionStorage.getItem(SELECTED_ACCOUNT_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function rememberSelectedAccount(address: string | null) {
+  try {
+    if (address) {
+      window.sessionStorage.setItem(SELECTED_ACCOUNT_KEY, address);
+    } else {
+      window.sessionStorage.removeItem(SELECTED_ACCOUNT_KEY);
+    }
+  } catch {
+    // 저장소가 차단되어도 현재 탭의 지갑 연결은 정상 동작해야 한다.
+  }
+}
+
 export interface WalletControls extends WalletState {
   connect: () => Promise<void>;
   selectAccount: (address: string) => void;
@@ -60,12 +87,21 @@ export function useWalletMachine(): WalletControls {
       knownAccountsRef.current = nextAccounts;
       setState((current) => {
         if (current.status === "connected") {
-          if (!nextAccounts.length) return { ...initialState, hasMetaMask: true };
+          if (!nextAccounts.length) {
+            rememberSelectedAccount(null);
+            return { ...initialState, hasMetaMask: true };
+          }
+          const currentAccount = findAccount(nextAccounts, current.address);
+          if (currentAccount) {
+            return { ...current, address: currentAccount, availableAccounts: nextAccounts };
+          }
           if (nextAccounts.length === 1) {
             const [account] = nextAccounts;
             if (!account) return { ...initialState, hasMetaMask: true };
+            rememberSelectedAccount(account);
             return { ...current, address: account, availableAccounts: nextAccounts, isDemoWallet: false };
           }
+          rememberSelectedAccount(null);
           return {
             ...current,
             status: "selecting",
@@ -85,6 +121,7 @@ export function useWalletMachine(): WalletControls {
 
     const onDisconnect = () => {
       knownAccountsRef.current = [];
+      rememberSelectedAccount(null);
       setState({ ...initialState, hasMetaMask: true });
     };
 
@@ -92,7 +129,45 @@ export function useWalletMachine(): WalletControls {
     eth.on("disconnect", onDisconnect);
     setState((current) => ({ ...current, hasMetaMask: true }));
     void eth.request<string[]>({ method: "eth_accounts" })
-      .then((accounts) => { knownAccountsRef.current = accounts; })
+      .then((accounts) => {
+        knownAccountsRef.current = accounts;
+        if (!accounts.length) return;
+        setState((current) => {
+          if (current.status !== "disconnected") return current;
+          const rememberedAccount = findAccount(accounts, readSelectedAccount());
+          if (rememberedAccount) {
+            return {
+              status: "connected",
+              address: rememberedAccount,
+              error: null,
+              hasMetaMask: true,
+              availableAccounts: accounts,
+              isDemoWallet: false,
+            };
+          }
+          if (accounts.length > 1) {
+            return {
+              status: "selecting",
+              address: null,
+              error: null,
+              hasMetaMask: true,
+              availableAccounts: accounts,
+              isDemoWallet: false,
+            };
+          }
+          const [account] = accounts;
+          if (!account) return current;
+          rememberSelectedAccount(account);
+          return {
+            status: "connected",
+            address: account,
+            error: null,
+            hasMetaMask: true,
+            availableAccounts: accounts,
+            isDemoWallet: false,
+          };
+        });
+      })
       .catch(() => {});
 
     return () => {
@@ -126,6 +201,7 @@ export function useWalletMachine(): WalletControls {
           setState((current) => ({ ...current, status: "error", error: "연결된 계정을 찾을 수 없습니다." }));
           return;
         }
+        rememberSelectedAccount(account);
         setState({ status: "connected", address: account, error: null, hasMetaMask: true, availableAccounts: accounts, isDemoWallet: false });
       }
     } catch (err) {
@@ -143,6 +219,7 @@ export function useWalletMachine(): WalletControls {
       setState((current) => ({ ...current, status: "error", error: "선택한 지갑 권한을 다시 확인해주세요." }));
       return;
     }
+    rememberSelectedAccount(selected);
     setState({
       status: "connected",
       address: selected,
@@ -154,6 +231,7 @@ export function useWalletMachine(): WalletControls {
   }, []);
 
   const cancelAccountSelection = useCallback(() => {
+    rememberSelectedAccount(null);
     setState((current) => ({ ...initialState, hasMetaMask: current.hasMetaMask }));
   }, []);
 
@@ -180,6 +258,7 @@ export function useWalletMachine(): WalletControls {
   }, []);
 
   const disconnect = useCallback(async () => {
+    rememberSelectedAccount(null);
     // 실제 컨트랙트 화면에서 데모 지갑을 해제하면 런타임 데모 세션도 종료해 실제 모드로 돌아간다.
     if (state.isDemoWallet && LIVE_CONTRACT_MODE) {
       stopRuntimeDemoMode();

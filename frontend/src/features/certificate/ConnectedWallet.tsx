@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Copy } from "lucide-react";
 import { shortenAddress } from "../../utils/address";
 import styles from "./ConnectedWallet.module.css";
 
@@ -22,14 +23,12 @@ export function ConnectedWallet({ address }: { address: string }) {
 
   return (
     <div className={styles.wallet}>
-      <div className={styles.label}><span className={styles.dot} aria-hidden="true" />연결된 지갑</div>
-      <div className={styles.row}>
-        <span className={styles.address} title={address} aria-label={address}>{shortenAddress(address)}</span>
-        <button className={styles.copy} type="button" onClick={() => void copy()} aria-label="지갑 주소 복사">
-          <span className={styles.icon} aria-hidden="true" />
-        </button>
-      </div>
-      <div className={styles.rule} />
+      <span className={styles.address} title={address} aria-label={`연결된 지갑 ${address}`}>
+        {shortenAddress(address)}
+      </span>
+      <button className={styles.copy} type="button" onClick={() => void copy()} aria-label="지갑 주소 복사">
+        <Copy className={styles.copyIcon} size={10} strokeWidth={2} aria-hidden="true" />
+      </button>
       <div className={styles.toast} data-visible={Boolean(notice)} role="status" aria-live="polite">{notice}</div>
     </div>
   );

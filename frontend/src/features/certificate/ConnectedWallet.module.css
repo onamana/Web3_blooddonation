@@ -1,19 +1,13 @@
 @import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&display=swap");
 
-/* User-provided connected-wallet reference, adapted to the live wallet address. */
-.wallet { position: relative; display: inline-flex; flex-direction: column; gap: 6px; align-items: flex-start; max-width: 100%; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; }
-.label { display: flex; align-items: center; gap: 7px; font-size: 10px; font-weight: 800; letter-spacing: 0.18em; text-transform: uppercase; color: #8a6b6e; }
-.dot { width: 7px; height: 7px; border-radius: 50%; background: #1f9d63; }
-.row { display: flex; align-items: center; gap: 8px; }
-.address { font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 18px; line-height: 26px; font-weight: 600; letter-spacing: -0.01em; color: #1f1315; }
-.copy { flex: none; width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; border: 1.5px solid #2b1a1c; border-radius: 7px; background: transparent; color: #2b1a1c; cursor: pointer; transition: background 0.15s ease, color 0.15s ease, transform 0.1s ease; }
-.copy:hover { background: #2b1a1c; color: #fdf3f4; }
+/* 실제 지갑 연결 시 DEMO 배지와 같은 형태로 표시하는 축약 주소와 복사 버튼. */
+.wallet { position: relative; display: inline-flex; align-items: center; align-self: center; gap: 4px; box-sizing: border-box; height: 20px; max-width: 100%; padding: 3px 8px; border-radius: 999px; background: var(--pri); color: #fff; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; line-height: 1; user-select: text; transform: translateY(1px); }
+.address { overflow: hidden; max-width: 120px; font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 10px; line-height: 1; font-weight: 800; letter-spacing: 0.4px; color: inherit; white-space: nowrap; text-overflow: ellipsis; }
+.copy { flex: none; width: 14px; height: 14px; display: flex; align-items: center; justify-content: center; border: 0; border-radius: 50%; background: transparent; color: inherit; cursor: pointer; transition: background 0.15s ease, color 0.15s ease, transform 0.1s ease; }
+.copy:hover { background: rgb(255 255 255 / 0.2); color: #fff; }
 .copy:active { transform: scale(0.94); }
-.copy:focus-visible { outline: 2px solid #2b1a1c; outline-offset: 2px; }
-.icon { display: block; width: 10px; height: 12px; border: 1.5px solid currentColor; border-radius: 3px; box-shadow: 3px -3px 0 -1.5px currentColor; }
-/* Include the underline in the wallet's height so its bottom aligns with the description. */
-.rule { align-self: stretch; height: 1px; background: rgba(43, 26, 28, 0.14); }
-.toast { position: absolute; top: calc(100% + 8px); right: 0; width: max-content; max-width: min(280px, 80vw); font-size: 11px; line-height: 14px; font-weight: 600; color: #2b1a1c; opacity: 0; pointer-events: none; transition: opacity 0.2s ease; }
+.copy:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.copyIcon { display: block; flex: none; }
+.toast { position: absolute; z-index: 20; top: 50%; left: calc(100% + 8px); width: max-content; max-width: min(280px, 80vw); padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--card); box-shadow: 0 6px 18px rgb(65 22 26 / 0.1); font-size: 11px; line-height: 14px; font-weight: 600; color: var(--ink); opacity: 0; pointer-events: none; transform: translateY(-50%); transition: opacity 0.2s ease; }
 .toast[data-visible="true"] { opacity: 1; }
-@media (max-width: 420px) { .address { font-size: 16px; } .toast { left: 0; right: auto; } }
 @media (prefers-reduced-motion: reduce) { .copy, .toast { transition: none; } }

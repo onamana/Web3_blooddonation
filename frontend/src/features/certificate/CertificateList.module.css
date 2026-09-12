@@ -1,5 +1,4 @@
 body:has(.page) { background: var(--card); }
-.eyebrow { color: var(--pri-d); font-size: 11px; font-weight: 800; letter-spacing: 0.14em; }
 .surface { background: var(--card); border-radius: var(--radius-xl); }
 .overview {
   padding: clamp(20px, 4vw, 32px);
@@ -11,11 +10,13 @@ body:has(.page) { background: var(--card); }
 .description { margin: 0; color: var(--sub); font-size: 14px; line-height: 1.7; word-break: keep-all; }
 .stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 24px; }
 .stat { display: flex; flex-direction: column; gap: 10px; padding: 16px 20px; border: 1px solid var(--line); border-radius: 12px; background: var(--card); }
-.stat[data-highlight="true"] { background: var(--pri-tint); border-color: var(--pri-line); }
+.stat[data-tone="owned"] { background: var(--pri-tint); border-color: var(--pri-line); }
+.stat[data-tone="available"] { background: var(--done-bg); border-color: var(--done-line); }
 .stat > span { font-size: 12px; font-weight: 600; color: var(--sub); }
 .stat strong { font-size: 28px; color: var(--sub); letter-spacing: -0.04em; font-variant-numeric: tabular-nums; line-height: 1; }
 .stat small { font-size: 12px; font-weight: 500; color: var(--mute); margin-left: 5px; }
-.stat[data-highlight="true"] strong { color: var(--pri); }
+.stat[data-tone="owned"] strong { color: var(--pri); }
+.stat[data-tone="available"] strong { color: var(--done); }
 .collection { padding: 24px 0; border-radius: 0 0 var(--radius-xl) var(--radius-xl); background: linear-gradient(0deg, var(--pri-tint), var(--card) 75%); }
 .collectionHead { padding: 0 24px; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
 .collectionHead h2 { margin: 0; font-size: 18px; letter-spacing: -0.03em; }

@@ -37,7 +37,7 @@ function toVerifyError(err: unknown, fallback: string): VerifyError {
   return { notImplemented: false, message: err instanceof Error ? err.message : fallback };
 }
 
-/** 화면 3: 병원 검증 — 입력 → 판정 → 사용 처리 (실패 시 화면 4로 갈림) */
+/** 화면 3: 증서 검증 — 입력 → 판정 → 사용 처리 (실패 시 화면 4로 갈림) */
 export function VerifyScreen() {
   const [tokenId, setTokenId] = useState("");
   const [result, setResult] = useState<CertificateVerifyResult | null>(null);
@@ -53,9 +53,6 @@ export function VerifyScreen() {
   const [uncertainIds, setUncertainIds] = useState<string[]>([]);
   const busyRef = useRef(false);
 
-  // 세션 컨텍스트. 백엔드와 무관한 클라이언트 상태이고, 새로고침하면 초기화된다.
-  const [verifyCount, setVerifyCount] = useState(0);
-  const [useCount, setUseCount] = useState(0);
   const [recentIds, setRecentIds] = useState<{ id: string; status: CertificateVerifyResult["status"] }[]>([]);
   const remember = (verified: CertificateVerifyResult) => setRecentIds((prev) => [
     { id: verified.tokenId, status: verified.status },
@@ -87,7 +84,6 @@ export function VerifyScreen() {
     try {
       const verified = await verifyCertificate(trimmed);
       setResult(verified);
-      setVerifyCount((count) => count + 1);
       remember(verified);
       if (verified.status === "used") setUncertainIds((prev) => prev.filter((id) => id !== trimmed));
     } catch (err) {
@@ -138,7 +134,6 @@ export function VerifyScreen() {
       setUseTxHash(used.txHash);
       setUsedAt(usedEvent?.timestamp ?? used.certificate.usedAt);
       setResult({ tokenId: used.certificate.tokenId, status: "used", certificate: used.certificate });
-      setUseCount((count) => count + 1);
       remember({ tokenId: used.certificate.tokenId, status: "used", certificate: used.certificate });
     } catch (err) {
       setError(toVerifyError(err, "사용 처리 결과를 확인하지 못했습니다."));
@@ -167,7 +162,6 @@ export function VerifyScreen() {
       )}
 
       <section className={verifyStyles.hero} aria-labelledby="verify-title">
-        <span className={verifyStyles.eyebrow}>CERTIFICATE VERIFICATION</span>
         <h1 id="verify-title" className={verifyStyles.title}>증서 검증</h1>
         <p className={verifyStyles.description}>환자가 제시한 증서 번호를 입력해 온체인 상태를 확인합니다.</p>
         <ol className={verifyStyles.steps} aria-label="증서 검증 절차">
@@ -178,14 +172,6 @@ export function VerifyScreen() {
       <div className={styles.sessionStrip}>
         <span className={styles.sessionDot} />
         <span className={styles.sessionHospital}>{HOSPITAL_NAME}</span>
-        <span className={styles.sessionSep}>·</span>
-        <span>
-          검증 <span className={styles.sessionValue}>{verifyCount}</span>건
-        </span>
-        <span className={styles.sessionSep}>·</span>
-        <span>
-          사용 처리 <span className={styles.sessionValue}>{useCount}</span>건
-        </span>
         {!DEMO_MODE && <span className={styles.sessionNetwork}>
           {NETWORK_NAME} · 테스트 네트워크
         </span>}
@@ -204,8 +190,7 @@ export function VerifyScreen() {
           value={tokenId}
           onChange={(e) => { setTokenId(e.target.value); setInputError(null); }}
           onFocus={(e) => e.currentTarget.select()}
-          placeholder="예: 94"
-          aria-describedby={inputError ? "verify-input-error verify-input-hint" : "verify-input-hint"}
+          aria-describedby={inputError ? "verify-input-error" : undefined}
           aria-invalid={Boolean(inputError)}
           autoComplete="off"
           inputMode="numeric"
@@ -214,10 +199,6 @@ export function VerifyScreen() {
         <Button type="submit" disabled={!tokenId.trim() || pending}>
           {pending ? "확인 중..." : "검증하기"}
         </Button>
-        </div>
-        <div id="verify-input-hint" className={styles.inputHint}>
-          환자가 제시한 카드 또는 앱 화면의 증서 번호를 그대로 입력하세요. 앞의 0은 생략해도 됩니다 (094 →
-          94).
         </div>
       </form>
       {inputError && <p id="verify-input-error" className={verifyStyles.inputError} role="alert">{inputError}</p>}
@@ -233,7 +214,7 @@ export function VerifyScreen() {
               onClick={() => handleRecent(id)}
               disabled={pending}
             >
-              #{id.padStart(3, "0")} · {resultLabels[status]}
+              #{id} · {resultLabels[status]}
             </button>
           ))}
         </div>
@@ -315,7 +296,7 @@ export function VerifyScreen() {
             </div>
           </div>
 
-          <div className={styles.actions}>
+          <div className={`${styles.actions} ${verifyStyles.resultActions}`}>
             <Button to={`/certificates/${result.certificate.tokenId}`}>이력 보기</Button>
           </div>
         </>
@@ -391,7 +372,7 @@ export function VerifyScreen() {
             <HistoryTimeline history={valid.history} />
           </details>
 
-          <div className={styles.actions}>
+          <div className={`${styles.actions} ${verifyStyles.resultActions}`}>
             <Button onClick={() => { setConfirmed(false); setConfirmOpen(true); }} disabled={pending || uncertainIds.includes(valid.tokenId)}>
               {pending ? "처리 중..." : "사용 처리하기"}
             </Button>

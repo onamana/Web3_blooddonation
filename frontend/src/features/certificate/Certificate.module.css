@@ -10,7 +10,7 @@
   gap: 14px;
 }
 
-.verifyShell .sessionStrip { background: var(--card); border: 0; padding: 12px 14px; border-radius: 12px; gap: 8px; }
+.verifyShell .sessionStrip { background: var(--card); border: 0; padding: 8px 10px; border-radius: 12px; gap: 8px; }
 .verifyShell .sessionNetwork { font-size: 11px; }
 .verifyShell .recentChips { margin-top: 16px; }
 .verifyShell .recentChip { min-height: 36px; padding: 6px 12px; }
@@ -77,8 +77,14 @@
 
 /* BloodSupplyPanel 의 활성 탭(적혈구/혈소판)과 같은 모양 — 빨간 배경 + 흰 글씨 알약. */
 .demoTag {
+  display: inline-flex;
+  align-items: center;
+  align-self: center;
+  box-sizing: border-box;
+  height: 20px;
   font-size: 10px;
   font-weight: 800;
+  line-height: 1;
   letter-spacing: 0.4px;
   color: #fff;
   background: var(--pri);
@@ -754,7 +760,7 @@
 
 /* --- 검증 화면 세션 컨텍스트 --- */
 
-/* 이 화면만 "누구의 화면인지"가 안 보였다. 병원명·처리 건수·연결 상태를 상단에 고정한다. */
+/* 검증을 수행하는 병원과 연결된 네트워크를 상단에 표시한다. */
 .sessionStrip {
   display: flex;
   align-items: center;
@@ -778,16 +784,6 @@
 
 .sessionHospital {
   font-weight: 700;
-  color: var(--ink);
-}
-
-.sessionSep {
-  color: var(--line);
-}
-
-.sessionValue {
-  font-family: var(--font-mono);
-  font-weight: 600;
   color: var(--ink);
 }
 
@@ -999,7 +995,7 @@
 }
 
 
-/* --- 혈액원 발급: 입력 플로우와 증서 미리보기를 나란히 둔 발급 데스크 --- */
+/* --- 혈액증서 발급: 입력 플로우와 증서 미리보기를 나란히 둔 발급 데스크 --- */
 
 .srOnly {
   position: absolute;
@@ -1450,123 +1446,10 @@
   opacity: 0.72;
 }
 
-.issuePreviewBody {
-  position: relative;
-  margin: 0 9px;
-  padding: 23px 15px 20px;
-  background: #fff;
-  text-align: center;
-}
-
-.issuePreviewBody::before,
-.issuePreviewBody::after {
-  position: absolute;
-  top: -8px;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: var(--pri-tint);
-  content: "";
-}
-
-.issuePreviewBody::before {
-  left: -17px;
-}
-
-.issuePreviewBody::after {
-  right: -17px;
-}
-
-.issuePreviewMark {
-  display: grid;
-  width: 38px;
-  height: 38px;
-  margin: 0 auto 10px;
-  place-items: center;
-  border-radius: 12px 12px 12px 4px;
-  background: var(--pri);
-  color: #fff;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 900;
-}
-
-.issuePreviewToken {
-  color: var(--mute);
-  font-family: var(--font-mono);
-  font-size: 8px;
-  letter-spacing: 0.08em;
-}
-
-.issuePreviewBody h2 {
-  margin: 6px 0 5px;
-  color: var(--ink);
-  font-size: 16px;
-  letter-spacing: -0.025em;
-}
-
-.issuePreviewVolume {
-  color: var(--pri);
-  font-family: var(--font-mono);
-  font-size: 12px;
-  font-weight: 800;
-}
-
-.issuePreviewRows {
-  display: flex;
-  flex-direction: column;
-  gap: 9px;
-  margin-top: 20px;
-  border-top: 1px dashed var(--line);
-  padding-top: 15px;
-  text-align: left;
-}
-
-.issuePreviewRows > div {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 10px;
-}
-
-.issuePreviewRows span {
-  flex: 0 0 auto;
-  color: var(--mute);
-  font-size: 9.5px;
-}
-
-.issuePreviewRows strong {
-  overflow: hidden;
-  color: var(--ink);
-  font-size: 10.5px;
-  text-align: right;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.issueReadyText {
-  color: var(--done) !important;
-}
-
-.issuePrivacyStrip {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  margin: 10px 12px;
-  color: var(--sub);
-  font-size: 9.5px;
-  line-height: 1.5;
-}
-
-.issuePrivacyStrip span {
-  flex: 0 0 auto;
-  border-radius: 999px;
-  padding: 2px 5px;
-  background: rgb(var(--pri-rgb) / 0.1);
-  color: var(--pri);
-  font-family: var(--font-mono);
-  font-size: 7.5px;
-  font-weight: 800;
+.issuePreviewCard {
+  width: min(310px, calc(100% - 40px));
+  height: min(471px, calc((100vw - 80px) * 1.519));
+  margin: 28px auto 18px;
 }
 
 .issuePreview > .banner,
@@ -1787,10 +1670,11 @@
 }
 
 .mockCertType {
-  font-size: 22px;
+  font-size: 19px;
   font-weight: 800;
   color: var(--pri);
   letter-spacing: -0.3px;
+  white-space: nowrap;
 }
 
 .mockCertIssuer {
