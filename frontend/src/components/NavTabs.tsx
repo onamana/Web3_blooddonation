@@ -35,9 +35,9 @@ export function NavTabs() {
     해제만 하면 상세·검증·발급 화면은 그대로 남는다 (게이트를 띄우는 화면이
     "내 증서" 하나뿐이라서). 그래서 해제 직후 초기 화면으로 돌려보낸다.
   */
-  const handleDisconnect = () => {
-    void disconnect();
-    navigate("/certificates");
+  const handleDisconnect = async () => {
+    const navigationStarted = await disconnect();
+    if (!navigationStarted) navigate("/certificates");
   };
 
   const activeIndex = activeIndexFor(pathname);

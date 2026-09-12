@@ -56,7 +56,8 @@ export interface WalletControls extends WalletState {
   cancelAccountSelection: () => void;
   connectDemoWallet: () => void;
   /** 앱 상태와 MetaMask의 이 사이트 계정 권한을 함께 해제한다. */
-  disconnect: () => Promise<void>;
+  /** 데모 모드 종료를 위해 페이지 이동을 직접 시작했으면 true를 반환한다. */
+  disconnect: () => Promise<boolean>;
   dismissError: () => void;
 }
 
@@ -259,21 +260,27 @@ export function useWalletMachine(): WalletControls {
 
   const disconnect = useCallback(async () => {
     rememberSelectedAccount(null);
-    // 실제 컨트랙트 화면에서 데모 지갑을 해제하면 런타임 데모 세션도 종료해 실제 모드로 돌아간다.
-    if (state.isDemoWallet && LIVE_CONTRACT_MODE) {
-      stopRuntimeDemoMode();
-      window.location.reload();
-      return;
-    }
+    const leavingRuntimeDemo = state.isDemoWallet && LIVE_CONTRACT_MODE;
+    if (leavingRuntimeDemo) stopRuntimeDemoMode();
+
     const eth = window.ethereum;
     knownAccountsRef.current = [];
     setState((current) => ({ ...initialState, hasMetaMask: current.hasMetaMask }));
-    if (!eth) return;
-    try {
-      await eth.request({ method: "wallet_revokePermissions", params: [{ eth_accounts: {} }] });
-    } catch {
-      // 일부 provider는 권한 해제를 지원하지 않는다. 이 경우에도 앱의 연결은 해제한다.
+    if (eth) {
+      try {
+        await eth.request({ method: "wallet_revokePermissions", params: [{ eth_accounts: {} }] });
+      } catch {
+        // 일부 provider는 권한 해제를 지원하지 않는다. 이 경우에도 앱의 연결은 해제한다.
+      }
     }
+
+    // 런타임 데모 플래그는 모듈 초기화 때 읽히므로, 실제 모드로 돌아가려면 새로 로드해야 한다.
+    // 현재 경로에서 reload하면 화면이 잠깐 되돌아가는 것처럼 보일 수 있어 목적지를 한 번에 연다.
+    if (leavingRuntimeDemo) {
+      window.location.assign("/certificates");
+      return true;
+    }
+    return false;
   }, [state.isDemoWallet]);
 
   return { ...state, connect, selectAccount, cancelAccountSelection, connectDemoWallet, disconnect, dismissError };
