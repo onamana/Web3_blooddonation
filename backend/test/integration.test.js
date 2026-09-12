@@ -72,7 +72,9 @@ test("browserless frontend -> HTTP API -> local contracts", { timeout: 180000 },
   const certificate = await deploy("BloodCertificate");
   const registry = await deploy("DonationRegistry");
   const deployment = await certificate.deploymentTransaction().wait();
-  const apiEnv = { ...process.env, PORT: String(apiPort), SEPOLIA_RPC_URL: rpcUrl, CHAIN_ID: "31337",
+  const apiEnv = { ...process.env, NODE_ENV: 'test', HOST: '127.0.0.1', TRUST_PROXY: '',
+    DEMO_ALLOW_UNAUTHENTICATED: 'true', DEMO_ACCESS_PASSWORD: '', DEMO_SESSION_SECRET: '',
+    PORT: String(apiPort), SEPOLIA_RPC_URL: rpcUrl, CHAIN_ID: "31337",
     BACKEND_SIGNER_PRIVATE_KEY: admin.privateKey, CERTIFICATE_CONTRACT_ADDRESS: await certificate.getAddress(),
     DONATION_CONTRACT_ADDRESS: await registry.getAddress(), CERTIFICATE_DEPLOY_BLOCK: String(deployment.blockNumber),
     CERTIFICATE_DB_PATH: path.join(temp, "certificates.sqlite"), BLOOD_CENTER_NAME: "Integration Center" };

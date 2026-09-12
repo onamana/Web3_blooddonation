@@ -22,17 +22,17 @@ if (process.env.NODE_ENV === 'production' && process.env.DID_ISSUE_API_KEY.lengt
 if (process.env.NODE_ENV === 'production' && process.env.DID_SEED_DEMO === 'true') throw new Error('Demo seeding is disabled in production');
 
 // CORS 화이트리스트 구성
-const allowedOrigins = (process.env.DID_ALLOWED_ORIGINS || 'http://localhost:4000').split(',');
+const allowedOrigins = (process.env.DID_ALLOWED_ORIGINS || 'http://localhost:4000').split(',').map(value => value.trim());
 app.use(cors({
   origin: (origin, callback) => {
     if (!origin || allowedOrigins.includes(origin)) {
       return callback(null, true);
     }
-    return callback(new Error('CORS 정책에 의해 차단된 Origin입니다.'));
+    return callback(Object.assign(new Error('CORS 정책에 의해 차단된 Origin입니다.'), { status: 400 }));
   }
 }));
 
-app.use(express.json({ limit: '64kb' }));
+app.use(express.json({ limit: '64kb', verify: (req, res, buffer) => { req.hasJsonBody = buffer.length > 0; } }));
 app.use((req, res, next) => { res.set('Cache-Control', 'no-store'); next(); });
 
 // API 인증 미들웨어 (발급 전용)
@@ -71,6 +71,12 @@ app.get('/vc', (req, res) => {
 });
 
 app.use(requireIssuerAuth);
+app.use((req, res, next) => {
+  if (req.method === 'POST' && (!req.hasJsonBody || !req.body || typeof req.body !== 'object' || Array.isArray(req.body))) {
+    return res.status(400).json({ error: 'JSON 객체 본문이 필요합니다.', code: 'INVALID_REQUEST' });
+  }
+  next();
+});
 
 app.post('/vc/revoke', (req, res) => {
   const { id } = req.body || {};
@@ -98,7 +104,7 @@ app.post('/vc/issue', requireIssuerAuth, async (req, res) => {
       return res.status(400).json({ error: "유효한 이더리움 지갑 주소(holderAddress)가 필요합니다." });
     }
 
-    if (typeof bloodType !== 'string' || !ALLOWED_BLOOD_TYPES.includes(bloodType.toUpperCase())) {
+    if (typeof bloodType !== 'string' || !ALLOWED_BLOOD_TYPES.includes(bloodType)) {
       return res.status(400).json({ error: `지원하지 않는 혈액형입니다. (${ALLOWED_BLOOD_TYPES.join(', ')})` });
     }
 
@@ -136,14 +142,14 @@ app.post('/match', async (req, res) => {
     const { bloodType, minDaysSinceLastDonation, onlyEligible } = req.body;
 
     if (Object.keys(req.body).some(key => !['bloodType', 'minDaysSinceLastDonation', 'onlyEligible'].includes(key))) return res.status(400).json({ error: '지원하지 않는 매칭 필드입니다.' });
-    if (bloodType !== undefined && (typeof bloodType !== 'string' || !ALLOWED_BLOOD_TYPES.includes(bloodType.toUpperCase()))) {
+    if (bloodType !== undefined && (typeof bloodType !== 'string' || !ALLOWED_BLOOD_TYPES.includes(bloodType))) {
       return res.status(400).json({ error: "허용되지 않은 혈액형 쿼리입니다." });
     }
 
     if (minDaysSinceLastDonation !== undefined) {
       const days = minDaysSinceLastDonation;
-      if (!Number.isInteger(days) || days < 0) {
-        return res.status(400).json({ error: "minDaysSinceLastDonation 값은 0 이상의 정수여야 합니다." });
+      if (!Number.isInteger(days) || days < 0 || days > 36500) {
+        return res.status(400).json({ error: "minDaysSinceLastDonation 값은 0~36500 사이의 정수여야 합니다." });
       }
     }
 
@@ -155,7 +161,7 @@ app.post('/match', async (req, res) => {
 
     const matchedResults = await matchCandidates({
       bloodType: bloodType ? bloodType.toUpperCase() : undefined,
-      minDaysSinceLastDonation: minDaysSinceLastDonation !== undefined ? Number(minDaysSinceLastDonation) : undefined,
+      minDaysSinceLastDonation: minDaysSinceLastDonation ?? 60,
       onlyEligible: effectiveOnlyEligible
     });
 
@@ -163,7 +169,7 @@ app.post('/match', async (req, res) => {
       success: true,
       query: {
         bloodType: bloodType ? bloodType.toUpperCase() : "ALL",
-        minDaysSinceLastDonation: minDaysSinceLastDonation ?? null,
+        minDaysSinceLastDonation: minDaysSinceLastDonation ?? 60,
         onlyEligible: effectiveOnlyEligible
       },
       matchedCount: matchedResults.length,
@@ -176,13 +182,17 @@ app.post('/match', async (req, res) => {
 
 // 테스트 환경(jest)이 아닐 때만 실제 포트를 열고 서버를 구동
 app.use((err, req, res, next) => {
-  res.status(err.status === 413 ? 413 : 400).json({ error: '요청 형식 또는 Origin을 확인하세요.' });
+  const status = err.status === 413 ? 413 : err.status === 400 ? 400 : 500;
+  res.status(status).json({
+    code: status === 500 ? 'INTERNAL_ERROR' : 'INVALID_REQUEST',
+    error: status === 500 ? '요청 처리에 실패했습니다.' : '요청 형식 또는 Origin을 확인하세요.',
+  });
 });
 
 if (process.env.NODE_ENV !== 'test') {
   (async () => {
     if (process.env.DID_SEED_DEMO === 'true') await initMockStore();
-    app.listen(PORT, process.env.HOST || '0.0.0.0', () => console.log(`[DID Module] Server running on port ${PORT}`));
+    app.listen(PORT, process.env.HOST || '127.0.0.1', () => console.log(`[DID Module] Server running on port ${PORT}`));
   })().catch(() => { console.error('DID startup failed'); process.exit(1); });
 }
 

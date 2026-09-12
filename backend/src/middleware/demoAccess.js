@@ -1,4 +1,5 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
+import { accessConfig } from '../config/access.js';
 
 const cookieName = 'bloodpass_demo';
 const lifetime = 8 * 60 * 60;
@@ -9,8 +10,7 @@ const equal = (a, b) => {
 
 // Shared operator login for an invitation-only demo, not hospital identity verification.
 export function installDemoAccess(app) {
-  const password = process.env.DEMO_ACCESS_PASSWORD;
-  const secret = process.env.DEMO_SESSION_SECRET;
+  const { password, secret } = accessConfig();
   const production = process.env.NODE_ENV === 'production';
   if (production && (!password || password.length < 16 || !secret || secret.length < 32)) {
     throw new Error('Production requires DEMO_ACCESS_PASSWORD (16+) and DEMO_SESSION_SECRET (32+)');

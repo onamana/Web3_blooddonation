@@ -4,6 +4,7 @@ function formatIssues(error) {
 
 export function validateBody(schema) {
   return (req, res, next) => {
+    if (!req.hasJsonBody) return res.status(400).json({ error: 'JSON body is required', code: 'INVALID_REQUEST' });
     const result = schema.safeParse(req.body);
     if (!result.success) {
       return res.status(400).json({ error: "invalid request body", detail: formatIssues(result.error) });

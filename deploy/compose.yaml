@@ -24,6 +24,8 @@ services:
     environment:
       NODE_ENV: production
       PORT: 4000
+      HOST: 0.0.0.0
+      DEMO_ALLOW_UNAUTHENTICATED: "false"
       CERTIFICATE_DB_PATH: /data/certificates.sqlite
       DID_MODULE_BASE_URL: http://did:5001
       DID_ISSUE_API_KEY: ${DID_ISSUE_API_KEY:?Set internal API key}
@@ -57,6 +59,7 @@ services:
     environment:
       NODE_ENV: production
       PORT: 5001
+      HOST: 0.0.0.0
       DID_DB_PATH: /data/credentials.sqlite
       DID_SEED_DEMO: "false"
       DID_ISSUER_PRIVATE_KEY: ${DID_ISSUER_PRIVATE_KEY:?Set DID issuer key}

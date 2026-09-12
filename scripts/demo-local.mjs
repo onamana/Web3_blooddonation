@@ -93,7 +93,7 @@ try {
     BACKEND_SIGNER_PRIVATE_KEY: admin.privateKey, CERTIFICATE_CONTRACT_ADDRESS: await certificate.getAddress(),
     CERTIFICATE_DEPLOY_BLOCK: String(receipt.blockNumber), DONATION_CONTRACT_ADDRESS: await registry.getAddress(),
     CERTIFICATE_DB_PATH: path.join(dir, 'certificates.sqlite'), DID_MODULE_BASE_URL: didUrl, DID_ISSUE_API_KEY: secrets.internalKey,
-    DEMO_ACCESS_PASSWORD: process.env.DEMO_LOCAL_ACCESS_PASSWORD || secrets.accessPassword, DEMO_SESSION_SECRET: secrets.sessionSecret,
+    DEMO_ALLOW_UNAUTHENTICATED: 'false', DEMO_ACCESS_PASSWORD: process.env.DEMO_LOCAL_ACCESS_PASSWORD || secrets.accessPassword, DEMO_SESSION_SECRET: secrets.sessionSecret,
     ALLOWED_ORIGINS: `http://localhost:${ports.web}`, TRUST_PROXY: '', PUBLIC_API_PREFIX: '/', BLOOD_CENTER_NAME: 'Demo Blood Center' });
   await ready(`http://127.0.0.1:${ports.api}/health`, api);
   const web = start('frontend', ['node_modules/vite/bin/vite.js', '--host', '127.0.0.1', '--port', String(ports.web), '--strictPort'], {
@@ -104,6 +104,22 @@ try {
     donorAddress: donor.address, certificateAddress: await certificate.getAddress(), note: 'Local chain resets on restart. VC database persists.' }, null, 2));
   console.log(`Local demo ready: http://localhost:${ports.web}/credentials`);
   console.log('Access password and local demo wallet key: .demo/secrets.json (not printed). Connection details: .demo/connection.json');
+  if (process.argv.includes('--check')) {
+    const apiUrl = `http://127.0.0.1:${ports.api}`;
+    const login = await fetch(`${apiUrl}/session/login`, { method: 'POST', headers: {
+      'Content-Type': 'application/json', 'X-Demo-Request': '1',
+    }, body: JSON.stringify({ password: process.env.DEMO_LOCAL_ACCESS_PASSWORD || secrets.accessPassword }), signal: AbortSignal.timeout(10000) });
+    const cookie = login.headers.get('set-cookie')?.split(';')[0];
+    if (!login.ok || !cookie) throw new Error('Local demo login check failed');
+    const session = await fetch(`${apiUrl}/session`, { headers: { cookie }, signal: AbortSignal.timeout(10000) });
+    if (!(await session.json()).authenticated) throw new Error('Local demo session check failed');
+    const match = await fetch(`${apiUrl}/match`, { method: 'POST', headers: {
+      cookie, 'Content-Type': 'application/json', 'X-Demo-Request': '1',
+    }, body: JSON.stringify({}), signal: AbortSignal.timeout(10000) });
+    if (!match.ok || !Array.isArray((await match.json()).matches)) throw new Error('Local demo DID integration check failed');
+    console.log('Local demo check passed: chain deployment, frontend, login, session and DID matching.');
+    await shutdown(0);
+  }
   for (const child of children) child.once('exit', () => { if (!exiting) { console.error('A demo service stopped; shutting down.'); void shutdown(1); } });
 } catch (error) {
   console.error(error.code ? `Local demo failed (${error.code}). Check dependencies, ports and compiled contracts.` : error.message);

@@ -35,7 +35,7 @@ test('authenticated demo -> backend -> persistent DID service', { timeout: 60000
   const internalKey = randomBytes(32).toString('hex'), password = randomBytes(24).toString('hex');
   const didEnv = { ...process.env, NODE_ENV: 'production', PORT: String(didPort), DID_DB_PATH: path.join(dir, 'vc.sqlite'),
     DID_ISSUER_PRIVATE_KEY: ethers.Wallet.createRandom().privateKey, DID_ISSUE_API_KEY: internalKey, DID_SEED_DEMO: 'false' };
-  const apiEnv = { ...process.env, NODE_ENV: 'production', PORT: String(apiPort), DID_MODULE_BASE_URL: didUrl,
+  const apiEnv = { ...process.env, NODE_ENV: 'production', HOST: '127.0.0.1', DEMO_ALLOW_UNAUTHENTICATED: 'false', PORT: String(apiPort), DID_MODULE_BASE_URL: didUrl,
     DEMO_ACCESS_PASSWORD: password, DEMO_SESSION_SECRET: randomBytes(32).toString('hex'), DID_ISSUE_API_KEY: internalKey,
     CERTIFICATE_DB_PATH: path.join(dir, 'certificates.sqlite') };
   const start = (folder, env) => spawn(process.execPath, ['src/server.js'], { cwd: path.join(root, folder), env, windowsHide: true, stdio: 'ignore' });
@@ -67,6 +67,35 @@ test('authenticated demo -> backend -> persistent DID service', { timeout: 60000
   const input = { holderAddress: holder, bloodType: 'O', isEligible: true,
     lastDonationDate: new Date(Date.now() - 120 * 86400000).toISOString().slice(0, 10), daysValid: 90 };
   let vc;
+  await t.test('direct DID and backend reject the same invalid issue and match inputs', async () => {
+    const invalidIssues = [
+      { ...input, holderAddress: 'not-an-address' }, { ...input, bloodType: 'o' },
+      { ...input, isEligible: 'true' }, { ...input, extra: true },
+      { ...input, lastDonationDate: '2026-02-30' }, { ...input, lastDonationDate: '2999-01-01' },
+      ...[-1, 0, 1.5, '90', 366].map(daysValid => ({ ...input, daysValid })),
+    ];
+    const invalidMatches = [
+      { bloodType: 'o' }, { bloodType: 'INVALID' }, { onlyEligible: 'false' }, { extra: true },
+      ...[-1, 1.5, '60', 36501].map(minDaysSinceLastDonation => ({ minDaysSinceLastDonation })),
+    ];
+    for (const [route, internal, cases] of [['/credentials/issue', '/vc/issue', invalidIssues], ['/match', '/match', invalidMatches]]) {
+      for (const body of cases) {
+        assert.equal((await call(route, body)).status, 400);
+        assert.equal((await post(didUrl, internal, body, { 'x-api-key': internalKey })).status, 400);
+      }
+      for (const body of [undefined, null, []]) {
+        assert.equal((await call(route, body)).status, 400);
+        assert.equal((await post(didUrl, internal, body, { 'x-api-key': internalKey })).status, 400);
+      }
+    }
+    for (const body of [{}, { minDaysSinceLastDonation: 0, onlyEligible: false }, { minDaysSinceLastDonation: 36500 }]) {
+      const direct = await post(didUrl, '/match', body, { 'x-api-key': internalKey });
+      const proxied = await call('/match', body);
+      assert.equal(direct.status, 200); assert.equal(proxied.status, 200);
+      assert.deepEqual((await direct.json()).query, (await proxied.json()).query);
+    }
+    assert.equal((await post(didUrl, '/vc/issue', input, { 'x-api-key': internalKey, Origin: 'https://untrusted.invalid' })).status, 400);
+  });
   await t.test('issue, verify and match through the backend; reject old and malformed inputs', async () => {
     assert.equal((await call('/match', { recentDonationWithinDays: 60 })).status, 400);
     assert.equal((await call('/credentials/issue', { ...input, daysValid: -1 })).status, 400);

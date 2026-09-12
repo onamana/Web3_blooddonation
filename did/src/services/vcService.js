@@ -7,11 +7,16 @@ if (!process.env.DID_ISSUER_PRIVATE_KEY) {
   throw new Error("CRITICAL: DID_ISSUER_PRIVATE_KEY 환경변수가 설정되지 않았습니다.");
 }
 
-const issuerWallet = new ethers.Wallet(process.env.DID_ISSUER_PRIVATE_KEY);
+let issuerWallet;
+try { issuerWallet = new ethers.Wallet(process.env.DID_ISSUER_PRIVATE_KEY); }
+catch { throw new Error('DID_ISSUER_PRIVATE_KEY must be a valid Ethereum private key'); }
+if (process.env.NODE_ENV !== 'test' && issuerWallet.address === '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266') {
+  throw new Error('Public Hardhat test issuer is forbidden outside tests; generate a private demo issuer');
+}
 const ISSUER_ADDRESS = ethers.getAddress(issuerWallet.address);
 const ISSUER_DID = `did:ethr:${ISSUER_ADDRESS}`;
 
-// 인메모리 저장소
+// SQLite storage retains renewal and revocation state across restarts.
 
 /**
  * 객체 속성 순서에 구애받지 않는 결정론적 Canonical JSON 직렬화
@@ -29,7 +34,7 @@ function canonicalStringify(obj) {
 }
 
 /**
- * 1. W3C 규격 VC 발급
+ * 1. Demo VC-shaped JSON with an Ethereum personal-message signature.
  */
 async function issueBloodVC({ holderAddress, bloodType, isEligible = true, lastDonationDate, daysValid = 90 }) {
   const normalizedHolder = ethers.getAddress(holderAddress);
@@ -139,7 +144,7 @@ function verifyBloodVC(vc) {
     }
 
     // 5) 유효기간 만료 확인
-    if (new Date(vc.expirationDate).getTime() < Date.now()) {
+    if (new Date(vc.expirationDate).getTime() <= Date.now()) {
       return { isValid: false, reason: "만료된 VC입니다." };
     }
 
@@ -151,8 +156,8 @@ function verifyBloodVC(vc) {
         ...parsedPayload.credentialSubject
       }
     };
-  } catch (err) {
-    return { isValid: false, reason: `검증 예외: ${err.message}` };
+  } catch {
+    return { isValid: false, reason: 'VC 구조 또는 서명이 올바르지 않습니다.', code: 'INVALID_VC' };
   }
 }
 

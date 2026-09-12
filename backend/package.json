@@ -5,6 +5,7 @@
   "type": "module",
   "engines": { "node": ">=22.13.0" },
   "scripts": {
+    "test:security": "node --test test/access.test.js",
     "dev": "node --watch src/server.js",
     "start": "node src/server.js",
     "test:integration": "node --test test/integration.test.js",

@@ -2,6 +2,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 const { ethers } = require("ethers");
 const dotenv = require("dotenv");
+const { compareRuntimeBytecode } = require("./runtime-bytecode");
 dotenv.config();
 
 function immutableReferencesFor(name) {
@@ -41,12 +42,16 @@ async function main() {
     ]) {
       const artifact = require(`../artifacts/contracts/${name}.sol/${name}.json`);
       const deployed = await provider.getCode(address);
-      if (normalizeRuntimeBytecode(deployed, immutableReferencesFor(name)) !== normalizeRuntimeBytecode(artifact.deployedBytecode, immutableReferencesFor(name))) {
-        throw new Error(`${name} bytecode mismatch`);
+      const comparison = compareRuntimeBytecode(
+        normalizeRuntimeBytecode(artifact.deployedBytecode, immutableReferencesFor(name)),
+        normalizeRuntimeBytecode(deployed, immutableReferencesFor(name)),
+      );
+      if (!comparison.executableMatches) {
+        throw new Error(`${name} executable bytecode mismatch`);
       }
       const contract = new ethers.Contract(address, artifact.abi, provider);
       if (!await contract.hasRole(await contract[role](), wallet.address)) throw new Error(`${name} role missing`);
-      checks.push({ name, address, bytecodeMatches: true, roleGranted: true });
+      checks.push({ name, address, ...comparison, roleGranted: true });
     }
     console.log(JSON.stringify({ checks, balanceEth: ethers.formatEther(await provider.getBalance(wallet.address)), frontendConfigured: frontend.VITE_DEMO_MODE === "false" }, null, 2));
   } finally { provider.destroy(); }
