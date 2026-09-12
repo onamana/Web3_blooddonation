@@ -1,4 +1,7 @@
+import { DEMO_MODE } from "../../api/env";
 import { NavTabs } from "../../components/NavTabs";
+import { useWallet } from "../../hooks/walletContext";
+import { ConnectedWallet } from "./ConnectedWallet";
 import styles from "./Certificate.module.css";
 
 /**
@@ -8,6 +11,10 @@ import styles from "./Certificate.module.css";
  * 화면 이동은 오른쪽 탭이 전담한다.
  */
 export function BrandBar() {
+  const wallet = useWallet();
+  const realWalletAddress =
+    wallet.status === "connected" && !wallet.isDemoWallet ? wallet.address : null;
+
   return (
     <div className={styles.brandBar}>
       <div className={styles.brand}>
@@ -23,6 +30,9 @@ export function BrandBar() {
           alt=""
         />
         <span className={styles.brandName}>BloodPass</span>
+        {realWalletAddress
+          ? <ConnectedWallet address={realWalletAddress} />
+          : DEMO_MODE && <span className={styles.demoTag}>DEMO</span>}
       </div>
       <NavTabs />
     </div>

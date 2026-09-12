@@ -7,7 +7,7 @@
 
 | 구성 | 역할 |
 | --- | --- |
-| frontend | 증서 발급·목록·상세·병원 검증 화면, 소유자 지갑의 직접 양도 |
+| frontend | 혈액증서 발급·내 증서·증서 검증 화면, 소유자 지갑의 직접 양도 |
 | backend | API, relayer, SQLite에 헌혈 종류·헌혈량 보관 |
 | BloodCertificate | 증서 소유권·발급·양도·사용 이력 (ERC-721) |
 | DonationRegistry | 혈액형 없는 기록 식별자 해시·시각 |

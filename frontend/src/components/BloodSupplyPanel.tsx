@@ -62,7 +62,7 @@ export function BloodSupplyPanel() {
     <div className={styles.panel} ref={panelRef}>
       <div className={styles.head}>
         <div className={styles.headText}>
-          <span className={styles.eyebrow}>오늘의 혈액 보유 현황</span>
+          <span className={styles.eyebrow}>혈액 보유 현황</span>
           <span className={styles.asOf}>{formatAsOf(snapshot.asOf)} 기준 · 데모 데이터</span>
         </div>
         <div className={styles.tabs} role="tablist" aria-label="혈액 성분">

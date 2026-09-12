@@ -4,12 +4,12 @@ import { ApiError } from "../../api/client";
 import { DEMO_BLOOD_CENTER_NAME, DEMO_MODE } from "../../api/env";
 import { DEMO_WALLET_ADDRESS } from "../../data/demoWallet";
 import type { Certificate, DonationType } from "../../types/certificate";
-import { shortenAddress } from "../../utils/address";
 import { formatOnchainDateTime } from "../../utils/onchain";
 import { AddressDisplay } from "./AddressDisplay";
 import { BrandBar } from "./BrandBar";
 import { BlockingLoader } from "./BlockingLoader";
 import { Button } from "./Button";
+import { FlipCertificateCard } from "./FlipCertificateCard";
 import { formatTokenId } from "./certificateLabels";
 import { OnchainProof } from "./OnchainProof";
 import styles from "./Certificate.module.css";
@@ -46,6 +46,18 @@ export function IssueScreen() {
   const addressValid = ADDRESS_PATTERN.test(trimmedTo);
   const issuedVolumeMl = donationType === "WHOLE_BLOOD" ? volumeMl : undefined;
   const donationTypeLabel = DONATION_TYPES.find(({ value }) => value === donationType)?.label;
+  const previewCertificate: Certificate = {
+    tokenId: "—",
+    owner: addressValid ? trimmedTo : "0x0000000000000000000000000000000000000000",
+    donationType,
+    volumeMl: issuedVolumeMl,
+    issuedAt: Math.floor(Date.now() / 1000),
+    issuer: DEMO_BLOOD_CENTER_NAME,
+    status: "active",
+    usedAt: null,
+    usedBy: null,
+    history: [],
+  };
 
   const handleReset = () => {
     request.current = null;
@@ -217,37 +229,18 @@ export function IssueScreen() {
               <small>PREVIEW</small>
             </div>
 
-            <div className={styles.issuePreviewBody}>
-              <div className={styles.issuePreviewMark}>BP</div>
-              <span className={styles.issuePreviewToken}>TOKEN ID · AUTO</span>
-              <h2>{donationTypeLabel} 헌혈증서</h2>
-              {issuedVolumeMl && <div className={styles.issuePreviewVolume}>{issuedVolumeMl} mL</div>}
-
-              <div className={styles.issuePreviewRows}>
-                <div>
-                  <span>수령 지갑</span>
-                  <strong className="mono">
-                    {addressValid ? shortenAddress(trimmedTo) : "주소 입력 대기"}
-                  </strong>
-                </div>
-                <div>
-                  <span>발급기관</span>
-                  <strong>{DEMO_BLOOD_CENTER_NAME}</strong>
-                </div>
-                <div>
-                  <span>발급 시각</span>
-                  <strong>블록 확정 시 자동 기록</strong>
-                </div>
-                <div>
-                  <span>초기 상태</span>
-                  <strong className={styles.issueReadyText}>사용 가능</strong>
-                </div>
-              </div>
-            </div>
-
-            <div className={styles.issuePrivacyStrip}>
-              <span>PRIVATE</span>
-              혈액형은 오프체인 검사정보에서 확인하며 증서에 공개하지 않습니다.
+            <div className={styles.issuePreviewCard} aria-label="발급될 혈액증서 미리보기">
+              <FlipCertificateCard
+                certificate={previewCertificate}
+                previewOnly
+                flipped={false}
+                tiltActive={false}
+                transferOpen={false}
+                transferPending={false}
+                onOpenTransfer={() => {}}
+                onCancelTransfer={() => {}}
+                onTransfer={() => {}}
+              />
             </div>
 
             {error && (

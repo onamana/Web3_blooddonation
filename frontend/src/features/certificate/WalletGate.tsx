@@ -53,21 +53,21 @@ const FEATURES: CoverflowItem[] = [
   },
   {
     title: "내 지갑의 증서, 한눈에",
-    desc: "보유 중인 헌혈 증서를 지갑에서 실시간으로 확인합니다.",
+    desc: "지갑을 연결하면 그 주소가 보유한 증서를 온체인에서 바로 조회합니다.",
     visual: (
       <div className={styles.mockCert}>
         <div className={styles.mockCertHead}>
-          <span className={styles.mockTokenId}>#94</span>
-          <span className={styles.mockBadgeOk}>보유중</span>
+          <span className={styles.mockTokenId}>증서 #94</span>
+          <span className={styles.mockBadgeOk}>사용 가능</span>
         </div>
-        <div className={styles.mockCertType}>A형</div>
+        <div className={styles.mockCertType}>전혈 320mL</div>
         <div className={styles.mockCertIssuer}>대전혈액원 · 2026.05.12 발급</div>
       </div>
     ),
   },
   {
     title: "발급부터 사용까지 전 과정 기록",
-    desc: "발급·양도·사용 이력이 ERC-721 Transfer 이벤트로 온체인에 자동 기록됩니다.",
+    desc: "발급·양도는 ERC-721 Transfer 이벤트로, 사용은 CertificateUsed 이벤트로 온체인에 기록됩니다.",
     visual: (
       <div className={styles.mockTimeline}>
         {[
@@ -91,7 +91,7 @@ const FEATURES: CoverflowItem[] = [
       <div className={styles.mockVerify}>
         <div className={styles.mockInputBox}>증서 번호 94</div>
         <div className={styles.mockResultOk}>✓ 사용 가능</div>
-        <div className={styles.mockResultBlocked}>✕ 이미 사용된 증서</div>
+        <div className={styles.mockResultBlocked}>✕ 사용 불가</div>
       </div>
     ),
   },
@@ -100,7 +100,7 @@ const FEATURES: CoverflowItem[] = [
     desc: "트랜잭션 해시로 Etherscan에서 누구든 직접 대조해 확인할 수 있습니다.",
     visual: (
       <div className={styles.mockProof}>
-        <div className={styles.mockHash}>0x81c0…f0c37b</div>
+        <div className={styles.mockHash}>0x50afbe…50da</div>
         <div className={styles.mockProofLink}>↗ Etherscan에서 보기</div>
       </div>
     ),
@@ -168,7 +168,7 @@ export function WalletGate({ wallet, onConnect, onSelectAccount, onCancelAccount
       {!selecting && <div className={styles.gateBar}>
         <div className={styles.gateBarInner}>
           <span className={styles.gateBarNote}>
-            이름·주민번호·병원 기록은 저장되지 않습니다. 지갑 주소로만 조회합니다.
+            이름·주민번호·혈액형은 온체인에 기록하지 않습니다. 지갑 주소로만 조회합니다.
           </span>
           <Button variant="push" onClick={() => setStartChoiceOpen(true)} disabled={connecting}>
             {connecting ? "연결 중..." : "지갑 연결하기"}
